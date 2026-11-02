@@ -1,0 +1,16 @@
+# Tajne (Kaggle token i sl.) nikad ne idu u repozitorij
+secrets.txt
+*.secret
+.env
+.kaggle/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# IDE
+.idea/
+
+# gstack browser logs
+.gstack/
