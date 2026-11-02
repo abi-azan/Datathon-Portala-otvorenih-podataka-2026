@@ -10,7 +10,10 @@ Chosen idea (2026-10-29): **Fiskalna karta JLS + dashboard**, a fiscal health ma
 
 - **The plan is `docs/PLAN.md` (v2, 2026-11-02).** It holds the methodology (0-100 score with KDZ/INEKO anchors, displayed as 5 = best), the scope, the stack and the schedule. Supporting research is in `docs/research/00-04`.
 - The user confirmed the plan on 2026-11-02 (PLAN.md §11), including the innovation package (Karta reforme, visible number verification, MCP server as SHOULD) and the cuts from an independent review. Building can start.
-- LLM texts are generated on a free Kaggle GPU (Gemma 4, Apache-2.0), driven through the official Kaggle MCP server (`https://www.kaggle.com/mcp`, registered in local scope; OAuth via `/mcp`). Tools used: `save_notebook` (takes `machine_shape`, `model_data_sources`, `dataset_data_sources`), `get_notebook_session_status`, `download_notebook_output`, `get_accelerator_quota`, `upload_dataset_file`. Without auth every call returns "Unauthenticated".
+- LLM texts are generated on a free Kaggle GPU (Gemma 4, Apache-2.0), driven through the official Kaggle MCP server (`https://www.kaggle.com/mcp`). Tools used: `save_notebook` (takes `machine_shape`, `model_data_sources`, `dataset_data_sources`), `get_notebook_session_status`, `download_notebook_output`, `get_accelerator_quota`, `upload_dataset_file`.
+  - Auth: OAuth through `/mcp` did not work. The server is registered in local scope with an `Authorization: Bearer KGAT_…` header. The token lives in `secrets.txt`, which is gitignored; never print it or commit it. Without auth every call returns "Unauthenticated".
+  - GPU quota is 30 h per week and resets Saturday 00:00 UTC (checked 2026-11-02).
+  - Kaggle Models `google/gemma-4` has GGUF variants `gemma-4-e4b-it-qat-q4_0-gguf`, `gemma-4-12b-it-qat-q4_0-gguf`, `gemma-4-26b-a4b-it-qat-q4_0-gguf` and `gemma-4-31b-it-qat-q4_0-gguf`. Attach them as a model data source instead of downloading from Hugging Face. The exact source-string format is not yet confirmed.
 - `pipeline/build.py` is an exploratory draft that implements the v1 indicators, not v2. It joins all 576 units across MF PR-RAS, Bilanca and DZS Popis 2021.
 - When building starts, add build/run/test commands and an architecture overview here.
 
