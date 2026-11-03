@@ -76,3 +76,16 @@ Kriterij gotovosti za svaki zadatak s kodom: `pytest` prolazi, a za web i `tsc`,
 - **Batch skripta** sa 576 ugrađenih paketa imat će oko 1 MB, a ograničenje Kaggle pusha nije poznato.
 - **Nakon batcha** svaka promjena `facts.py` tiho prebacuje profile na predložak (provjera `pack_sha256`). Test iz W6 to hvata.
 - **Svaki zadatak koji dira `Home.tsx` ili `GradeMap.tsx`** čeka W9.
+
+## Odgovori korisnika (3.11. navečer)
+
+| # | Odgovor | Stanje |
+|---|---|---|
+| O1 | Bolji model: **Gemma 4 31B** (v6: 20/20 iz prvog pokušaja). Provjeriti postoji li još bolji. | istraživanje u tijeku; predložak s oznakom ostaje za rijetke tekstove koji ne prođu provjeru |
+| O2 | Simulator **ne u TypeScriptu**; treba istražiti najbolji način. | prijedlog: unaprijed izračunati 13.353 povezane skupine od 2-4 jedinice (Python, ista funkcija kao Karta reforme); alternativa je Pyodide (`methodology.py` je čisti Python) |
+| O3 | Nejasno, traži objašnjenje. | objašnjeno; čeka potvrdu |
+| O4 | MCP ne rezati, nego ostaviti za kraj ako bude vremena. Za ostale rezove traži argumente. | argumenti dani; čeka potvrdu |
+| O5 | Karta ostaje glavni prikaz. | objašnjeno: tablica je dodatni prekidač za pristupačnost, ne zamjena; čeka potvrdu |
+| O6 | Riješeno. | `main` pushan, Pages uključen, stranica uživo; tjedni cron ostaje |
+| O7 | Ograda ne treba posebno raditi. | ograda je već na stranici od noćne smjene; prijedlog je da ostane |
+| O8 | Licence riješiti preko subagenta. | u tijeku |
