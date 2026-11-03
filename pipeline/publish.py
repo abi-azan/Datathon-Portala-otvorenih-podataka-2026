@@ -7,6 +7,10 @@
                            neighbours, openness layer, template explanation
   skupine.json             peer-group medians per year (points and the five indicators)
   geo/jls.topo.json        boundaries (layers jls, zupanije)
+  sifrarnik.csv            unit register: OIB, RKP, DGU/DZS code, name, type, county, slug
+  rezultati.csv            one row per unit and year: grade, points, I1-I5, S1-S5, flags
+  izvori.json              provenance of every download: URL, time, ETag, sha256, CKAN metadata
+  openapi.json             OpenAPI 3.1 description of all of the above (pipeline/openapi.py)
 
 The files are generated, not committed: CI builds them before deploying the site.
 """
@@ -18,7 +22,7 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-from . import config, explain, facts, verify
+from . import config, explain, facts, openapi, verify
 
 API = config.ROOT / "web" / "public" / "api" / "v1"
 
@@ -101,6 +105,17 @@ def main():
 
     (API / "geo").mkdir(parents=True, exist_ok=True)
     shutil.copy(config.BUILD / "geo" / "jls.topo.json", API / "geo" / "jls.topo.json")
+
+    reg_cols = ["oib", "rkp", "sifra", "naziv", "vrsta", "zup_id", "zupanija", "slug", "stanovnici_2021"]
+    units[reg_cols].to_csv(API / "sifrarnik.csv", index=False, encoding="utf-8")
+    res_cols = ["oib", "naziv", "year", "ocjena", "ocjena_rijec", "bodovi", "bodovi_bez_ogranicenja", "ogranicenje_do",
+                "skupina", "rang", "n_skupine", *[f"I{i}" for i in range(1, 6)], *[f"S{i}" for i in range(1, 6)],
+                "DO", "DO_iskazano", "zastavice", "kvaliteta"]
+    out = res[res_cols].rename(columns={"year": "godina"}).sort_values(["oib", "godina"])
+    out = out.replace([math.inf, -math.inf], float("nan"))   # I3 is infinite for debt without operating surplus
+    out.to_csv(API / "rezultati.csv", index=False, encoding="utf-8", float_format="%.10g")
+    shutil.copy(config.SOURCES_LOG, API / "izvori.json")
+    write(API / "openapi.json", openapi.spec(generated))
     size = sum(p.stat().st_size for p in API.rglob("*") if p.is_file())
     print(f"Statični API: {API} ({len(index)} jedinica, {size / 1e6:.1f} MB)")
 

@@ -1,0 +1,85 @@
+# Build the data from the public sources, test it, and publish the site and the static API
+# to GitHub Pages. Runs on every push to main, weekly (sources are re-checked with
+# conditional GET), and on demand.
+#
+# One-time setup in the repository: Settings -> Pages -> Source: "GitHub Actions".
+name: Build i objava
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1"          # Monday 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # Downloaded sources and the parsed PR-RAS table, so unchanged files are not fetched
+      # or parsed again (sources.py sends If-None-Match / If-Modified-Since).
+      - name: Predmemorija izvora
+        uses: actions/cache@v6
+        with:
+          path: |
+            data/raw
+            data/build/prras_long.parquet
+            data/build/prras_long.sha256
+            data/build/national_totals.parquet
+          key: sources-${{ github.run_id }}
+          restore-keys: sources-
+
+      - name: Python paketi
+        run: pip install -r requirements.txt
+
+      - name: ETL (MF, DZS WFS, data.gov.hr CKAN API)
+        run: python -m pipeline.build
+
+      - name: Statični API
+        run: python -m pipeline.publish
+
+      - name: Testovi
+        run: python -m pytest -q tests
+
+      - name: Frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

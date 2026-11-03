@@ -58,6 +58,14 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
   - The Kaggle user is `albertmari`. The notebook builds llama.cpp from source with `-DCMAKE_CUDA_ARCHITECTURES=75` for the T4 and serves the model with `llama-server --jinja`.
   - The model source string is `google/gemma-4/gguf/gemma-4-e4b-it-qat-q4_0-gguf/2`. The files are `gemma-4-E4B_q4_0-it.gguf` (5.2 GB) and an mmproj.
   - Re-check a downloaded output with `python -m pipeline.explain --check <gemma_test_output.json>`.
+- `pipeline/publish.py` writes the static API to `web/public/api/v1/`. The folder is generated and gitignored.
+  - Contents: `jedinice.json`, `jedinice/<slug>.json`, `skupine.json`, `sifrarnik.csv`, `rezultati.csv`, `izvori.json` (the provenance log) and `geo/jls.topo.json`.
+  - `openapi.json` describes all of these. It is built from `pipeline/openapi.py` as OpenAPI 3.1 with JSON Schema 2020-12.
+  - `tests/test_api.py` validates every published file against those same schemas.
+- `.github/workflows/deploy.yml` runs, on push to main, weekly, or by hand: build → publish → pytest → `npm run build` → GitHub Pages. It needs Settings → Pages → Source set to "GitHub Actions".
+- `web/` is the frontend: React 19, Vite 8, Tailwind 4, MapLibre GL 6 with OpenFreeMap tiles, hash routes.
+  - Run it with `npm run dev`, or with `npm run build` and then `npx vite preview`.
+  - The MapLibre worker URL is set explicitly with `?url`, because Vite breaks the default path.
 - `pipeline/build.py` orchestrates the steps above and writes `data/build/units.csv`, `results.parquet`, `results.json` and `geo/`.
 
 Source documents:

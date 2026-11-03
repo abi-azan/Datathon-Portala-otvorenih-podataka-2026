@@ -52,6 +52,27 @@ export function Footer({ generated }: { generated?: string }) {
         </div>
         <div>
           <div className="font-medium text-ink">Otvoreno</div>
+          <ul className="mt-2 space-y-1">
+            <li>
+              <a href="./api/v1/openapi.json" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+                Otvoreni API (OpenAPI 3.1)
+              </a>
+            </li>
+            <li>
+              <a href="./api/v1/rezultati.csv" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+                Svi rezultati (CSV)
+              </a>{' '}
+              ·{' '}
+              <a href="./api/v1/sifrarnik.csv" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+                Šifrarnik (CSV)
+              </a>
+            </li>
+            <li>
+              <a href="./api/v1/izvori.json" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+                Zapis izvora i preuzimanja
+              </a>
+            </li>
+          </ul>
           <p className="mt-2">
             Kod: EUPL-1.2 · Podaci: CC BY 4.0
             {generated && (
