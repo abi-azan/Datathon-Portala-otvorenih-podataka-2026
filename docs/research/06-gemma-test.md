@@ -53,4 +53,43 @@ Ispravci u promptu (`pipeline/explain.py`):
 
 U istoj sesiji vrte se oba modela (E4B, pa 12B QAT Q4_0, 7,2 GB) na istih 20 jedinica. Izgrađeni `llama-server` sprema se u izlaz bilježnice (`llama-bin/`), pa iduća pokretanja preskaču izgradnju od oko 30 minuta: dovoljno je bilježnicu priključiti kao izvor jezgre (kernel source).
 
-Rezultat: *dopisuje zakazani zadatak u 7:00.*
+
+### Rezultat v3 (završeno oko 4:25, obrađeno u 7:00)
+
+- **Provjeru brojki prošlo je 20/20 tekstova u oba modela, iz prvog pokušaja.**
+  - Lokalna provjera s novim, strožim verifikatorom isprva je javila 3 lažne greške kod 12B. Uzrok: iznos nakon riječi "ocjena" ("Ocjenu najviše spuštaju … 1.767.926 €") čitao se kao ocjena 1.
+  - To je ispravljeno u `verify.py` i pokriveno regresijskim testom.
+- **Vrijeme:** E4B 125 s za 20 tekstova (oko 6 s po tekstu), 12B 267 s (oko 13 s po tekstu). Izgradnja llama.cpp trajala je 1.972 s.
+  - Procjena za svih 576 jedinica: E4B oko 1 sat, 12B oko 2,1 sata. Kvota je 30 sati tjedno.
+- Sirovi izlaz je u `kaggle/results/gemma_test_v3_e4b_12b.json`.
+
+| | E4B | 12B |
+|---|---|---|
+| Nazivi (nominativ) | ispravni u 20/20 | ispravni u 20/20 |
+| Tekstova bez jezične greške | otprilike 10/20 | otprilike 10/20 |
+| Tipične greške | slaganje ("sastavnica je dospjele obveze", "Jedne od jakih strana"); red riječi ("da u Bilanci je"); "koji nedostaje 5,2 %" | jedna sustavna greška: "Ocjenu najviše **spuštaju** operativni saldo" (glagol prepisan iz primjera, a subjekt je u jednini); "se neto dug mogao bi" |
+| Sadržajne greške | 1: Zrinski Topolovac ima "jaku stranu: ovisnost o pomoćima", čega nema u činjenicama | 2: Šolta proglašava najslabijom drugu sastavnicu nego činjenice; Istarska navodi najslabiju sastavnicu koja nije označena |
+| Potpunost | ponekad izostavi upozorenja ili pravilo | navodi sva upozorenja, pravilo i napomenu, ali često prelazi 110 riječi i ponavlja napomenu o "razdoblju" |
+
+**Ocjena prema pravilu iz PLAN §5** (barem 80% tekstova prolazi provjeru uz pristojan hrvatski):
+- provjeru brojki prolazi 100%;
+- pristojan hrvatski bez greške ima oko 50% tekstova. **Prag od 80% zasad nije dosegnut.**
+
+Nijedan model nije zabludio u brojkama. Greške su većinom sustavne i dolaze iz prompta (oblik glagola iz primjera, pretjerano opisivanje razdoblja), pa se popravljaju promptom, a ne većim modelom.
+
+### v4 (pokrenut u 7:03, bilježnica `albertmari/fiskalna-karta-jls-gemma-ab`)
+
+Promjene:
+- **Prompt:**
+  - najslabija sastavnica uvodi se fiksnom frazom "Ocjenu najviše spušta sastavnica „…”" (slaganje ne ovisi o broju);
+  - jake strane uvode se frazom "Jake strane jedinice su: …";
+  - izričita zabrana proglašavanja konteksta (pomoći, uprava) jakom ili slabom stranom;
+  - najviše 100 riječi;
+  - upozorenja u najviše dvije rečenice.
+- **Činjenice:** uklonjena je stavka "Razdoblje" (prozor se vidi na profilu).
+- **Izvođenje:** bilježnica kao kernel source koristi već izgrađeni `llama-server` iz test bilježnice, pa se llama.cpp ne gradi ponovno.
+
+**Preporuka za odluku u srijedu navečer:**
+1. Ako v4 doseže barem 80% pristojnih tekstova, uzeti **12B**. Potpuniji je, a 2 sata GPU-a za 576 jedinica je prihvatljivo. E4B je rezerva ako se 12B pokaže sporim.
+2. Ako v4 ne dosegne prag, sljedeći je korak iz PLAN §5 Gemma 4 26B-A4B (MoE, 2× T4). Claude u batch načinu dolazi tek nakon toga, uz navođenje kao AI alata.
+3. U oba slučaja dodati jeftinu automatsku provjeru sadržaja: tekst smije proglasiti najslabijom samo sastavnicu iz činjenica, a jakom samo navedene jake strane. Fiksne fraze iz prompta čine tu provjeru jednostavnom.

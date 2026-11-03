@@ -51,10 +51,10 @@ def allowed(pack):
 
 # Grades: after every "ocjen*" word, the first standalone digit 1-5 in the same sentence is
 # a claimed grade and must be this year's or last year's. The scale wording "od 1 ... do 5"
-# is removed first, and ordinals ("1. mjesto") and decimals are not grades.
+# is removed first, and ordinals ("1. mjesto"), decimals and amounts ("1.767.926 €") are not grades.
 SCALE = re.compile(r"\bod\s+1\b[^.;]{0,40}?\bdo\s+5\b", re.IGNORECASE)
 GRADE_WORD = re.compile(r"\bocjen\w*", re.IGNORECASE)
-GRADE_DIGIT = re.compile(r"(?<![\d,.])([1-5])(?!\d)(?!,\d)(?!\.\s*[a-zčćđšž])")
+GRADE_DIGIT = re.compile(r"(?<![\d,.])([1-5])(?!\d)(?![,.]\d)(?!\.\s*[a-zčćđšž])")
 SENTENCE_END = re.compile(r"[.!?;]\s+(?=[A-ZČĆĐŠŽ])")
 
 

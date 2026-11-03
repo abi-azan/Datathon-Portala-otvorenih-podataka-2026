@@ -166,9 +166,7 @@ def fact_pack(unit, history, med, year):
         ]
     if prev is not None and pd.notna(prev.get("ocjena")):
         facts.append((f"Ocjena za {year - 1}.", f"{int(prev['ocjena'])} ({prev['ocjena_rijec']})"))
-    window = int(r["prozor_godina"])
-    facts.append(("Razdoblje", f"saldo i servis duga računaju se kao ponderirani prosjek zadnje {window} godine"
-                               if window in (2, 3, 4) else "saldo i servis duga odnose se na jednu godinu"))
+    # the averaging window is shown on the profile page; in the text it only took up words (Gemma test v3)
 
     scores = {c: r[f"S{c[1]}"] for c in COMPONENTS}
     for c, label in COMPONENTS.items():

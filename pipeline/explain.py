@@ -26,19 +26,19 @@ SYSTEM = ("Ti si urednik javnog portala o financijama općina, gradova i župani
           "i neutralna objašnjenja za građane na hrvatskom standardnom jeziku.")
 
 RULES = """Pravila:
-1. Napiši 3 do 5 rečenica, najviše 110 riječi, u jednom odlomku. Bez naslova, natuknica i oznaka (markdown).
+1. Napiši 3 do 5 rečenica, najviše 100 riječi, u jednom odlomku. Bez naslova, natuknica i oznaka (markdown).
 2. Koristi samo činjenice s popisa. Svaku brojku prepiši točno kako je napisana, zajedno s riječju ili znakom uz nju (boda, %, €). Ne zaokružuj i ne računaj nove brojke ni razlike.
-3. Redoslijed: ocjena i njezin opis riječima; zatim najslabija sastavnica (ako je navedena) s usporedbom s medijanom skupine; zatim jake strane; na kraju upozorenja, pravilo i napomena o podacima, ako postoje.
-4. Ton je neutralan i opisan. Ne koristi riječi "loše", "dobro", "uspjeh" ni "neuspjeh". Ne savjetuj, ne nagađaj o uzrocima i ne spominji političare ni stranke.
-5. Naziv jedinice piši samo u nominativu, kao subjekt rečenice ("{nom} ima ocjenu …"). Ne sklanjaj ga. U ostalim rečenicama piši "jedinica" ili naziv izostavi.
-6. Pazi na slaganje: "sastavnica je", "obveze su", "jedna od jakih strana", "34,2 boda"."""
+3. Redoslijed: ocjena i bodovi; najslabija sastavnica (samo ako je navedena) s usporedbom s medijanom skupine; jake strane (samo ako su navedene); na kraju upozorenja, pravilo i napomena o podacima u najviše dvije rečenice.
+4. Najslabiju sastavnicu uvedi točno ovim riječima: 'Ocjenu najviše spušta sastavnica „…”.' Jake strane uvedi riječima: 'Jake strane jedinice su: …' Ne proglašavaj ništa drugo jakom ili slabom stranom; ovisnost o pomoćima i trošak uprave su kontekst.
+5. Ton je neutralan i opisan. Ne koristi riječi "loše", "dobro", "uspjeh" ni "neuspjeh". Ne savjetuj, ne nagađaj o uzrocima i ne spominji političare ni stranke.
+6. Naziv jedinice piši samo u nominativu, kao subjekt rečenice ("{nom} ima ocjenu …"). Ne sklanjaj ga. U ostalim rečenicama piši "jedinica" ili naziv izostavi."""
 
 EXAMPLE = ("PRIMJER za izmišljenu jedinicu (samo za stil; njegove brojke ne koristi):\n"
            "Općina Primjerovo za 2025. godinu ima ocjenu 2 (pod pritiskom) i 31,4 boda od 100, dok je medijan "
-           "usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine "
-           "iznose 512.300 €, odnosno 41,2 % rashoda poslovanja, uz medijan skupine od 2,0 %. Zbog toga je ocjena "
-           "ograničena na najviše 2. Jaka strana jedinice je servis duga. Upozorenje: novca na računu ima manje "
-           "nego za mjesec dana rashoda poslovanja.")
+           "usporedne skupine 78,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju "
+           "godine iznose 512.300 €, odnosno 41,2 % rashoda poslovanja, uz medijan skupine od 2,0 %. Jake strane "
+           "jedinice su: servis duga. Zbog dospjelih obveza ocjena je ograničena na najviše 2, a novca na računu "
+           "ima manje nego za mjesec dana rashoda poslovanja.")
 
 
 def messages(pack):

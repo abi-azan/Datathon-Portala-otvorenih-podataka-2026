@@ -79,3 +79,9 @@ def test_the_gemma_v2_texts_still_pass():
     failed = [(r["naziv"], verify.verify(r["text"], packs[r["oib"]])["nepoznate"]) for r in out["results"]]
     failed = [f for f in failed if f[1]]
     assert not failed, failed
+
+
+def test_an_amount_after_the_word_ocjena_is_not_a_grade():
+    """Regression from the 12B run: 'Ocjenu najviše spuštaju … 1.767.926 €' is not grade 1."""
+    pack = {"ocjene": [2], "facts": [{"label": "x", "value": "2 (pod pritiskom); 1.767.926 €; 80,9 %"}]}
+    assert verify.verify("Ocjenu najviše spuštaju obveze od 1.767.926 €, odnosno 80,9 %, a ocjena je 2.", pack)["ok"]

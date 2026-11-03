@@ -1,0 +1,1221 @@
+{
+ "partial": false,
+ "meta": {
+  "llama_cpp_commit": "2cbca389f515df455412dafa07e2b1359cc72a6d",
+  "gpu": "Tesla T4\nTesla T4",
+  "max_retries": 2,
+  "seconds_total": 2381
+ },
+ "models": {
+  "gemma-4-E4B_q4_0-it.gguf": {
+   "results": [
+    {
+     "oib": "89238941129",
+     "naziv": "Općina Kloštar Podravski",
+     "text": "Općina Kloštar Podravski ima ocjenu 2 (pod pritiskom) i 34,2 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica je dospjele neplaćene obveze, koje iznose 1.767.926 €, što je 80,9 % rashoda poslovanja, u usporedbi s medijanom skupine od 1,5 % rashoda poslovanja. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći je od 5 % tekućih prihoda, a novca na računu manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Kloštar Podravski ima ocjenu 2 (pod pritiskom) i 34,2 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica je dospjele neplaćene obveze, koje iznose 1.767.926 €, što je 80,9 % rashoda poslovanja, u usporedbi s medijanom skupine od 1,5 % rashoda poslovanja. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći je od 5 % tekućih prihoda, a novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": []
+       },
+       "seconds": 4.3,
+       "usage": {
+        "completion_tokens": 179,
+        "prompt_tokens": 1329,
+        "total_tokens": 1508,
+        "prompt_tokens_details": {
+         "cached_tokens": 0
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "61106276570",
+     "naziv": "Grad Senj",
+     "text": "Grad Senj ima ocjenu 2 (pod pritiskom) i 28,5 boda od 100, dok je medijan usporedne skupine 70,1 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 12,5 % tekućih prihoda, u usporedbi s medijanom skupine koji je višak 8,1 % tekućih prihoda. Jedna od jakih strana jedinice je godine otplate neto duga. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda. Napomena o podacima je da u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Senj ima ocjenu 2 (pod pritiskom) i 28,5 boda od 100, dok je medijan usporedne skupine 70,1 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 12,5 % tekućih prihoda, u usporedbi s medijanom skupine koji je višak 8,1 % tekućih prihoda. Jedna od jakih strana jedinice je godine otplate neto duga. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda. Napomena o podacima je da u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 4.2,
+       "usage": {
+        "completion_tokens": 196,
+        "prompt_tokens": 1274,
+        "total_tokens": 1470,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "47207249296",
+     "naziv": "Općina Povljana",
+     "text": "Općina Povljana ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica su dospjele neplaćene obveze, koje iznose 1.045.908 €, odnosno 49,4 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jedna od jakih strana jedinice je operativni saldo, koji iznosi 26,9 % tekućih prihoda. Upozorenje je da otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Povljana ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica su dospjele neplaćene obveze, koje iznose 1.045.908 €, odnosno 49,4 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jedna od jakih strana jedinice je operativni saldo, koji iznosi 26,9 % tekućih prihoda. Upozorenje je da otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice).",
+       "check": {
+        "ok": true,
+        "n_brojki": 9,
+        "nepoznate": []
+       },
+       "seconds": 3.9,
+       "usage": {
+        "completion_tokens": 178,
+        "prompt_tokens": 1263,
+        "total_tokens": 1441,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "78755598868",
+     "naziv": "Grad Split",
+     "text": "Grad Split ima ocjenu 3 (umjereno) i 46,1 boda od 100, dok je medijan usporedne skupine 81,9 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji nedostaje 5,2 % tekućih prihoda, uz medijan skupine od 7,7 %. Nijedna sastavnica nije izrazito jaka. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda, a novca na računu manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Split ima ocjenu 3 (umjereno) i 46,1 boda od 100, dok je medijan usporedne skupine 81,9 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji nedostaje 5,2 % tekućih prihoda, uz medijan skupine od 7,7 %. Nijedna sastavnica nije izrazito jaka. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda, a novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 3.3,
+       "usage": {
+        "completion_tokens": 145,
+        "prompt_tokens": 1207,
+        "total_tokens": 1352,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "90811277065",
+     "naziv": "Općina Primorski Dolac",
+     "text": "Općina Primorski Dolac ima ocjenu 1 (ozbiljan pritisak) i 1,6 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 20,6 % tekućih prihoda, u usporedbi s medijanom skupine koji ima višak 13,3 % tekućih prihoda. Nije identificirana nijedna sastavnica kao izrazito jaka. Upozorenja uključuju da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda, a novca na računu ima manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Primorski Dolac ima ocjenu 1 (ozbiljan pritisak) i 1,6 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 20,6 % tekućih prihoda, u usporedbi s medijanom skupine koji ima višak 13,3 % tekućih prihoda. Nije identificirana nijedna sastavnica kao izrazito jaka. Upozorenja uključuju da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda, a novca na računu ima manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 3.9,
+       "usage": {
+        "completion_tokens": 176,
+        "prompt_tokens": 1336,
+        "total_tokens": 1512,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "90017522601",
+     "naziv": "Istarska županija",
+     "text": "Istarska županija ima ocjenu 5 (vrlo stabilno) i 91,2 boda od 100, što je bolje od medijana skupine od 68,3 boda. Sastavnica dospjele neplaćene obveze iznosi 2.589.890 €, što je 4,0 % rashoda poslovanja, u usporedbi s medijanom skupine od 0,2 % rashoda poslovanja. Jedna od jakih strana jedinice je operativni saldo. Upozorenje: nema upozorenja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Istarska županija ima ocjenu 5 (vrlo stabilno) i 91,2 boda od 100, što je bolje od medijana skupine od 68,3 boda. Sastavnica dospjele neplaćene obveze iznosi 2.589.890 €, što je 4,0 % rashoda poslovanja, u usporedbi s medijanom skupine od 0,2 % rashoda poslovanja. Jedna od jakih strana jedinice je operativni saldo. Upozorenje: nema upozorenja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 3.1,
+       "usage": {
+        "completion_tokens": 135,
+        "prompt_tokens": 1157,
+        "total_tokens": 1292,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "33141736361",
+     "naziv": "Općina Sveta Marija",
+     "text": "Općina Sveta Marija ima ocjenu 5 (vrlo stabilno) i 96,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je servis duga, koji iznosi 6,7 % zakonske osnovice, u usporedbi s medijanom skupine od 3,1 % zakonske osnovice. Jedne od jakih strana su operativni saldo, slobodni saldo nakon otplate glavnice i dospjele neplaćene obveze. Upozorenja za jedinicu nisu navedena. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 6,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Sveta Marija ima ocjenu 5 (vrlo stabilno) i 96,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je servis duga, koji iznosi 6,7 % zakonske osnovice, u usporedbi s medijanom skupine od 3,1 % zakonske osnovice. Jedne od jakih strana su operativni saldo, slobodni saldo nakon otplate glavnice i dospjele neplaćene obveze. Upozorenja za jedinicu nisu navedena. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 6,
+        "nepoznate": []
+       },
+       "seconds": 4.0,
+       "usage": {
+        "completion_tokens": 184,
+        "prompt_tokens": 1253,
+        "total_tokens": 1437,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "61817894937",
+     "naziv": "Grad Zagreb",
+     "text": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 5,7 % tekućih prihoda. Jedna od jakih strana jedinice je godina otplate neto duga, jer je neto dug zanemariv. Druga od jakih strana su dospjele neplaćene obveze, koje iznose 824.855 €, odnosno 0,1 % rashoda poslovanja. Upozorenja za jedinicu nisu navedena.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 6,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 5,7 % tekućih prihoda. Jedna od jakih strana jedinice je godina otplate neto duga, jer je neto dug zanemariv. Druga od jakih strana su dospjele neplaćene obveze, koje iznose 824.855 €, odnosno 0,1 % rashoda poslovanja. Upozorenja za jedinicu nisu navedena.",
+       "check": {
+        "ok": true,
+        "n_brojki": 6,
+        "nepoznate": []
+       },
+       "seconds": 3.1,
+       "usage": {
+        "completion_tokens": 138,
+        "prompt_tokens": 1054,
+        "total_tokens": 1192,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "54944238149",
+     "naziv": "Općina Tordinci",
+     "text": "Općina Tordinci ima ocjenu 1 (ozbiljan pritisak) i 14,7 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji nedostaje 7,1 % tekućih prihoda, u usporedbi s medijanom skupine od 10,8 %. Nijedna sastavnica nije izrazito jaka. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Tordinci ima ocjenu 1 (ozbiljan pritisak) i 14,7 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji nedostaje 7,1 % tekućih prihoda, u usporedbi s medijanom skupine od 10,8 %. Nijedna sastavnica nije izrazito jaka. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 3.2,
+       "usage": {
+        "completion_tokens": 140,
+        "prompt_tokens": 1267,
+        "total_tokens": 1407,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "70479631665",
+     "naziv": "Općina Zrinski Topolovac",
+     "text": "Općina Zrinski Topolovac ima ocjenu 2 (pod pritiskom) i 24,7 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je godine otplate neto duga, jer neto dug mogao bi se otplatiti iz operativnog viška za 93,5 godine, a većina jedinica u skupini nema neto duga. Jedna od jakih strana je ovisnost o pomoćima, jer tekuće pomoći čine 69,0 % tekućih prihoda, u usporedbi s medijanom skupine od 36,0 %. Upozorenje je da novca na računu ima manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Zrinski Topolovac ima ocjenu 2 (pod pritiskom) i 24,7 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je godine otplate neto duga, jer neto dug mogao bi se otplatiti iz operativnog viška za 93,5 godine, a većina jedinica u skupini nema neto duga. Jedna od jakih strana je ovisnost o pomoćima, jer tekuće pomoći čine 69,0 % tekućih prihoda, u usporedbi s medijanom skupine od 36,0 %. Upozorenje je da novca na računu ima manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 3.9,
+       "usage": {
+        "completion_tokens": 175,
+        "prompt_tokens": 1285,
+        "total_tokens": 1460,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "95584171878",
+     "naziv": "Grad Stari Grad",
+     "text": "Grad Stari Grad ima ocjenu 3 (umjereno) na ljestvici od 1 do 5, s 44,4 boda od 100, dok je medijan usporedne skupine 80,6 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 19,1 % tekućih prihoda, u usporedbi s medijanom skupine koji ima višak 14,1 % tekućih prihoda. Jedna od jakih strana je servis duga, s otplatom kredita i kamata od 1,3 % zakonske osnovice. Dospjele neplaćene obveze iznose 24.943 €, što je 0,4 % rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 11,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Stari Grad ima ocjenu 3 (umjereno) na ljestvici od 1 do 5, s 44,4 boda od 100, dok je medijan usporedne skupine 80,6 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 19,1 % tekućih prihoda, u usporedbi s medijanom skupine koji ima višak 14,1 % tekućih prihoda. Jedna od jakih strana je servis duga, s otplatom kredita i kamata od 1,3 % zakonske osnovice. Dospjele neplaćene obveze iznose 24.943 €, što je 0,4 % rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 11,
+        "nepoznate": []
+       },
+       "seconds": 4.0,
+       "usage": {
+        "completion_tokens": 182,
+        "prompt_tokens": 1192,
+        "total_tokens": 1374,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "08909915246",
+     "naziv": "Općina Lobor",
+     "text": "Općina Lobor ima ocjenu 4 (stabilno) i 70,3 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica je servis duga, koji iznosi 23,1 % zakonske osnovice, u usporedbi s medijanom skupine od 3,8 % zakonske osnovice. Jedna od jakih strana jedinice je operativni saldo, koji iznosi 20,5 % tekućih prihoda. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Lobor ima ocjenu 4 (stabilno) i 70,3 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica je servis duga, koji iznosi 23,1 % zakonske osnovice, u usporedbi s medijanom skupine od 3,8 % zakonske osnovice. Jedna od jakih strana jedinice je operativni saldo, koji iznosi 20,5 % tekućih prihoda. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": []
+       },
+       "seconds": 3.4,
+       "usage": {
+        "completion_tokens": 151,
+        "prompt_tokens": 1233,
+        "total_tokens": 1384,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "18648820219",
+     "naziv": "Općina Sveti Križ Začretje",
+     "text": "Općina Sveti Križ Začretje ima ocjenu 5 (vrlo stabilno) i 97,9 boda od 100, dok je medijan usporedne skupine 82,5 boda. Sastavnica dospjele neplaćene obveze iznosi 39.872 €, što je 1,3 % rashoda poslovanja, uz medijan skupine od 0,8 % rashoda poslovanja. Jedne od jakih strana su operativni saldo, slobodni saldo nakon otplate glavnice, godine otplate neto duga i servis duga. Upozorenja za jedinicu nisu navedena.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Sveti Križ Začretje ima ocjenu 5 (vrlo stabilno) i 97,9 boda od 100, dok je medijan usporedne skupine 82,5 boda. Sastavnica dospjele neplaćene obveze iznosi 39.872 €, što je 1,3 % rashoda poslovanja, uz medijan skupine od 0,8 % rashoda poslovanja. Jedne od jakih strana su operativni saldo, slobodni saldo nakon otplate glavnice, godine otplate neto duga i servis duga. Upozorenja za jedinicu nisu navedena.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 3.4,
+       "usage": {
+        "completion_tokens": 152,
+        "prompt_tokens": 1205,
+        "total_tokens": 1357,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "97782176849",
+     "naziv": "Općina Krapinske Toplice",
+     "text": "Općina Krapinske Toplice za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 18,3 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 18,6 % tekućih prihoda, u usporedbi s medijanom skupine koji ima višak 20,0 % tekućih prihoda. Nije identificirana nijedna sastavnica kao izrazito jaka. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda, a novca na računu je manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Krapinske Toplice za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 18,3 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 18,6 % tekućih prihoda, u usporedbi s medijanom skupine koji ima višak 20,0 % tekućih prihoda. Nije identificirana nijedna sastavnica kao izrazito jaka. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda, a novca na računu je manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": []
+       },
+       "seconds": 4.1,
+       "usage": {
+        "completion_tokens": 185,
+        "prompt_tokens": 1275,
+        "total_tokens": 1460,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "71211305734",
+     "naziv": "Općina Tkon",
+     "text": "Općina Tkon ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica su dospjele neplaćene obveze, koje iznose 433.273 €, što je 47,8 % rashoda poslovanja, u usporedbi s medijanom skupine od 2,0 % rashoda poslovanja. Jedna od jakih strana jedinice je operativni saldo, koji iznosi 34,2 % tekućih prihoda. Upozorenje: preneseni manjak iz prethodnih godina veći je od 5 % tekućih prihoda. Pravilo: ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 11,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Tkon ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica su dospjele neplaćene obveze, koje iznose 433.273 €, što je 47,8 % rashoda poslovanja, u usporedbi s medijanom skupine od 2,0 % rashoda poslovanja. Jedna od jakih strana jedinice je operativni saldo, koji iznosi 34,2 % tekućih prihoda. Upozorenje: preneseni manjak iz prethodnih godina veći je od 5 % tekućih prihoda. Pravilo: ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 11,
+        "nepoznate": []
+       },
+       "seconds": 4.5,
+       "usage": {
+        "completion_tokens": 207,
+        "prompt_tokens": 1291,
+        "total_tokens": 1498,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "21647556965",
+     "naziv": "Općina Kumrovec",
+     "text": "Općina Kumrovec ima ocjenu 3 (umjereno) i 50,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 22,9 % tekućih prihoda, u usporedbi s medijanom skupine koji je višak 13,3 % tekućih prihoda. Jedne od jakih strana su godine otplate neto duga i dospjele neplaćene obveze. Upozorenja za jedinicu nisu navedena.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 6,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Kumrovec ima ocjenu 3 (umjereno) i 50,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 22,9 % tekućih prihoda, u usporedbi s medijanom skupine koji je višak 13,3 % tekućih prihoda. Jedne od jakih strana su godine otplate neto duga i dospjele neplaćene obveze. Upozorenja za jedinicu nisu navedena.",
+       "check": {
+        "ok": true,
+        "n_brojki": 6,
+        "nepoznate": []
+       },
+       "seconds": 3.3,
+       "usage": {
+        "completion_tokens": 145,
+        "prompt_tokens": 1194,
+        "total_tokens": 1339,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "38621571773",
+     "naziv": "Općina Šolta",
+     "text": "Općina Šolta ima ocjenu 4 (stabilno) i 67,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 7,4 % tekućih prihoda, u usporedbi s medijanom skupine od 10,8 %. Jedna od jakih strana je servis duga, koji iznosi 0,4 % zakonske osnovice. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda. Podaci su obračunati na temelju ponderiranog prosjeka zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Šolta ima ocjenu 4 (stabilno) i 67,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 7,4 % tekućih prihoda, u usporedbi s medijanom skupine od 10,8 %. Jedna od jakih strana je servis duga, koji iznosi 0,4 % zakonske osnovice. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda. Podaci su obračunati na temelju ponderiranog prosjeka zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 9,
+        "nepoznate": []
+       },
+       "seconds": 3.8,
+       "usage": {
+        "completion_tokens": 168,
+        "prompt_tokens": 1199,
+        "total_tokens": 1367,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "97003983043",
+     "naziv": "Općina Dobrinj",
+     "text": "Općina Dobrinj za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 88,8 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 11,7 % tekućih prihoda, u usporedbi s medijanom skupine od 16,9 %. Jedne od jakih strana jedinice su godine otplate neto duga, servis duga i dospjele neplaćene obveze. Upozorenja za jedinicu nisu navedena.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Dobrinj za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 88,8 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 11,7 % tekućih prihoda, u usporedbi s medijanom skupine od 16,9 %. Jedne od jakih strana jedinice su godine otplate neto duga, servis duga i dospjele neplaćene obveze. Upozorenja za jedinicu nisu navedena.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 3.4,
+       "usage": {
+        "completion_tokens": 149,
+        "prompt_tokens": 1183,
+        "total_tokens": 1332,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "89243140464",
+     "naziv": "Općina Dubravica",
+     "text": "Općina Dubravica ima ocjenu 1 (ozbiljan pritisak) i 16 bodova od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 21,3 % tekućih prihoda, naspram medijana skupine od viška 13,3 % tekućih prihoda. Nijedna sastavnica nije izrazito jaka. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda. Napomena o podacima je da u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Dubravica ima ocjenu 1 (ozbiljan pritisak) i 16 bodova od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 21,3 % tekućih prihoda, naspram medijana skupine od viška 13,3 % tekućih prihoda. Nijedna sastavnica nije izrazito jaka. Upozorenje je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda. Napomena o podacima je da u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 4.3,
+       "usage": {
+        "completion_tokens": 194,
+        "prompt_tokens": 1308,
+        "total_tokens": 1502,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "07707519145",
+     "naziv": "Općina Donja Voća",
+     "text": "Općina Donja Voća ima ocjenu 2 (pod pritiskom) i 22,7 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica su dospjele neplaćene obveze, koje iznose 888.964 €, odnosno 64,2 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Nijedna sastavnica nije izrazito jaka. Upozorenje: novca na računu ima manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Donja Voća ima ocjenu 2 (pod pritiskom) i 22,7 boda od 100, dok je medijan usporedne skupine 87,8 boda. Najslabija sastavnica su dospjele neplaćene obveze, koje iznose 888.964 €, odnosno 64,2 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Nijedna sastavnica nije izrazito jaka. Upozorenje: novca na računu ima manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 3.4,
+       "usage": {
+        "completion_tokens": 145,
+        "prompt_tokens": 1271,
+        "total_tokens": 1416,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "seconds": 125
+  },
+  "gemma-4-12b-it-qat-q4_0.gguf": {
+   "results": [
+    {
+     "oib": "89238941129",
+     "naziv": "Općina Kloštar Podravski",
+     "text": "Općina Kloštar Podravski za 2025. godinu ima ocjenu 2 (pod pritiskom) i 34,2 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 1.767.926 €, što je 80,9 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Jedinica nema izrazito jakih sastavnica. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Kloštar Podravski za 2025. godinu ima ocjenu 2 (pod pritiskom) i 34,2 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 1.767.926 €, što je 80,9 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Jedinica nema izrazito jakih sastavnica. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 10,
+        "nepoznate": []
+       },
+       "seconds": 11.2,
+       "usage": {
+        "completion_tokens": 262,
+        "prompt_tokens": 1333,
+        "total_tokens": 1595,
+        "prompt_tokens_details": {
+         "cached_tokens": 0
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "61106276570",
+     "naziv": "Grad Senj",
+     "text": "Grad Senj ima ocjenu 2 (pod pritiskom) i 28,5 boda od 100, dok je medijan usporedne skupine 70,1 boda. Ocjenu najviše spuštaju operativni saldo, gdje operativni manjak iznosi 12,5 % tekućih prihoda, dok medijan skupine pokazuje višak 8,1 % tekućih prihoda. Jake strane jedinice su godine otplate neto duga i servis duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Senj ima ocjenu 2 (pod pritiskom) i 28,5 boda od 100, dok je medijan usporedne skupine 70,1 boda. Ocjenu najviše spuštaju operativni saldo, gdje operativni manjak iznosi 12,5 % tekućih prihoda, dok medijan skupine pokazuje višak 8,1 % tekućih prihoda. Jake strane jedinice su godine otplate neto duga i servis duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": []
+       },
+       "seconds": 10.4,
+       "usage": {
+        "completion_tokens": 220,
+        "prompt_tokens": 1278,
+        "total_tokens": 1498,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "47207249296",
+     "naziv": "Općina Povljana",
+     "text": "Općina Povljana ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 1.045.908 €, što je 49,4 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jake strane jedinice su operativni saldo, slobodni saldo nakon otplate glavnice i servis duga. Upozorenje: otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Pravilo: ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 11,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Povljana ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 1.045.908 €, što je 49,4 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jake strane jedinice su operativni saldo, slobodni saldo nakon otplate glavnice i servis duga. Upozorenje: otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Pravilo: ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 11,
+        "nepoznate": []
+       },
+       "seconds": 10.9,
+       "usage": {
+        "completion_tokens": 233,
+        "prompt_tokens": 1267,
+        "total_tokens": 1500,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "78755598868",
+     "naziv": "Grad Split",
+     "text": "Grad Split ima ocjenu 3 (umjereno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno) i 46,1 boda od 100, dok je medijan usporedne skupine 81,9 boda. Ocjenu najviše spuštaju slobodni saldo nakon otplate glavnice, gdje nakon otplate glavnice kredita nedostaje 5,2 % tekućih prihoda, dok u usporednoj skupini ostaje 7,7 % tekućih prihoda. Jedinica nema izrazito jakih strana. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja. Razdoblje: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Split ima ocjenu 3 (umjereno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno) i 46,1 boda od 100, dok je medijan usporedne skupine 81,9 boda. Ocjenu najviše spuštaju slobodni saldo nakon otplate glavnice, gdje nakon otplate glavnice kredita nedostaje 5,2 % tekućih prihoda, dok u usporednoj skupini ostaje 7,7 % tekućih prihoda. Jedinica nema izrazito jakih strana. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja. Razdoblje: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 10,
+        "nepoznate": []
+       },
+       "seconds": 10.1,
+       "usage": {
+        "completion_tokens": 209,
+        "prompt_tokens": 1211,
+        "total_tokens": 1420,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "90811277065",
+     "naziv": "Općina Primorski Dolac",
+     "text": "Općina Primorski Dolac za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 1,6 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze koje iznose 1.808.767 €, što je 155,3 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jedinica nema izrazito jakih sastavnica. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Primorski Dolac za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 1,6 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze koje iznose 1.808.767 €, što je 155,3 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jedinica nema izrazito jakih sastavnica. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 10,
+        "nepoznate": []
+       },
+       "seconds": 12.6,
+       "usage": {
+        "completion_tokens": 278,
+        "prompt_tokens": 1340,
+        "total_tokens": 1618,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "90017522601",
+     "naziv": "Istarska županija",
+     "text": "Istarska županija ima ocjenu 5 (vrlo stabilno) i 91,2 boda od 100, dok je medijan usporedne skupine 68,3 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 2.589.890 €, što je 4,0 % rashoda poslovanja, uz medijan skupine od 0,2 % rashoda poslovanja. Jake strane jedinice su operativni saldo i godine otplate neto duga. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Istarska županija ima ocjenu 5 (vrlo stabilno) i 91,2 boda od 100, dok je medijan usporedne skupine 68,3 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 2.589.890 €, što je 4,0 % rashoda poslovanja, uz medijan skupine od 0,2 % rashoda poslovanja. Jake strane jedinice su operativni saldo i godine otplate neto duga. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": []
+       },
+       "seconds": 8.0,
+       "usage": {
+        "completion_tokens": 155,
+        "prompt_tokens": 1161,
+        "total_tokens": 1316,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "33141736361",
+     "naziv": "Općina Sveta Marija",
+     "text": "Općina Sveta Marija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 96,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju servis duga, koji iznosi 6,7 % zakonske osnovice, uz medijan skupine od 3,1 % zakonske osnovice. Jake strane jedinice su operativni saldo, slobodni saldo nakon otplate glavnice i dospjele neplaćene obveze. Napomena: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Sveta Marija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 96,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju servis duga, koji iznosi 6,7 % zakonske osnovice, uz medijan skupine od 3,1 % zakonske osnovice. Jake strane jedinice su operativni saldo, slobodni saldo nakon otplate glavnice i dospjele neplaćene obveze. Napomena: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": []
+       },
+       "seconds": 8.6,
+       "usage": {
+        "completion_tokens": 172,
+        "prompt_tokens": 1257,
+        "total_tokens": 1429,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "61817894937",
+     "naziv": "Grad Zagreb",
+     "text": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 5,7 % tekućih prihoda, dok jedinica nema usporedivu skupinu pa se ne vrši usporedba s medijanom. Jake strane jedinice su godine otplate neto duga i dospjele neplaćene obveze. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 5,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 5,7 % tekućih prihoda, dok jedinica nema usporedivu skupinu pa se ne vrši usporedba s medijanom. Jake strane jedinice su godine otplate neto duga i dospjele neplaćene obveze. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 5,
+        "nepoznate": []
+       },
+       "seconds": 6.9,
+       "usage": {
+        "completion_tokens": 127,
+        "prompt_tokens": 1058,
+        "total_tokens": 1185,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "54944238149",
+     "naziv": "Općina Tordinci",
+     "text": "Općina Tordinci za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 14,7 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, kod kojeg nakon otplate glavnice kredita nedostaje 7,1 % tekućih prihoda, dok u skupini ostaje 10,8 % tekućih prihoda. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Tordinci za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 14,7 boda od 100, dok je medijan usporedne skupine 78,8 boda. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, kod kojeg nakon otplate glavnice kredita nedostaje 7,1 % tekućih prihoda, dok u skupini ostaje 10,8 % tekućih prihoda. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 10,
+        "nepoznate": []
+       },
+       "seconds": 10.4,
+       "usage": {
+        "completion_tokens": 225,
+        "prompt_tokens": 1271,
+        "total_tokens": 1496,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "70479631665",
+     "naziv": "Općina Zrinski Topolovac",
+     "text": "Općina Zrinski Topolovac za 2025. godinu ima ocjenu 2 (pod pritiskom) i 24,7 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju godine otplate neto duga, jer se neto dug mogao bi otplatiti iz operativnog viška za 93,5 godine, dok većina jedinica u skupini nema neto duga. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Zrinski Topolovac za 2025. godinu ima ocjenu 2 (pod pritiskom) i 24,7 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju godine otplate neto duga, jer se neto dug mogao bi otplatiti iz operativnog viška za 93,5 godine, dok većina jedinica u skupini nema neto duga. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 9,
+        "nepoznate": []
+       },
+       "seconds": 11.0,
+       "usage": {
+        "completion_tokens": 238,
+        "prompt_tokens": 1289,
+        "total_tokens": 1527,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "95584171878",
+     "naziv": "Grad Stari Grad",
+     "text": "Grad Stari Grad ima ocjenu 3 (umjereno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno) i 44,4 boda od 100, dok je medijan usporedne skupine 80,6 boda. Ocjenu najviše spuštaju operativni saldo, gdje operativni manjak iznosi 19,1 % tekućih prihoda, dok medijan skupine pokazuje višak 14,1 % tekućih prihoda. Jake strane jedinice su servis duga i dospjele neplaćene obveze. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Stari Grad ima ocjenu 3 (umjereno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno) i 44,4 boda od 100, dok je medijan usporedne skupine 80,6 boda. Ocjenu najviše spuštaju operativni saldo, gdje operativni manjak iznosi 19,1 % tekućih prihoda, dok medijan skupine pokazuje višak 14,1 % tekućih prihoda. Jake strane jedinice su servis duga i dospjele neplaćene obveze. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 9,
+        "nepoznate": []
+       },
+       "seconds": 8.6,
+       "usage": {
+        "completion_tokens": 170,
+        "prompt_tokens": 1196,
+        "total_tokens": 1366,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "08909915246",
+     "naziv": "Općina Lobor",
+     "text": "Općina Lobor za 2025. godinu ima ocjenu 4 (stabilno) i 70,3 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju servis duga, gdje otplata kredita i kamata iznosi 23,1 % zakonske osnovice, uz medijan skupine od 3,8 % zakonske osnovice. Jaka strana jedinice je operativni saldo. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Lobor za 2025. godinu ima ocjenu 4 (stabilno) i 70,3 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju servis duga, gdje otplata kredita i kamata iznosi 23,1 % zakonske osnovice, uz medijan skupine od 3,8 % zakonske osnovice. Jaka strana jedinice je operativni saldo. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 10,
+        "nepoznate": []
+       },
+       "seconds": 9.6,
+       "usage": {
+        "completion_tokens": 196,
+        "prompt_tokens": 1237,
+        "total_tokens": 1433,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "18648820219",
+     "naziv": "Općina Sveti Križ Začretje",
+     "text": "Općina Sveti Križ Začretje za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 97,9 boda od 100, dok je medijan usporedne skupine 82,5 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 39.872 €, što je 1,3 % rashoda poslovanja, uz medijan skupine od 0,8 % rashoda poslovanja. Jake strane jedinice su operativni saldo, slobodni saldo nakon otplate glavnice, godine otplate neto duga i servis duga. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Sveti Križ Začretje za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 97,9 boda od 100, dok je medijan usporedne skupine 82,5 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 39.872 €, što je 1,3 % rashoda poslovanja, uz medijan skupine od 0,8 % rashoda poslovanja. Jake strane jedinice su operativni saldo, slobodni saldo nakon otplate glavnice, godine otplate neto duga i servis duga. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 9,
+        "nepoznate": []
+       },
+       "seconds": 8.9,
+       "usage": {
+        "completion_tokens": 179,
+        "prompt_tokens": 1209,
+        "total_tokens": 1388,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "97782176849",
+     "naziv": "Općina Krapinske Toplice",
+     "text": "Općina Krapinske Toplice za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 18,3 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju operativni saldo, gdje operativni manjak iznosi 18,6 % tekućih prihoda, dok medijan skupine pokazuje višak 20,0 % tekućih prihoda. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Krapinske Toplice za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 18,3 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju operativni saldo, gdje operativni manjak iznosi 18,6 % tekućih prihoda, dok medijan skupine pokazuje višak 20,0 % tekućih prihoda. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 10,
+        "nepoznate": []
+       },
+       "seconds": 10.6,
+       "usage": {
+        "completion_tokens": 224,
+        "prompt_tokens": 1279,
+        "total_tokens": 1503,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "71211305734",
+     "naziv": "Općina Tkon",
+     "text": "Općina Tkon za 2025. godinu ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 433.273 €, što je 47,8 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jake strane jedinice su operativni saldo i slobodni saldo nakon otplate glavnice. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Pravilo: ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 12,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Tkon za 2025. godinu ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 433.273 €, što je 47,8 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jake strane jedinice su operativni saldo i slobodni saldo nakon otplate glavnice. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Pravilo: ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 12,
+        "nepoznate": []
+       },
+       "seconds": 11.6,
+       "usage": {
+        "completion_tokens": 252,
+        "prompt_tokens": 1295,
+        "total_tokens": 1547,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "21647556965",
+     "naziv": "Općina Kumrovec",
+     "text": "Općina Kumrovec ima ocjenu 3 (umjereno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno) i 50,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju operativni saldo, gdje operativni manjak iznosi 22,9 % tekućih prihoda, dok medijan skupine pokazuje višak 13,3 % tekućih prihoda. Jake strane jedinice su godine otplate neto duga te dospjele neplaćene obveze. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Kumrovec ima ocjenu 3 (umjereno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno) i 50,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju operativni saldo, gdje operativni manjak iznosi 22,9 % tekućih prihoda, dok medijan skupine pokazuje višak 13,3 % tekućih prihoda. Jake strane jedinice su godine otplate neto duga te dospjele neplaćene obveze. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 9,
+        "nepoznate": []
+       },
+       "seconds": 8.8,
+       "usage": {
+        "completion_tokens": 175,
+        "prompt_tokens": 1198,
+        "total_tokens": 1373,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "38621571773",
+     "naziv": "Općina Šolta",
+     "text": "Općina Šolta za 2025. godinu ima ocjenu 4 (stabilno) i 67,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 388.703 €, što je 13,8 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jedna od jakih strana jedinice je servis duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Šolta za 2025. godinu ima ocjenu 4 (stabilno) i 67,5 boda od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine iznose 388.703 €, što je 13,8 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jedna od jakih strana jedinice je servis duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 10,
+        "nepoznate": []
+       },
+       "seconds": 9.0,
+       "usage": {
+        "completion_tokens": 183,
+        "prompt_tokens": 1203,
+        "total_tokens": 1386,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "97003983043",
+     "naziv": "Općina Dobrinj",
+     "text": "Općina Dobrinj za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 88,8 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju slobodni saldo nakon otplate glavnice, koji iznosi 11,7 % tekućih prihoda, uz medijan skupine od 16,9 %. Jake strane jedinice su godine otplate neto duga, servis duga i dospjele neplaćene obveze. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Dobrinj za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 88,8 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju slobodni saldo nakon otplate glavnice, koji iznosi 11,7 % tekućih prihoda, uz medijan skupine od 16,9 %. Jake strane jedinice su godine otplate neto duga, servis duga i dospjele neplaćene obveze. Napomena: saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": []
+       },
+       "seconds": 7.9,
+       "usage": {
+        "completion_tokens": 153,
+        "prompt_tokens": 1187,
+        "total_tokens": 1340,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "89243140464",
+     "naziv": "Općina Dubravica",
+     "text": "Općina Dubravica za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno) i 16 bodova od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze koje iznose 253.283 €, što je 27,1 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja, te operativni manjak od 21,3 % tekućih prihoda uz medijan skupine od 13,3 % tekućih prihoda. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 14,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Dubravica za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno) i 16 bodova od 100, dok je medijan usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze koje iznose 253.283 €, što je 27,1 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja, te operativni manjak od 21,3 % tekućih prihoda uz medijan skupine od 13,3 % tekućih prihoda. Nijedna sastavnica nije izrazito jaka. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 14,
+        "nepoznate": []
+       },
+       "seconds": 13.8,
+       "usage": {
+        "completion_tokens": 316,
+        "prompt_tokens": 1312,
+        "total_tokens": 1628,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "07707519145",
+     "naziv": "Općina Donja Voća",
+     "text": "Općina Donja Voća za 2025. godinu ima ocjenu 2 (pod pritiskom) i 22,7 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze koje na kraju godine iznose 888.964 €, što je 64,2 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Jedinica nema izrazito jakih sastavnica. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 11,
+      "nepoznate": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Donja Voća za 2025. godinu ima ocjenu 2 (pod pritiskom) i 22,7 boda od 100, dok je medijan usporedne skupine 87,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze koje na kraju godine iznose 888.964 €, što je 64,2 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Jedinica nema izrazito jakih sastavnica. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Saldo i servis duga računaju se kao ponderirani prosjek zadnje 4 godine.",
+       "check": {
+        "ok": true,
+        "n_brojki": 11,
+        "nepoznate": []
+       },
+       "seconds": 10.9,
+       "usage": {
+        "completion_tokens": 232,
+        "prompt_tokens": 1275,
+        "total_tokens": 1507,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "seconds": 267
+  }
+ }
+}
