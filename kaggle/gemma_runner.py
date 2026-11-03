@@ -34,16 +34,16 @@ LOG = "/kaggle/working/llama_server.log"
 PORT = 8080
 
 
-def sh(cmd):
+def sh(cmd, check=True):
     print("$", cmd, flush=True)
     t = time.time()
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     tail = (r.stdout + r.stderr)[-3000:]
     print(tail, flush=True)
     print(f"  ({time.time() - t:.0f} s, exit {r.returncode})", flush=True)
-    if r.returncode:
+    if r.returncode and check:
         raise SystemExit(f"failed: {cmd}")
-    return r.stdout
+    return r.stdout if not r.returncode else None
 
 
 def build_llama_cpp():
@@ -52,8 +52,17 @@ def build_llama_cpp():
     sh("nvcc --version | tail -2; cmake --version | head -1")
     sh(f"git clone --depth 1 https://github.com/ggml-org/llama.cpp {SRC}")
     commit = sh(f"git -C {SRC} rev-parse HEAD").strip()
-    sh(f"cmake -S {SRC} -B {SRC}/build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 "
-       f"-DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release")
+    # CUDA 13 on Kaggle: CMake may not find the libcuda stub, so point it at every stub
+    # directory; if CUDA::cuda_driver is still missing, build without VMM (no libcuda link).
+    stubs = sorted({os.path.dirname(p) for p in glob.glob("/usr/local/cuda*/**/stubs/libcuda.so", recursive=True)})
+    print("libcuda stubs:", stubs, flush=True)
+    base = (f"cmake -S {SRC} -B {SRC}/build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 "
+            f"-DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release")
+    if stubs:
+        base += f" -DCMAKE_LIBRARY_PATH={';'.join(stubs)}"
+    if sh(base, check=False) is None:
+        sh(f"rm -rf {SRC}/build")
+        sh(base + " -DGGML_CUDA_NO_VMM=ON")
     sh(f"cmake --build {SRC}/build --config Release -j {os.cpu_count()} --target llama-server")
     return commit
 
