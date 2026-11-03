@@ -85,7 +85,7 @@ export function Home({ index }: { index: IndexFile }) {
             Ministarstva financija i uspoređenu sa sličnim jedinicama. Metoda i kod su otvoreni.
           </p>
           <p className="mt-3 border-l-2 border-axis pl-3 text-sm leading-relaxed text-muted">
-            Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja. Ocjena nije službena.
+            Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja.
           </p>
         </div>
 

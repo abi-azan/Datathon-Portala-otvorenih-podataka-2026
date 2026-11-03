@@ -87,5 +87,9 @@ Kriterij gotovosti za svaki zadatak s kodom: `pytest` prolazi, a za web i `tsc`,
 | O4 | MCP ne rezati, nego ostaviti za kraj ako bude vremena. Za ostale rezove traži argumente. | argumenti dani; čeka potvrdu |
 | O5 | Karta ostaje glavni prikaz. | objašnjeno: tablica je dodatni prekidač za pristupačnost, ne zamjena; čeka potvrdu |
 | O6 | Riješeno. | `main` pushan, Pages uključen, stranica uživo; tjedni cron ostaje |
-| O7 | Ograda ne treba posebno raditi. | ograda je već na stranici od noćne smjene; prijedlog je da ostane |
+| O7 | **Konačno (4.11.):** rečenica "Ocjena nije službena" je nepotrebna jer se podrazumijeva. | maknuta iz sučelja, README-a i scenarija videa; ostaje samo opis "ocjenjuje se financijska održivost, a ne kvaliteta upravljanja" i izjava o izvoru u licencnim dokumentima |
 | O8 | Licence riješiti preko subagenta. | gotovo (`ea96e98`); otvorena pitanja za korisnika u odgovoru od 4.11. |
+
+**Dodatne odluke (4.11.):**
+- U proizvodu se koriste samo AI modeli otvorenog koda (Gemma). Claude Code smije se koristiti kao razvojni alat, pa upit organizatoru nije potreban. Svi alati ostaju navedeni u README-u.
+- `spopt` zasad ostaje u `requirements.txt`.

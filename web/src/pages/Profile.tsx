@@ -112,7 +112,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             </div>
           </div>
           <p className="mt-4 border-t border-hairline pt-3 text-xs leading-relaxed text-muted">
-            Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja. Ocjena nije službena.{' '}
+            Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja.{' '}
             <a href="#/metodologija" className="underline underline-offset-2">
               Kako se računa
             </a>

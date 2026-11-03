@@ -23,7 +23,7 @@ Naracija ima oko 400 riječi, što je oko 2:50 uz smirenu brzinu (oko 140 riječ
 **Kadar:** naslovnica Fiskalne karte, pa polako prema legendi.
 
 **Naracija:**
-> Fiskalna karta je za građane, novinare, vijećnike i ministarstvo. Svaka jedinica dobiva ocjenu od jedan do pet, iz službenih podataka i uz usporedbu sa sličnima. Ovo nije rang-lista ni službena ocjena. Mjeri financijsku održivost, a ne kvalitetu upravljanja.
+> Fiskalna karta je za građane, novinare, vijećnike i ministarstvo. Svaka jedinica dobiva ocjenu od jedan do pet, iz službenih podataka i uz usporedbu sa sličnima. Ovo nije rang-lista. Mjeri financijsku održivost, a ne kvalitetu upravljanja.
 
 ## 0:40-1:25 Ana traži svoju općinu (svjedodžba)
 

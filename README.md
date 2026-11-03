@@ -2,7 +2,7 @@
 
 **Kako stoje financije tvoje općine?** Fiskalna karta daje ocjenu financijske stabilnosti od 1 do 5 za svih 576 općina, gradova i županija. Ocjena se računa iz službenih financijskih izvještaja i uspoređuje sa sličnim jedinicama. Metoda, kod i podaci su otvoreni.
 
-> Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja. Ocjena nije službena: to je neovisni izračun iz javnih podataka.
+> Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja.
 
 Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datathon_portala_otvorenih_podataka2026), izazov C: Gospodarstvo i učinkovito upravljanje.
 

@@ -41,7 +41,7 @@ Ovaj plan nadograđuje v1, koji je tim potvrdio 29.10. Temelji se na validaciji 
 | Načelnici, vijećnici, pročelnici | Svjedodžbu, usporedbu sa sličnima, simulator, ugradivu karticu |
 | Novinari, građani, istraživači | Kartu, objašnjenja običnim jezikom, preuzimanje podataka |
 
-**Ograda (vidljiva u aplikaciji):** ocjenjuje se **financijska održivost**, a ne kvaliteta upravljanja. Ocjena nije službena.
+**Napomena u aplikaciji:** ocjenjuje se **financijska održivost**, a ne kvaliteta upravljanja. (Rečenica "Ocjena nije službena" maknuta je 4.11., jer se podrazumijeva.)
 
 ---
 
