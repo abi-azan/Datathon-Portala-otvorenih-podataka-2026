@@ -1,6 +1,7 @@
 """AI explanation of a unit's grade (PLAN §5): prompt, retries, template fallback.
 
     .venv/Scripts/python -m pipeline.explain --kaggle-test 20   # writes the Kaggle test script
+    .venv/Scripts/python -m pipeline.explain --kaggle-test 20 --fresh   # 20 units not tested before
     .venv/Scripts/python -m pipeline.explain --check out.json   # re-verifies a downloaded Kaggle output
 
 Python computes the facts (pipeline/facts.py). The model writes 3-5 sentences around them,
@@ -105,10 +106,26 @@ TEST_FIXED = ["Općina Sveta Marija", "Općina Povljana", "Grad Senj", "Općina 
               "Općina Kloštar Podravski", "Grad Zagreb", "Grad Split", "Istarska županija"]
 
 
-def pick_test_units(packs, n, seed=7):
-    """The fixed stories plus a sample spread over all grades."""
-    chosen = [p for p in packs if p["naziv"]["nom"] in TEST_FIXED][:n]
-    rest = [p for p in packs if p not in chosen]
+def tested_oibs():
+    """Units already used in earlier Kaggle tests (kaggle/results/*.json)."""
+    seen = set()
+    for f in (config.ROOT / "kaggle" / "results").glob("*.json"):
+        out = json.loads(f.read_text(encoding="utf-8"))
+        models = out.get("models") or {"model": {"results": out.get("results", [])}}
+        seen |= {r["oib"] for m in models.values() for r in m["results"]}
+    return seen
+
+
+def pick_test_units(packs, n, seed=7, fresh=False):
+    """The fixed stories plus a sample spread over all grades. With fresh=True: no fixed
+    stories and no unit from an earlier test, so a prompt tuned on the old sample is
+    checked on units it has not seen."""
+    if fresh:
+        seen = tested_oibs()
+        chosen, rest = [], [p for p in packs if p["oib"] not in seen]
+    else:
+        chosen = [p for p in packs if p["naziv"]["nom"] in TEST_FIXED][:n]
+        rest = [p for p in packs if p not in chosen]
     rng = random.Random(seed)
     by_grade = {g: [p for p in rest if p["ocjena"] == g] for g in (1, 2, 3, 4, 5)}
     g = 1
@@ -119,10 +136,10 @@ def pick_test_units(packs, n, seed=7):
     return chosen
 
 
-def write_kaggle_test(n):
+def write_kaggle_test(n, fresh=False):
     """kaggle/gemma_test.py: the runner with the number check, the prompt code and the fact
     packs embedded, so the Kaggle notebook needs nothing but the attached model."""
-    packs = pick_test_units(load_packs()[0], n)
+    packs = pick_test_units(load_packs()[0], n, seed=11 if fresh else 7, fresh=fresh)
     here = config.ROOT / "kaggle"
     src = (here / "gemma_runner.py").read_text(encoding="utf-8")
     verify_src = (config.ROOT / "pipeline" / "verify.py").read_text(encoding="utf-8")
@@ -161,10 +178,11 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
     ap.add_argument("--kaggle-test", type=int, metavar="N")
+    ap.add_argument("--fresh", action="store_true", help="test units not used in any earlier test")
     ap.add_argument("--check", metavar="OUTPUT_JSON")
     a = ap.parse_args()
     if a.kaggle_test:
-        write_kaggle_test(a.kaggle_test)
+        write_kaggle_test(a.kaggle_test, fresh=a.fresh)
     if a.check:
         check_output(a.check)
 

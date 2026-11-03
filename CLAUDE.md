@@ -62,7 +62,9 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
   - Contents: `jedinice.json`, `jedinice/<slug>.json`, `skupine.json`, `sifrarnik.csv`, `rezultati.csv`, `izvori.json` (the provenance log) and `geo/jls.topo.json`.
   - `openapi.json` describes all of these. It is built from `pipeline/openapi.py` as OpenAPI 3.1 with JSON Schema 2020-12.
   - `tests/test_api.py` validates every published file against those same schemas.
-- `.github/workflows/deploy.yml` runs, on push to main, weekly, or by hand: build → publish → pytest → `npm run build` → GitHub Pages. It needs Settings → Pages → Source set to "GitHub Actions".
+- `.github/workflows/deploy.yml` runs, on push to main, weekly, or by hand: build → publish → pytest → `npm run build` → GitHub Pages.
+  - Pages is enabled with Source "GitHub Actions" (2026-11-03). The site is https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/. The first CI run passed end to end, ETL included.
+  - Pushing a change under `.github/workflows/` needs a `gh` token with the `workflow` scope (`gh auth refresh -h github.com -s workflow`).
 - `web/` is the frontend: React 19, Vite 8, Tailwind 4, MapLibre GL 6 with OpenFreeMap tiles, hash routes.
   - Run it with `npm run dev`, or with `npm run build` and then `npx vite preview`.
   - The MapLibre worker URL is set explicitly with `?url`, because Vite breaks the default path.

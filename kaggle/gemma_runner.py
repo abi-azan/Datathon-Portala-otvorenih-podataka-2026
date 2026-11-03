@@ -3,7 +3,8 @@
 Generated from kaggle/gemma_runner.py by `python -m pipeline.explain --kaggle-test N`.
 Do not edit kaggle/gemma_test.py by hand.
 
-- Model: Gemma 4 E4B-it, QAT Q4_0 GGUF, attached as a Kaggle model data source (Apache-2.0).
+- Models: every attached Gemma 4 QAT Q4_0 GGUF (Kaggle model data sources, Apache-2.0), smallest
+  first. A model larger than one T4 is split by layers across both T4s.
 - Runtime: llama.cpp (MIT), built from source for the T4 (CUDA arch 75), served by llama-server.
 - Every text is checked: each number must appear in the unit's fact pack. A failed text is
   generated again with feedback, at most __MAX_RETRIES__ times, and then the template is used.
@@ -104,8 +105,9 @@ def find_models():
 def start_server(model):
     log = open(LOG, "w")
     proc = subprocess.Popen([SERVER, "-m", model, "-ngl", "99", "-c", "8192", "--jinja",
-                             "--port", str(PORT), "-np", "1"], stdout=log, stderr=subprocess.STDOUT)
-    for _ in range(300):
+                             "--split-mode", "layer", "--port", str(PORT), "-np", "1"],
+                            stdout=log, stderr=subprocess.STDOUT)
+    for _ in range(600):                      # up to 20 min: the 31B file is 17.7 GB
         try:
             with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/health", timeout=5) as r:
                 if r.status == 200:
@@ -160,14 +162,21 @@ def main():
     for model in find_models():
         name = os.path.basename(model)
         t1 = time.time()
-        proc = start_server(model)
+        try:
+            proc = start_server(model)
+        except SystemExit as e:                # e.g. out of GPU memory: keep the other models
+            out["models"][name] = {"error": str(e), "log": open(LOG).read()[-3000:], "results": []}
+            json.dump(out, open(OUT, "w"), ensure_ascii=False, indent=1)
+            continue
+        out["models"][name] = {"load_seconds": round(time.time() - t1), "results": [],
+                               "gpu_memory": sh("nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader")}
         results = []
         for i, pack in enumerate(PACKS, 1):
             r = run_job(pack)
             results.append(r)
             print(f"[{name} {i}/{len(PACKS)}] {r['naziv']}: {r['source']}, {len(r['attempts'])} pokušaja, "
                   f"{r['check']['n_brojki']} brojki, nepoznate {r['check']['nepoznate']}", flush=True)
-            out["models"][name] = {"results": results}
+            out["models"][name]["results"] = results
             json.dump(out, open(OUT, "w"), ensure_ascii=False, indent=1)
         proc.terminate()
         proc.wait(timeout=60)

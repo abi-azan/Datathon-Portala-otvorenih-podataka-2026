@@ -124,3 +124,43 @@ Promjene:
 - Prije batcha treba ponoviti test na novih 20 jedinica, s istim pragom, da se izbjegne prilagodba prompta baš ovom uzorku.
 
 Sirovi izlazi: `kaggle/results/gemma_test_v4_e4b_12b.json` i `gemma_test_v5_e4b_12b.json`.
+
+## v6 (3.11. 22:59-23:24): 20 novih jedinica, 12B, 26B-A4B i 31B
+
+Ovo je potvrdni test W5 iz `docs/plan-srijeda-4-11.md`, proširen na veće modele. Pitanje je bilo isplati li se za batch od 576 jedinica uzeti veći model, kad je ostalo 28 h GPU kvote.
+
+**Postav:**
+- Bilježnica je `albertmari/fiskalna-karta-jls-gemma-v6` (privatna).
+- 20 jedinica nije bilo ni u jednom ranijem testu (`--fresh`, seed 11), po 4 za svaku ocjenu. Među njima su dvojezični istarski nazivi i jedna županija.
+- Prompt, činjenice i provjera su isti kao u v5.
+- Izvodi se na 2× T4 s llama.cpp `2cbca38` iz predmemorije. Model veći od jedne T4 dijeli se po slojevima na obje kartice.
+- Cijela sesija trajala je 1.268 s, odnosno 0,36 h kvote.
+
+| | 12B | 26B-A4B (MoE) | 31B |
+|---|---|---|---|
+| GGUF | 7,0 GB | 14,4 GB | 17,7 GB |
+| VRAM (GPU0 + GPU1) | 3,7 + 4,2 GB | 7,6 + 7,3 GB | 9,5 + 10,0 GB |
+| Učitavanje | 66 s | 144 s | 222 s |
+| **Prošlo punu provjeru** | **18/20** | **10/20** | **20/20** |
+| Iz prvog pokušaja | 17/20 | 9/20 | 20/20 |
+| s po tekstu (s ponavljanjima) | 10,2 | 8,9 | 21,9 |
+| Generiranje | oko 20 tok/s | oko 38 tok/s | oko 11 tok/s |
+| Procjena za 576 jedinica | oko 1,7 h | oko 1,5 h | **oko 3,6 h** |
+
+Nalazi:
+- **31B prolazi 20/20 iz prvog pokušaja.**
+  - Uvijek navodi godinu i medijan skupine za ukupne bodove, a uz medijan piše i mjernu jedinicu ("uz medijan skupine od 1,7 % tekućih prihoda").
+  - Kad u činjenicama nema jakih strana, ne izmišlja ih.
+  - Jedina nespretnost je "uz medijan skupine od viška 13,3 %" (Motovun).
+- **12B ima 18/20.**
+  - Oba pada su izmišljene jake strane (Sveti Petar u Šumi, Benkovac), a provjera ih je ispravno odbila.
+  - Sitnice: "Upozorenje:" u jednini ispred više stavki, izostavljena godina i medijan ukupnih bodova, "dok u skupini ostaje 10,8 %" uz jedinicu koja ima manjak.
+- **26B-A4B ima 10/20 i nije upotrebljiv s ovim promptom.**
+  - Izmišlja jake strane i piše "neplaćane" umjesto "neplaćene".
+  - Na povratnu informaciju ponavlja istu grešku u sva tri pokušaja. MoE s oko 4B aktivnih parametara slijedi upute kao mali model.
+- **Jezična razlika 12B i 31B je mala**, jer prompt traži fiksne fraze. Oba teksta su ispravna, ali šablonska. Veći model zato donosi točnost i manje predložaka, a ne prirodniji stil.
+  - Ako želimo prirodniji tekst, treba olabaviti fiksne fraze. To vjerojatno može samo 31B, a traži još jedan test.
+
+**Preporuka:** batch radi **31B**. Uz 100 % prolaza iz prvog pokušaja gotovo nijedna jedinica ne dobiva predložak. Trošak je oko 3,6 h od 28,2 h preostale kvote, uz novih 30 h u subotu 7.11. 12B ostaje rezerva (oko 1,7 h).
+
+Sirovi izlaz: `kaggle/results/gemma_test_v6_12b_26b_31b.json`.
