@@ -14,8 +14,38 @@ Chosen idea (2026-10-29): **Fiskalna karta JLS + dashboard**, a fiscal health ma
   - Auth: OAuth through `/mcp` did not work. The server is registered in local scope with an `Authorization: Bearer KGAT_…` header. The token lives in `secrets.txt`, which is gitignored; never print it or commit it. Without auth every call returns "Unauthenticated".
   - GPU quota is 30 h per week and resets Saturday 00:00 UTC (checked 2026-11-02).
   - Kaggle Models `google/gemma-4` has GGUF variants `gemma-4-e4b-it-qat-q4_0-gguf`, `gemma-4-12b-it-qat-q4_0-gguf`, `gemma-4-26b-a4b-it-qat-q4_0-gguf` and `gemma-4-31b-it-qat-q4_0-gguf`. Attach them as a model data source instead of downloading from Hugging Face. The exact source-string format is not yet confirmed.
-- `pipeline/build.py` is an exploratory draft that implements the v1 indicators, not v2. It joins all 576 units across MF PR-RAS, Bilanca and DZS Popis 2021.
-- When building starts, add build/run/test commands and an architecture overview here.
+
+## Build and test
+
+```
+py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt
+.venv/Scripts/python -m pipeline.build             # fetch sources (conditional GET) and build, ~2-4 min
+.venv/Scripts/python -m pipeline.build --offline   # reuse data/raw
+.venv/Scripts/python -m pytest -q tests            # all tests
+.venv/Scripts/python -m pytest -q tests/test_methodology.py::test_flags   # one test
+```
+
+`tests/test_data.py` runs against `data/build/`, so build first; it is skipped when the build is missing.
+
+## Architecture (ETL)
+
+- `pipeline/sources.py` downloads every source and logs the URL, time, ETag, sha256 and CKAN metadata in `data/raw/sources.json`. That log is the provenance record for the "Izvori" page.
+- `pipeline/mf.py` parses the MF workbooks.
+  - PR-RAS goes into a long table that keeps workbook, sheet and Excel row for every value. The product uses these to show where a number comes from.
+  - Bilanca gives one wide row per unit and year.
+  - PR-RAS parsing takes about 2 min. It is cached in `data/build/prras_long.parquet`, keyed on the ZIP's sha256.
+- `pipeline/units.py` builds the šifrarnik for 576 units: OIB, RKP, 5-digit DGU code (`Z01`-`Z20` for counties), name, county and slug.
+  - PR-RAS sheet names are matched to Bilanca names within each county.
+  - The OIB is then looked up in `data/reference/jls_master.csv`. That file is curated, holds 556 JLS, and was built from the DGU ATOM boundaries, the development index and an island flag.
+- `pipeline/population.py` reads Popis 2021 from the DZS WFS.
+- `pipeline/openness.py` builds the openness layer.
+  - It pages through all portal datasets with CKAN `package_search` (about 4,000 datasets, 4 calls) and maps each publishing organization to a unit.
+  - It matches names without diacritics, because the portal writes "Konjšćina" and MF writes "KONJŠČINA". A county suffix such as "(ZD)" settles duplicate names like Privlaka.
+  - Per unit it records the number of datasets, the last update, the machine-readable share and a link to the newest budget dataset.
+- `pipeline/methodology.py` holds PLAN §3 as pure functions: auxiliary quantities, windowed indicators I1-I5, 0-100 scores, grades, four weight scenarios, flags Z1-Z4 and context measures. It also holds the two overdue-liability rules, decided 2026-11-03 (background in `docs/research/05`):
+  - A loan reported as entirely overdue, while its principal is repaid at 3% a year or more, does not count toward DO. The unit gets the quality note `kredit_iskazan_kao_dospio`.
+  - DO ≥ 30% of operating spending caps points at 39.9, so the grade is at most 2. `bodovi_bez_ogranicenja` keeps the uncapped points.
+- `pipeline/build.py` orchestrates the steps above and writes `data/build/units.csv`, `results.parquet` and `results.json`.
 
 Source documents:
 - Rules: `1792415200857_praviladatathonfinal.pdf` (in repo)
@@ -56,8 +86,18 @@ Tie-breakers: Izvedivost first, then open data use. The organizer may withhold a
 - Sudski registar API v3.0.4 uses OAuth2 client credentials (`/api/oauth/token`). It serves whole tables paged with `offset`/`limit` per `snapshot_id`: `/subjekti` (`datum_osnivanja`, `datum_brisanja`, `postupak`, `glavna_djelatnost` as an NKD code), `/sjedista` (`sifra_opcine`, `naziv_opcine`; DGU code lists are not included), `/postupci` (bankruptcy and liquidation), `/gfi` (which annual financial reports were filed and when), `/promjene`. It covers companies only, not obrti.
 - CKAN responses carry no CORS header, so a browser can't call the portal API directly. API use has to happen in the ETL or CI.
 - Municipal boundaries plus Census 2021 population per unit: the DZS INSPIRE WFS at `transformiraj.nipp.hr` (556 polygons, GeoJSON, CORS enabled). The DGU "Upravne jedinice INSPIRE" ATOM ZIP is the fallback with an explicit Otvorena dozvola licence. The DGU WFS is disabled. Exact URLs are in `docs/research/04-podaci-granice-i-varijable.md`.
-- Ministry of Finance local-budget data (PR-RAS, RAS-funkcijski, Bilanca) is on mfin.gov.hr only, not on the portal, and has no stated licence. Overdue liabilities (`dio 23/24/26 D`) exist only in the 2025 Bilanca. The MF national aggregate for functional classes in 2025 is incomplete, so validate per unit instead.
+- Ministry of Finance local-budget data (PR-RAS, RAS-funkcijski, Bilanca) is on mfin.gov.hr only, not on the portal, and has no stated licence.
+- Overdue liabilities exist in every Bilanca year from 2019 to 2025. 2025 labels the columns `dio 23 D` / `dio 23 N`. Earlier years label both columns `dio 23`, and only the second header row says "- dospjele" or "- nedospjele" (verified 2026-11-02; this corrects an earlier note that they exist only for 2025).
+- MF level 22 is the unit's own budget without its budget users: account 367 (transfers to own budget users) is still in 3.
+  - RAS-funkcijski leaves 367 out, so the control sum R1 = 3 + 4 − 367 holds for each unit.
+  - Every PR-RAS sheet has a column-numbering row under the header (1, 2, 3, …). Its "3" is not account 3, so skip it.
+- Unit sums of accounts 6 and 3 match the national sheet "SVEUKUPNO OPĆ_GRAD_ŽUPANIJA" in workbook 22 to within 1 € for every year.
 - The default `python` is 3.10. Use `py -3.12` for packages that need a newer Python.
+- State Audit Office (DUR) reports, used for the audit-opinion layer (verified 2026-11-03):
+  - The list is HTML at `https://www.revizija.hr/izvjesca/10?pojamIzvjesce=&godinaID=<id>&page=N`, 40 items per page. Year ids: 2026=3164, 2025=3035, 2024=2901, 2023=2810, 2022=2686, 2021=1465, 2020=1275, 2019=1276.
+  - Links are Windows-style backslash paths under `/UserDocsImages`. The folder names say the unit type (OPCINE/GRADOVI/ZUPANIJE, or JLPRS/OPĆINE in 2020-2021). Skip follow-up checks (PROVJER*, PPNNP), budget users, companies and summary reports.
+  - The PDFs are text. The opinion (bezuvjetno/uvjetno/nepovoljno mišljenje, or suzdržavanje) is found by regex. The publication year is not the audited year.
+  - About 330 of 576 units have at least one financial audit since 2019. Name matching has to handle bilingual Istrian names and "DJ" for "Đ".
 - Known dead or unusable sources, despite being listed on the portal: the AIK "Poslovne zone u RH" JSON (403), the MGIPU contract-register CSVs (unreachable), FINA RGFI (tagged CSV but actually a login page), and FINA "Informacije o ugovorenim koncesijama" (its datastore holds the HTML/JS of a search form, not concession records). Check that any source is live before building on it.
 
 ## Environment gotchas (Windows)

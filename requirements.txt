@@ -1,0 +1,9 @@
+# Python 3.12 (py -3.12 -m venv .venv)
+pandas>=2.2
+openpyxl>=3.1
+pyarrow>=15
+requests>=2.31
+geopandas>=1.0
+libpysal>=4.10
+spopt>=0.6
+pytest>=8

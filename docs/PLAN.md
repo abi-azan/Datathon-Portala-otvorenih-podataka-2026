@@ -25,7 +25,7 @@ Ovaj plan nadograđuje v1, koji je tim potvrdio 29.10. Temelji se na validaciji 
 7. **Simulator** procjenjuje uštede samo na općoj upravi, kao raspon s tri sloja, uz procjenu promjene fiskalnog izravnanja po zakonskoj formuli. Ukupna ušteda se ne obećava.
 8. **Odustajemo od modela strojnog učenja za ranu uzbunu.** Jedinice u Hrvatskoj ne mogu u stečaj, pa nema oznake na kojoj bi se model učio. Umjesto toga koristimo pravila (zastavice) i blizance.
 9. **Granice i stanovništvo dolaze iz DZS-ova INSPIRE WFS servisa** (pravi API): 556 poligona i Popis 2021. Rezervni izvor je DGU ATOM paket pod Otvorenom dozvolom.
-10. **Dospjele obveze postoje samo za 2025.** Ministarstvo financija nema zaseban obrazac Obveze. Glavna ocjena (2025.) ih uključuje, a povijesni niz ide bez njih.
+10. **Dospjele obveze postoje za sve godine 2019.-2025.** (ispravak 2.11. navečer, ETL v1). U Bilanci 2019.-2024. stupci se zovu samo `dio 23`, a "dospjele"/"nedospjele" piše u drugom retku zaglavlja; validacija je to previdjela. I5 zato ulazi u cijeli povijesni niz.
 
 ---
 
@@ -52,7 +52,7 @@ Cijeli popis skupova podataka u formatu za predaju je u `04` §6.
 | Izvor | Sadržaj | Pristup | Uloga |
 |---|---|---|---|
 | Ministarstvo financija, PR-RAS + RAS-funkcijski 2019.-2025. (razina 22) | Prihodi, rashodi, funkcije, broj zaposlenih | XLSX/ZIP s mfin.gov.hr (uvjetni GET s ETag-om) | Jezgra |
-| Ministarstvo financija, Bilanca 2019.-2025. | OIB, RKP, dug, novac, dospjele obveze (samo 2025.), akumulirani rezultat | XLSX | Jezgra, ključ OIB |
+| Ministarstvo financija, Bilanca 2019.-2025. | OIB, RKP, dug, novac, dospjele obveze (sve godine), akumulirani rezultat | XLSX | Jezgra, ključ OIB |
 | DZS, INSPIRE WFS (transformiraj.nipp.hr) | 556 poligona i Popis 2021. po jedinici | **OGC WFS API, GeoJSON** | Karta, stanovništvo, susjedstvo |
 | DGU, Upravne jedinice INSPIRE (ATOM) | 556 JLS, 21 županija, naselja; Otvorena dozvola | ZIP/GML | Rezerva, broj naselja, otoci |
 | data.gov.hr (CKAN API) | DZS Popis 2021. i 2011., Porezna uprava stope 2026., MPUDT popis JLS | **CKAN API** | Stanovništvo, kontekst, vrsta jedinice |
@@ -60,6 +60,7 @@ Cijeli popis skupova podataka u formatu za predaju je u `04` §6.
 | razvoj.gov.hr i NN 3/2024 | Indeks razvijenosti i skupine I-VIII | PDF (parsiran, 556/556) | Skupine, kontekst |
 | Ministarstvo financija, fiskalno izravnanje 2018.-2027. | Kapacitet, iznosi po jedinici | XLSX | Simulator (izravnanje) |
 | NN 13/2026, NN 24/2019 | Decentralizirane funkcije, brdsko-planinska područja | Narodne novine | Oznake usporedivosti |
+| Državni ured za reviziju (revizija.hr) | Izvješća o financijskim revizijama jedinica: mišljenje (bezuvjetno, uvjetno, nepovoljno, suzdržano) i poveznica na PDF | HTML popis po godini (`/izvjesca/10?godinaID=…&page=N`) + tekst PDF-a | Sloj vjerodostojnosti uz ocjenu (SHOULD, odluka 3.11.) |
 
 **Ključevi:** OIB je primarni ključ, uz RKP (Ministarstvo financija) i peteroznamenkasti službeni kod jedinice (DGU i DZS, isti kod je i u Sudskom registru). Objavljujemo **šifrarnik OIB ↔ RKP ↔ kod ↔ naziv ↔ županija** kao zaseban interoperabilni rezultat. Spajanje po nazivu je testirano za svih 576 jedinica, uz 3 ručna aliasa.
 
@@ -81,7 +82,13 @@ Detalji i izvori su u `01` §2. Pondere i pragove kalibriramo jednom, prije preg
 | ND | Neto dug = max(0, 26 + 25 − 11) |
 | SD | Servis duga = 341 + 342 + 54 (refinanciranje se neutralizira kad je 84 velik u istoj godini) |
 | ZO | Zakonska osnovica (približno, čl. 121.): prihodi prethodne godine − 63 + fiskalno izravnanje − 663 |
-| DO | Dospjele obveze = 23 D + 24 D + 26 D (samo 2025.) |
+| DO | Dospjele obveze = 23 D + 24 D + 26 D (sve godine), uz pravilo 1 ispod |
+
+**Pravilo 1, kredit iskazan kao cijeli dospio** (odluka 3.11., `research/05`). 26 D se ne ubraja u DO kad vrijede oba uvjeta:
+- stanje kredita (26) je veće od 10.000 €, a 26 D je barem 90% od 26;
+- otplata glavnice (54) u godini t je barem 3% stanja kredita na kraju godine t−1. Novi kredit (početno stanje 0) uvjet zadovoljava. Za 2019., kad nema prethodne godine, uzima se stanje na kraju godine t.
+
+Jedinica tada dobiva oznaku kvalitete `kredit_iskazan_kao_dospio`, a profil prikazuje i iskazani i ispravljeni DO. Ako se kredit ne otplaćuje (Povljana), 26 D ostaje u DO. Za 2025. pravilo pogađa 26 jedinica, a ranijih godina 21-67.
 
 ### 3.2 Ocjenjivani pokazatelji
 
@@ -95,9 +102,14 @@ Bodovi se računaju linearnom interpolacijom između pragova, na ljestvici 0-100
 | I4 | Servis duga | SD / ZO(t−1) | 0% → 100; 5% → 84; 10% → 64; 15% → 44; **20% → 24**; ≥ 30% → 0 | 15 |
 | I5 | Dospjele obveze | DO / 3 | ≤ 0,5% → 100; 15% → 50; ≥ 30% → 0 | 30 |
 
-- **Prozor:** I1, I2 i I4 računaju se kao omjer ponderiranih zbrojeva za godine t..t−3 (ponderi 4-3-2-1). I3 je stanje na kraju godine t prema ponderiranom OS-u. I5 je za 2025. jednogodišnji.
+- **Prozor:** I1, I2 i I4 računaju se kao omjer ponderiranih zbrojeva za godine t..t−3 (ponderi 4-3-2-1). I3 je stanje na kraju godine t prema ponderiranom OS-u. I5 je jednogodišnji (stanje na kraju godine t prema rashodima poslovanja te godine). Na početku niza prozor je kraći (2019. ima jednu godinu); broj godina u prozoru se prikazuje.
 - **Ukupno:** ponderirani zbroj 0-100 pretvara se u ocjenu: ≥ 80 → **5 "vrlo stabilno"**, 60-80 → **4 "stabilno"**, 40-60 → **3 "umjereno"**, 20-40 → **2 "pod pritiskom"**, < 20 → **1 "ozbiljan pritisak"**.
-- **Povijesni niz (2019.-2024.)** računa se bez I5, uz preraspodjelu pondera, i označen je kao "usporedni niz". U grafikonima se uz to prikazuju i jednogodišnje vrijednosti.
+- **Pravilo 2, gornja granica zbog dospjelih obveza** (odluka 3.11.). Ako je I5 ≥ 30%, bodovi se ograničavaju na 39,9, pa je ocjena najviše 2 "pod pritiskom". Isto vrijedi u sva četiri scenarija pondera.
+  - Razlog: na 30% S5 već daje 0, ali ostali pokazatelji mogu donijeti do 70 bodova. Bez pravila je 12 jedinica s DO ≥ 30% dobilo ocjenu 4.
+  - Ograničavaju se i bodovi, ne samo ocjena, kako bi se ocjena, rang i percentil slagali. Neograničeni bodovi čuvaju se u `bodovi_bez_ogranicenja` i prikazuju u razradi s napomenom.
+  - Za 2025. pravilo spušta 16 jedinica na ocjenu 2.
+  - Raspodjela 2025. s oba pravila (5/4/3/2/1): 306/149/68/43/10.
+- **Povijesni niz (2019.-2024.)** računa se istom metodom, sa svih pet pokazatelja. U grafikonima se uz to prikazuju i jednogodišnje vrijednosti.
 - **Osjetljivost:** ocjena se računa u četiri scenarija pondera (osnovni, jednaki, sličan KDZ-u, sličan INEKO-u). Jedinica dobiva značku "ocjena stabilna" ili "ocjena osjetljiva na pretpostavke".
 - **Kalibracija:** ako je više od 50% jedinica u jednom razredu, ili ako neki pokazatelj gotovo svima daje 100, to se obrazlaže kao stvarno stanje (npr. mnoge općine nemaju dug). Pragovi se ne krivotvore.
 
@@ -145,7 +157,7 @@ Prikaz: "bez zastavica", "1-2: pojačano praćenje", "3 i više: strukturni rizi
 
 1. Zbroj jedinica jednak je zbirnim tablicama Ministarstva financija za razrede 6 i 3. Funkcije se provjeravaju po jedinici, jer je zbirna tablica Ministarstva za 2025. nepotpuna.
 2. Zbroj stanovnika jednak je 3.871.833.
-3. Za svaku jedinicu zbroj funkcija jednak je 3 + 4 (tolerancija 1%).
+3. Za svaku jedinicu zbroj funkcija (R1) jednak je 3 + 4 − 367 (tolerancija 1%). Funkcijska klasifikacija ne broji prijenose vlastitim proračunskim korisnicima (367).
 4. Ručna provjera pet jedinica prema njihovim godišnjim izvještajima i usporedba s IJF-ovim tablicama.
 5. Pregled 10 najviših i 10 najnižih ocjena po skupini.
 
@@ -207,9 +219,9 @@ Prioriteti su iz `02` §5.
 7. **Otvoreni izlaz:** statični JSON/CSV API, OpenAPI 3.1, DCAT-AP katalog, šifrarnik ID-ova.
 8. **Sloj otvorenosti (CKAN API):** broj skupova jedinice na data.gov.hr, zadnje ažuriranje, poveznica na proračun, strojna čitljivost (udio CSV/XLSX nasuprot PDF-u).
 
-**SHOULD:** MCP server (§5); kriterij od 10% (Z5), samo ako je donesen; rječnik i oblačići; kontekst "što jedinica ne kontrolira"; kanal za prijavu greške.
+**SHOULD:** MCP server (§5); **sloj revizija DUR-a** (odluka 3.11.: za svaku jedinicu zadnje mišljenje revizije s godinom i poveznicom na izvješće, ili "nije revidirana od 2019."; ide nakon MUST-a); kriterij od 10% (Z5), samo ako je donesen; rječnik i oblačići; kontekst "što jedinica ne kontrolira"; kanal za prijavu greške.
 
-**COULD:** ugradiva kartica (iframe); AI čita proračune s portala (subotnji bonus); dodatni slojevi (IJF transparentnost, DUR, Sudski registar); PDF svjedodžba; engleska verzija.
+**COULD:** ugradiva kartica (iframe); AI čita proračune s portala (subotnji bonus); dodatni slojevi (IJF transparentnost, Sudski registar); PDF svjedodžba; engleska verzija.
 
 **Izbačeno 2.11. (Fable review):** zasebna usporedba 2-4 jedinice (simulator već pokazuje stanje prije); "što ako"; "Pitaj podatke"; prijedlog partnera (zamijenjen Kartom reforme); puni Playwright paket (umjesto njega ručna provjera svih poveznica u subotu).
 
@@ -287,9 +299,9 @@ MCP server (read-only, čita /api/v1) → AI asistenti
 |---|---|
 | Podaci Ministarstva financija nemaju navedenu licencu i nisu na portalu | Izjava o izvoru; javni podaci prema Zakonu o pravu na pristup informacijama; upit organizatoru |
 | AI asistent za kodiranje je vlasnički alat | **Riješeno 2.11.:** pravila dopuštaju AI alate uz navođenje u dokumentaciji. Claude Code se navodi kao razvojni alat koji nije dio rješenja; rješenje se gradi isključivo otvorenim kodom. Upit organizatoru se ne šalje. |
-| Dospjele obveze postoje samo za 2025. i jedinice ih same prijavljuju | Ponder 30 ostaje (presedan INEKO), uz analizu osjetljivosti i ručnu provjeru ekstremnih vrijednosti |
+| Dospjele obveze jedinice same prijavljuju | Ponder 30 ostaje (presedan INEKO), uz analizu osjetljivosti i ručnu provjeru ekstremnih vrijednosti |
 | Mapiranje konta (341, 25, 663, udio za decentralizirane funkcije) | Provjera u Računskom planu i u izvatku; testovi |
-| Razina 22 je vjerojatno konsolidirana s proračunskim korisnicima (vrtići i sl.) | Napomena; Z006 broji samo tijela uprave |
+| Razina 22 je proračun same jedinice, bez proračunskih korisnika (potvrđeno: konto 367 je u rashodima) | Napomena: vrtići, knjižnice i sl. ulaze samo kroz prijenose (367); Z006 broji samo tijela uprave |
 | Skriveni dug u komunalnim društvima nije u podacima | Napomena na stranici metodologije |
 | Politička osjetljivost | Bez rang-lista na naslovnici i bez imena; jezik "održivosti"; ograda |
 | Hrvatski jezik i padeži u tekstovima modela | Nazivi u padežima u paketu činjenica; Claude ocjenjuje uzorak od 20 jedinica; odluka u srijedu (§5) |
@@ -319,7 +331,7 @@ Okvir je **"Svjedodžba za vašu općinu"**, a vrhunac **"Spoji pa vidi"**:
 Korisnik je 2.11. potvrdio plan i nalaze Fable reviewa (neovisni pregled modelom Claude Fable 5.1).
 
 1. Ocjena 0-100 s pragovima KDZ-a i INEKO-a i ponderima 20/20/15/15/30, prikazana kao 5 (najbolje) do 1 s riječima.
-2. Glavna ocjena za 2025. (prozor 2022.-2025.); povijesni niz bez dospjelih obveza.
+2. Glavna ocjena za 2025. (prozor 2022.-2025.); povijesni niz istom metodom (dospjele obveze postoje za sve godine, ispravak 2.11.).
 3. Simulator: ušteda samo na općoj upravi, raspon u tri sloja, plus procjena fiskalnog izravnanja.
 4. Bez modela strojnog učenja za ranu uzbunu; umjesto toga zastavice i blizanci.
 5. Stack: React + MapLibre + ECharts, Python ETL, GitHub Pages, Gemma 4 na Kaggle GPU-u.
@@ -329,3 +341,13 @@ Korisnik je 2.11. potvrdio plan i nalaze Fable reviewa (neovisni pregled modelom
 9. **Prihvaćeno 2.11.: paket inovacija.** Karta reforme i vidljiva provjera brojki (MUST), MCP server (SHOULD, cilj je da uđe), vremenska animacija. Detalji u §5 i §6.
 10. **Prihvaćeno 2.11.: AI hibrid.** Gemma 4 na Kaggleu primarno; veći model samo ako je potrebno; Claude kao razvojni alat i rezerva uz odluku u srijedu navečer.
 11. **Prihvaćeno 2.11.: rezovi i slijepe točke iz Fable reviewa** (§6, §8, §9).
+12. **Prihvaćeno 3.11.: sloj revizija DUR-a (SHOULD).**
+    - Provjera izvora 3.11.: popis izvješća je HTML, po 40 stavki po stranici, a putanja PDF-a kaže vrstu i naziv jedinice.
+    - PDF-ovi su tekstualni. Mišljenje se iz njih čita regularnim izrazom (8/8 na uzorku 2019.-2025.).
+    - Pokrivenost: od 2019. barem jednu financijsku reviziju ima oko 330 od 576 jedinica (314 spojeno odmah, ostatak su dvojezični nazivi i "DJ" za "Đ").
+    - Godina objave nije revidirana godina; revidirana se čita iz teksta.
+13. **Prihvaćeno 3.11.: objava.** GitHub Pages + GitHub Actions (ETL → testovi → build → statični API → deploy), bez poslužitelja i baze. AI tekstovi se generiraju na Kaggleu i commitaju, CI ih samo kopira. Uvjet: repozitorij mora biti javan (besplatni Pages).
+14. **Prihvaćeno 3.11.: pravila za dospjele obveze** (`research/05`, §3.1 i §3.2). Ugrađeno u `pipeline/methodology.py` i pokriveno testovima.
+    - Pravilo 1: kredit iskazan kao cijeli dospio, a redovno otplaćivan, ne ulazi u DO i dobiva oznaku kvalitete.
+    - Pravilo 2: DO ≥ 30% rashoda poslovanja daje ocjenu najviše 2.
+15. **Odlučeno 3.11.:** repozitorij postaje javan odmah. Ime ostaje.

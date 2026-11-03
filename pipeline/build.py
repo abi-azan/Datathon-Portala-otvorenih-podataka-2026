@@ -1,333 +1,159 @@
-"""Build fiscal health indicators for every Croatian local and regional self-government unit.
+"""Build the fiscal health dataset for all 576 units.
 
-Inputs:
-  --mf-dir    Ministry of Finance PR-RAS + RAS-funkcijski workbooks, one per county,
-              one sheet per unit, 2019-2025 ("Lokalci FINALI ... EURO.zip", unpacked)
-  --bilanca   Ministry of Finance balance sheets 2019-2025, one sheet per year
-  --pop       DZS Popis 2021, population by town/municipality (data.gov.hr)
+    .venv/Scripts/python -m pipeline.build            # fetch (conditional GET) + build
+    .venv/Scripts/python -m pipeline.build --offline  # reuse data/raw, no network
 
-Outputs (in --out):
-  jls_years.csv   one row per unit and year, raw values and indicators
-  jls.json        the same data nested per unit, for the dashboard
+Outputs in data/build/:
+  units.csv          the unit register (OIB, RKP, code, name, county, structure)
+  prras_long.parquet every PR-RAS value used, with workbook, sheet and row
+  results.parquet    one row per unit and year: aux values, indicators, scores, flags
+  results.json       the same, nested per unit
 """
 import argparse
 import json
 import math
-import os
-import re
 import sys
-from pathlib import Path
 
-import openpyxl
 import pandas as pd
+
+from . import config, methodology, mf, openness, population, sources, units
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-YEARS = list(range(2019, 2026))
-
-# PR-RAS position codes we keep (accounts, functional classes, derived rows)
-PRRAS_KEYS = {
-    "6": "prihodi_poslovanja",
-    "61": "porezi",
-    "611": "porez_na_dohodak",
-    "613": "porezi_na_imovinu",
-    "63": "pomoci",
-    "6353": "fiskalno_izravnanje",
-    # capital grants and donations: excluded from current revenue (KDZ "laufende Gebarung")
-    "6312": "kap_pomoci_6312",
-    "6322": "kap_pomoci_6322",
-    "6324": "kap_pomoci_6324",
-    "6332": "kap_pomoci_6332",
-    "6342": "kap_pomoci_6342",
-    "6352": "kap_pomoci_6352",
-    "6362": "kap_pomoci_6362",
-    "6382": "kap_pomoci_6382",
-    "6632": "kap_pomoci_6632",
-    "64": "prihodi_od_imovine",
-    "65": "pristojbe_i_naknade",
-    "7": "prihodi_od_prodaje_nefin",
-    "3": "rashodi_poslovanja",
-    "31": "rashodi_zaposleni",
-    "32": "materijalni_rashodi",
-    "342": "kamate",
-    "4": "rashodi_nefin_imovina",
-    "84": "primici_od_zaduzivanja",
-    "54": "otplata_glavnice",
-    "01": "f01_opce_javne_usluge",
-    "Z006": "zaposleni_u_tijelima",
-}
-
-# Balance sheet columns (position codes in the header row)
-BILANCA_KEYS = {
-    "11": "novac",
-    "23": "obveze_rashodi_poslovanja",
-    "dio 23 D": "dospjele_obveze_poslovanja",
-    "26": "obveze_krediti_zajmovi",
-    "dio 26 D": "dospjele_obveze_krediti",
-    "9221": "visak_akumulirani",
-    "9222": "manjak_akumulirani",
-}
+SIZE_CLASSES = [(0, 2000, "do 2.000"), (2000, 5000, "2.000-5.000"), (5000, 10000, "5.000-10.000"),
+                (10000, 35000, "10.000-35.000"), (35000, 10**9, "35.000+")]
 
 
-def norm_name(s):
-    s = str(s).upper().strip()
-    s = re.sub(r"\s*-\s*", "-", s)
-    s = re.sub(r"\s+", " ", s)
-    return s
+def fetch_all(offline):
+    mf_dir = config.RAW / "mf"
+    if not offline:
+        print("Preuzimanje izvora ...")
+        meta = {"publisher": "Ministarstvo financija", "license": "nije navedena (javni podatak, ZPPI)"}
+        sources.fetch("mf_prras_zip", config.MF_PRRAS_ZIP, mf_dir / "prras.zip", meta=meta)
+        sources.fetch("mf_bilanca", config.MF_BILANCA, mf_dir / "bilanca.xlsx", meta=meta)
+    return mf_dir / "prras.zip", mf_dir / "bilanca.xlsx"
 
 
-def unit_type(sheet_name):
-    if sheet_name.endswith("ŽUPANIJA"):
-        return "zupanija"
-    if sheet_name.startswith("GRAD "):
-        return "grad"
-    if sheet_name.startswith("OPĆINA "):
-        return "opcina"
+def load_prras(zip_path):
+    cache = config.BUILD / "prras_long.parquet"
+    stamp = config.BUILD / "prras_long.sha256"
+    log = json.loads(config.SOURCES_LOG.read_text(encoding="utf-8")) if config.SOURCES_LOG.exists() else {}
+    sha = log.get("mf_prras_zip", {}).get("sha256", "")
+    if cache.exists() and stamp.exists() and stamp.read_text() == sha:
+        print("PR-RAS: iz predmemorije")
+        return pd.read_parquet(cache), None
+    print("PR-RAS: raspakiravanje i čitanje (oko 3 min) ...")
+    files, names = mf.extract_prras(zip_path, config.RAW / "mf" / "prras")
+    df = mf.parse_prras(files, names)
+    national = mf.parse_national(files["22"]) if "22" in files else None
+    config.BUILD.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(cache, index=False)
+    stamp.write_text(sha)
+    if national:
+        pd.DataFrame([{"code": c, "year": y, "value": v} for (c, y), v in national.items()]).to_parquet(
+            config.BUILD / "national_totals.parquet", index=False)
+    return df, national
+
+
+def size_class(pop):
+    for lo, hi, label in SIZE_CLASSES:
+        if lo <= pop < hi:
+            return label
     return None
 
 
-def bare_name(full):
-    full = norm_name(full)
-    for p in ("GRAD ", "OPĆINA "):
-        if full.startswith(p):
-            return full[len(p):]
-    return full
+def peer_group(u):
+    if u.vrsta == "zupanija":
+        return "županije"
+    if u.zagreb:
+        return "Grad Zagreb"
+    if u.vrsta == "grad" and u.stanovnici_2021 >= 35000:
+        return "veliki gradovi"
+    return f"{'općine' if u.vrsta == 'opcina' else 'gradovi'} {size_class(u.stanovnici_2021)}"
 
 
-def match_key(name):
-    """Loose key for names that differ between sources: bilingual Istrian names,
-    en dashes, "SV." abbreviations and county suffixes."""
-    s = bare_name(name).replace("–", "-")
-    s = re.sub(r"^SV\. ?", "SVETI ", s)
-    s = re.sub(r" ZADARSKI$| OPĆINA$", "", s)
-    return re.split(r"\s*-\s*", s)[0].strip()
-
-
-def parse_prras(mf_dir):
-    """Return {(county_id, sheet_name): {field: {year: value}}}."""
-    files = sorted(os.listdir(mf_dir))
-    out = {}
-    for f in files:
-        m = re.match(r"(\d\d) ", f)
-        if not m or not f.endswith(".xlsx") or m.group(1) == "22":
-            continue
-        # Osječko-baranjska ships a corrected file next to the original
-        if m.group(1) == "14" and "ispravak" not in f and any(
-            x.startswith("14 ") and "ispravak" in x for x in files
-        ):
-            continue
-        county_id = int(m.group(1))
-        wb = openpyxl.load_workbook(Path(mf_dir) / f, read_only=True, data_only=True)
-        for sn in wb.sheetnames:
-            if sn.startswith(("UKUPNO", "SVEUKUPNO")) or unit_type(sn) is None:
-                continue
-            year_col = {}
-            data = {}
-            for r in wb[sn].iter_rows(values_only=True):
-                if not year_col:
-                    for i, c in enumerate(r):
-                        mm = re.match(r"Ostvareno u (\d{4})", str(c or ""))
-                        if mm:
-                            year_col[int(mm.group(1))] = i
-                    continue
-                key = r[2]
-                if key is None:
-                    continue
-                key = str(key).strip()
-                if key in PRRAS_KEYS:
-                    data[PRRAS_KEYS[key]] = {
-                        y: float(r[i]) if isinstance(r[i], (int, float)) else 0.0
-                        for y, i in year_col.items()
-                    }
-            out[(county_id, sn)] = data
-        wb.close()
-        print(f"  {f}: done", flush=True)
-    return out
-
-
-def parse_bilanca(path):
-    """Return {(county_id, name): {"oib", "rkp", field: {year: value}}}."""
-    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-    out = {}
-    for sn in wb.sheetnames:
-        year = int(sn)
-        it = wb[sn].iter_rows(values_only=True)
-        codes = [str(c).strip() if c is not None else "" for c in next(it)]
-        col = {BILANCA_KEYS[c]: i for i, c in enumerate(codes) if c in BILANCA_KEYS}
-        for r in it:
-            if not isinstance(r[0], (int, float)) or not r[2]:
-                continue
-            key = (int(r[0]), norm_name(r[3]))
-            u = out.setdefault(key, {"oib": str(r[2]), "rkp": str(r[1])})
-            for field, i in col.items():
-                v = r[i]
-                u.setdefault(field, {})[year] = float(v) if isinstance(v, (int, float)) else 0.0
-    wb.close()
-    return out
-
-
-def parse_population(path):
-    """Return ({(county_id, type, bare_name): population}, {county_id: county_name})."""
-    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-    ws = wb["1."]
-    county_ids, pop, county_totals = {}, {}, {}
-    for r in ws.iter_rows(min_row=9, values_only=True):
-        county, kind, name, total = r[0], r[1], r[4], r[5]
-        if not county or county == "Republika Hrvatska":
-            continue
-        if county not in county_ids:
-            county_ids[county] = len(county_ids) + 1
-        cid = county_ids[county]
-        if kind in ("Grad", "Općina") and isinstance(total, (int, float)):
-            t = "grad" if kind == "Grad" else "opcina"
-            pop[(cid, t, norm_name(name))] = int(total)
-        elif cid not in county_totals:
-            # county total row: first number after the name columns
-            nums = [c for c in r[1:8] if isinstance(c, (int, float))]
-            if nums:
-                county_totals[cid] = int(nums[0])
-    wb.close()
-    return pop, county_totals, {v: k for k, v in county_ids.items()}
-
-
-def lookup(table, cid, t, name):
-    """Exact match on the bare name first, then on match_key."""
-    if (cid, t, bare_name(name)) in table:
-        return table[(cid, t, bare_name(name))]
-    k = match_key(name)
-    hits = [v for (c, tt, n), v in table.items() if c == cid and tt == t and match_key(n) == k]
-    return hits[0] if len(hits) == 1 else None
-
-
-def div(a, b):
-    if a is None or b is None or b == 0:
+def clean(x):
+    if isinstance(x, float) and (math.isnan(x) or math.isinf(x)):
         return None
-    return a / b
-
-
-def band(x, cuts, higher_is_better):
-    """Score 1 (best) to 5 (worst) using four cut points."""
-    if x is None:
-        return None
-    if higher_is_better:
-        for score, c in enumerate(cuts, start=1):
-            if x >= c:
-                return score
-        return 5
-    for score, c in enumerate(cuts, start=1):
-        if x <= c:
-            return score
-    return 5
-
-
-def indicators(v, pop):
-    """v: dict of raw values for one unit-year. Returns indicator dict."""
-    g = lambda k: v.get(k) or 0.0
-    kap = sum(g(k) for k in v if k.startswith("kap_pomoci_"))
-    rev = g("prihodi_poslovanja") - kap  # current revenue
-    op = rev - g("rashodi_poslovanja")
-    debt = g("obveze_krediti_zajmovi")
-    ind = {
-        "kapitalne_pomoci": kap,
-        "tekuci_prihodi": rev,
-        "operativni_saldo": div(op, rev),
-        "slobodni_saldo": div(op - g("otplata_glavnice"), rev),
-        "dug_prema_prihodima": div(debt, rev),
-        "godine_otplate": (0.0 if debt == 0 else (div(debt, op) if op > 0 else math.inf)),
-        "teret_otplate": div(g("kamate") + g("otplata_glavnice"), rev),
-        "dospjele_obveze_udio": div(g("dospjele_obveze_poslovanja") + g("dospjele_obveze_krediti"), g("rashodi_poslovanja")),
-        "udio_pomoci": div(g("pomoci"), g("prihodi_poslovanja")),
-        "udio_tekucih_pomoci": div(g("pomoci") - kap + g("kap_pomoci_6632"), rev),
-        "investicijska_kvota": div(g("rashodi_nefin_imovina"), g("rashodi_poslovanja") + g("rashodi_nefin_imovina")),
-        "prihodi_pc": div(rev, pop),
-        "vlastiti_prihodi_pc": div(g("porezi") + g("prihodi_od_imovine") + g("pristojbe_i_naknade"), pop),
-        "admin_pc": div(g("f01_opce_javne_usluge"), pop),
-        "zaposleni_pc": div(g("rashodi_zaposleni"), pop),
-        "djelatnici_na_1000": div(g("zaposleni_u_tijelima") * 1000, pop),
-    }
-    scores = [
-        band(ind["operativni_saldo"], [0.15, 0.10, 0.05, 0.0], True),
-        band(ind["slobodni_saldo"], [0.10, 0.05, 0.0, -0.05], True),
-        band(ind["godine_otplate"], [2, 5, 10, 20], False),
-        band(ind["teret_otplate"], [0.02, 0.05, 0.10, 0.20], False),
-        band(ind["dospjele_obveze_udio"], [0.01, 0.03, 0.07, 0.15], False),
-    ]
-    valid = [s for s in scores if s is not None]
-    ind["bodovi"] = scores
-    ind["ocjena"] = round(sum(valid) / len(valid), 2) if len(valid) >= 4 else None
-    return ind
+    if isinstance(x, dict):
+        return {k: clean(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [clean(v) for v in x]
+    return x
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--mf-dir", required=True)
-    ap.add_argument("--bilanca", required=True)
-    ap.add_argument("--pop", required=True)
-    ap.add_argument("--out", default=str(Path(__file__).resolve().parent.parent / "data" / "processed"))
+    ap.add_argument("--offline", action="store_true")
     a = ap.parse_args()
 
-    print("PR-RAS ...", flush=True)
-    prras = parse_prras(a.mf_dir)
-    print(f"  {len(prras)} units")
-    print("Bilanca ...", flush=True)
-    bil = parse_bilanca(a.bilanca)
-    print("Popis 2021 ...", flush=True)
-    pop, county_pop, county_names = parse_population(a.pop)
-    bil = {(cid, unit_type(n), bare_name(n)): v for (cid, n), v in bil.items()}
+    zip_path, bilanca_path = fetch_all(a.offline)
+    prras, _ = load_prras(zip_path)
+    print("Bilanca ...")
+    bil = mf.parse_bilanca(bilanca_path)
+    print("Popis 2021 (DZS WFS) ...")
+    pop = population.fetch_population(a.offline)
 
-    rows, units, unmatched = [], [], []
-    for (cid, sn), data in sorted(prras.items()):
-        t = unit_type(sn)
-        name = norm_name(sn)
-        b = lookup(bil, cid, t, name)
-        if t == "zupanija":
-            p = county_pop.get(cid)
-        else:
-            p = lookup(pop, cid, t, name)
-            # Grad Zagreb is both a city and a county; DZS lists it only as a county
-            if p is None and name == "GRAD ZAGREB":
-                p = county_pop.get(cid)
-        if b is None or p is None:
-            unmatched.append((cid, sn, "bilanca" if b is None else "popis"))
-        unit = {
-            "oib": b["oib"] if b else None,
-            "rkp": b["rkp"] if b else None,
-            "naziv": sn,
-            "vrsta": t,
-            "zupanija_id": cid,
-            "zupanija": county_names.get(cid),
-            "stanovnici_2021": p,
-            "godine": {},
-        }
-        for y in YEARS:
-            v = {k: d.get(y) for k, d in data.items()}
-            if b:
-                v.update({k: b[k].get(y) for k in BILANCA_KEYS.values() if k in b})
-            ind = indicators(v, p)
-            unit["godine"][y] = {**v, **ind}
-            rows.append({k: unit[k] for k in ("oib", "naziv", "vrsta", "zupanija_id", "stanovnici_2021")}
-                        | {"godina": y} | v | {k: x for k, x in ind.items() if k != "bodovi"})
-        units.append(unit)
+    master = pd.read_csv(config.REFERENCE / "jls_master.csv", dtype={"jls_code": str, "oib": str, "rkp": str})
+    sheets = prras[["zup_id", "sheet", "vrsta"]].drop_duplicates()
+    reg = units.build_units(sheets, bil, master)
+    reg = reg.merge(pop, on="sifra", how="left")
+    county_pop = reg[reg.vrsta != "zupanija"].groupby("zup_id")["stanovnici_2021"].sum()
+    is_cty = reg.vrsta == "zupanija"
+    reg.loc[is_cty, "stanovnici_2021"] = reg.loc[is_cty, "zup_id"].map(county_pop)
+    reg["stanovnici_2021"] = reg["stanovnici_2021"].astype(int)
+    reg["skupina"] = [peer_group(u) for u in reg.itertuples()]
+    print(f"Šifrarnik: {len(reg)} jedinica, {reg.vrsta.value_counts().to_dict()}")
 
-    out = Path(a.out)
-    out.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(rows).to_csv(out / "jls_years.csv", index=False, encoding="utf-8")
-    def finite(x):
-        if isinstance(x, float) and not math.isfinite(x):
-            return None
-        if isinstance(x, dict):
-            return {k: finite(v) for k, v in x.items()}
-        if isinstance(x, list):
-            return [finite(v) for v in x]
-        return x
-
-    with open(out / "jls.json", "w", encoding="utf-8") as f:
-        json.dump(finite(units), f, ensure_ascii=False)
-    print(f"{len(units)} units written to {out}")
+    print("Otvorenost (data.gov.hr CKAN API) ...")
+    opn, unmatched = openness.build_openness(reg, openness.fetch_packages(a.offline))
     if unmatched:
-        print(f"{len(unmatched)} unmatched:")
-        for u in unmatched:
-            print("  ", u)
+        print(f"  organizacije bez para: {unmatched}")
+    print(f"  {int(opn.portal_objavljuje.sum())} jedinica objavljuje na portalu")
+    reg = reg.merge(opn, on="oib", how="left")
+
+    # wide unit-year table
+    key = prras.merge(reg[["naziv_mf", "zup_id", "oib"]], left_on=["sheet", "zup_id"], right_on=["naziv_mf", "zup_id"])
+    wide = key.pivot_table(index=["oib", "year"], columns="code", values="value", aggfunc="sum")
+    wide.columns = [f"p_{c}" for c in wide.columns]
+    bcols = [c for c in bil.columns if c.startswith("b_")]
+    wide = wide.join(bil.set_index(["oib", "year"])[bcols], how="left").reset_index()
+
+    rows = []
+    results = {}
+    popmap = reg.set_index("oib")["stanovnici_2021"].to_dict()
+    for oib, grp in wide.groupby("oib"):
+        recs = {int(r["year"]): r for r in grp.to_dict("records")}
+        res = methodology.evaluate_unit(recs, popmap[oib])
+        results[oib] = res
+        for y, r in res.items():
+            rows.append({"oib": oib, "year": y, **{k: v for k, v in r.items()
+                                                    if not isinstance(v, (list, dict))},
+                         "zastavice": ",".join(r["zastavice"]), "oznake": ",".join(r["oznake"]),
+                         "kvaliteta": ",".join(r["kvaliteta"])})
+    res_df = pd.DataFrame(rows).merge(reg[["oib", "naziv", "vrsta", "skupina", "zup_id", "stanovnici_2021"]], on="oib")
+
+    # rank and percentile inside the peer group, per year
+    res_df["rang"] = res_df.groupby(["skupina", "year"])["bodovi"].rank(ascending=False, method="min")
+    res_df["n_skupine"] = res_df.groupby(["skupina", "year"])["bodovi"].transform("count")
+    res_df["percentil"] = res_df.groupby(["skupina", "year"])["bodovi"].rank(pct=True) * 100
+
+    config.BUILD.mkdir(parents=True, exist_ok=True)
+    reg.to_csv(config.BUILD / "units.csv", index=False, encoding="utf-8")
+    res_df.to_parquet(config.BUILD / "results.parquet", index=False)
+    nested = []
+    for u in reg.to_dict("records"):
+        nested.append({**u, "godine": {str(y): r for y, r in results[u["oib"]].items()}})
+    (config.BUILD / "results.json").write_text(json.dumps(clean(nested), ensure_ascii=False), encoding="utf-8")
+
+    last = res_df[res_df.year == config.LAST_YEAR]
+    print(f"\nOcjene {config.LAST_YEAR} (5 = najbolje):")
+    print(pd.crosstab(last.vrsta, last.ocjena, margins=True).to_string())
+    print("\nStabilnost:", last.stabilnost.value_counts().to_dict())
+    print("Zastavice:", {z: int(last.zastavice.str.contains(z).sum()) for z in ["Z1", "Z2", "Z3", "Z4"]})
+    print("Dospjele obveze: kredit iskazan kao dospio (pravilo 1):", int(last.kredit_iskazan_dospio.sum()),
+          "| ocjena ograničena (pravilo 2):", int(last.ogranicenje_do.sum()))
+    print(f"\nGotovo: {config.BUILD}")
 
 
 if __name__ == "__main__":

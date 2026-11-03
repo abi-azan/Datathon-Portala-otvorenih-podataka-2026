@@ -14,3 +14,7 @@ __pycache__/
 
 # gstack browser logs
 .gstack/
+
+# Podaci: preuzeto i izračunato (regenerira se pipelineom)
+data/raw/
+data/build/
