@@ -93,3 +93,34 @@ Promjene:
 1. Ako v4 doseže barem 80% pristojnih tekstova, uzeti **12B**. Potpuniji je, a 2 sata GPU-a za 576 jedinica je prihvatljivo. E4B je rezerva ako se 12B pokaže sporim.
 2. Ako v4 ne dosegne prag, sljedeći je korak iz PLAN §5 Gemma 4 26B-A4B (MoE, 2× T4). Claude u batch načinu dolazi tek nakon toga, uz navođenje kao AI alata.
 3. U oba slučaja dodati jeftinu automatsku provjeru sadržaja: tekst smije proglasiti najslabijom samo sastavnicu iz činjenica, a jakom samo navedene jake strane. Fiksne fraze iz prompta čine tu provjeru jednostavnom.
+
+### Rezultat v4 (7:03-7:10)
+
+- Llama.cpp se ponovno koristio iz cachea, pa je cijeli run trajao 364 s.
+- Provjeru brojki oba modela prolaze 20/20.
+- **12B:** gramatika je sada uglavnom čista. Iz primjera u promptu model je naučio sadržajno krivu rečenicu "zbog prenesenog manjka ocjena je ograničena" (8/20).
+- **E4B:** lošiji je ("kućne pomoći", "Bilancije", prazne rečenice o izvoru podataka).
+- **Provjera sadržaja** dodana je u `verify.py`. Tekst smije spomenuti ograničenje ocjene samo uz pravilo 2, a najslabiju sastavnicu i jake strane samo kako ih navode činjenice. Na tekstovima iz v4 hvata 13/20 kod 12B i 10/20 kod E4B, upravo one koje sam ručno označio.
+- Iz činjenica je izbačen kontekst (pomoći, trošak uprave), zajedno s praznom stavkom "nijedna sastavnica nije izrazito jaka".
+
+### Rezultat v5 (7:13, puna provjera: brojke, ocjena i sadržaj)
+
+| | E4B | 12B |
+|---|---|---|
+| Prolazi provjeru (uz najviše 2 ponavljanja) | 10/20 | **17/20 (85 %)** |
+| Vrijeme za 20 tekstova | 175 s | 283 s |
+| Duljina | | 32-109 riječi, prosječno 75 |
+
+12B, ručni pregled:
+- 17 tekstova koji su prošli provjeru pisani su ispravnim, iako šablonskim hrvatskim. Gramatičkih grešaka više ne nalazim.
+- Tri koja nisu prošla provjeru idu na predložak:
+  - Istarska županija i Sveti Križ Začretje imenuju najslabiju sastavnicu kad je u činjenicama nije bilo (sve sastavnice iznad 80 bodova). Rješenje: činjenice sada uvijek navode sastavnicu koja ocjenu najviše spušta, jer je to točno i kod visoke ocjene.
+  - Dubravica je izmislila jaku stranu. Provjera je to ispravno odbila.
+
+**Preporuka za odluku u srijedu navečer:** **Gemma 4 12B** (QAT Q4_0, llama.cpp na T4).
+- Prema PLAN §5 prag od 80% je dosegnut, i to sa strožom provjerom nego što plan traži (brojke i sadržaj).
+- Trošak: za svih 576 jedinica oko 2,3 sata GPU-a, s ponavljanjima.
+- Tekstovi koji ne prođu provjeru dobivaju predložak i jasnu oznaku na profilu.
+- Prije batcha treba ponoviti test na novih 20 jedinica, s istim pragom, da se izbjegne prilagodba prompta baš ovom uzorku.
+
+Sirovi izlazi: `kaggle/results/gemma_test_v4_e4b_12b.json` i `gemma_test_v5_e4b_12b.json`.

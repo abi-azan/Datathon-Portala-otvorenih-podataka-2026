@@ -82,7 +82,7 @@ def test_no_false_grade_claims_in_real_model_texts():
     for f in results.glob("gemma_test_*.json"):
         out = json.loads(f.read_text(encoding="utf-8"))
         for m in (out.get("models") or {"": {"results": out.get("results", [])}}).values():
-            texts += [(r["oib"], r["text"]) for r in m["results"]]
+            texts += [(r["oib"], r["text"]) for r in m["results"] if r["source"] == "ai"]   # wrong texts may claim wrong grades
     assert len(texts) >= 60
     bad = [(packs[o]["naziv"]["nom"], g) for o, t in texts for g in verify.claimed_grades(t)
            if int(g) not in packs[o]["ocjene"]]

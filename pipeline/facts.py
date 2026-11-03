@@ -178,8 +178,9 @@ def fact_pack(unit, history, med, year):
     # A strength must score high and, where there is a peer group, not be worse than its median.
     valid = {c: s for c, s in scores.items() if s is not None and not pd.isna(s)}
     weakest = min(valid, key=valid.get)
-    if valid[weakest] < 80:
-        facts.append(("Najslabija sastavnica", COMPONENTS[weakest]))
+    # always named: "it pulls the grade down most" is true even for a high grade, and the model
+    # names one anyway (Istarska županija in Gemma v5), so the check needs the right answer
+    facts.append(("Najslabija sastavnica", COMPONENTS[weakest]))
     strong = [COMPONENTS[c] for c, s in valid.items()
               if s >= 90 and (not peers or not_worse_than_median(c, r[c], m[c]))]
     if strong:                      # no "nijedna ..." line: the model turned it into "Jake strane su: nijedna" (v4)
