@@ -16,13 +16,33 @@ import pandas as pd
 
 from . import config
 
+# Bump when parse_prras output changes; build.py then re-parses instead of using the cache.
+PRRAS_PARSER_VERSION = 2
+
+_ZIP_UTF8_FLAG = 0x800
+
+
+def zip_member_name(name, flag_bits=0):
+    """Readable name of a ZIP member.
+
+    Without the UTF-8 flag, zipfile decodes member names as CP437. The MF ZIP is
+    written in CP852 (Croatian DOS code page), so "Zagrebačka" comes out as
+    "Zagrebaƒka". Re-decode as CP852; keep the name as given if that fails."""
+    if flag_bits & _ZIP_UTF8_FLAG:
+        return name
+    try:
+        return name.encode("cp437").decode("cp852")
+    except UnicodeError:
+        return name
+
 
 def extract_prras(zip_path, out_dir):
     """Unpack the MF ZIP into out_dir/NN.xlsx (NN = county 01-22).
 
-    Member names in the ZIP are mis-encoded, so only the two-digit prefix is used.
-    Osječko-baranjska (14) ships a corrected file next to the original; the
-    correction wins."""
+    Member names in the ZIP are CP852 without the UTF-8 flag, so files are chosen by
+    the two-digit prefix only; the returned source names are fixed with
+    zip_member_name. Osječko-baranjska (14) ships a corrected file next to the
+    original; the correction wins."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(zip_path) as z:
@@ -41,7 +61,8 @@ def extract_prras(zip_path, out_dir):
             target = out_dir / f"{nn}.xlsx"
             with z.open(m) as src, open(target, "wb") as dst:
                 dst.write(src.read())
-    return {nn: out_dir / f"{nn}.xlsx" for nn in chosen}, {nn: m.rsplit("/", 1)[-1] for nn, m in chosen.items()}
+        names = {nn: zip_member_name(m, z.getinfo(m).flag_bits).rsplit("/", 1)[-1] for nn, m in chosen.items()}
+    return {nn: out_dir / f"{nn}.xlsx" for nn in chosen}, names
 
 
 def unit_type(sheet_name):

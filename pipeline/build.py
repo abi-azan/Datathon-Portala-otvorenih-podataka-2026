@@ -41,7 +41,8 @@ def load_prras(zip_path):
     stamp = config.BUILD / "prras_long.sha256"
     log = json.loads(config.SOURCES_LOG.read_text(encoding="utf-8")) if config.SOURCES_LOG.exists() else {}
     sha = log.get("mf_prras_zip", {}).get("sha256", "")
-    if cache.exists() and stamp.exists() and stamp.read_text() == sha:
+    key = f"{sha}:v{mf.PRRAS_PARSER_VERSION}"  # re-parse when the ZIP or the parser changes
+    if cache.exists() and stamp.exists() and stamp.read_text() == key:
         print("PR-RAS: iz predmemorije")
         return pd.read_parquet(cache), None
     print("PR-RAS: raspakiravanje i čitanje (oko 3 min) ...")
@@ -50,7 +51,7 @@ def load_prras(zip_path):
     national = mf.parse_national(files["22"]) if "22" in files else None
     config.BUILD.mkdir(parents=True, exist_ok=True)
     df.to_parquet(cache, index=False)
-    stamp.write_text(sha)
+    stamp.write_text(key)
     if national:
         pd.DataFrame([{"code": c, "year": y, "value": v} for (c, y), v in national.items()]).to_parquet(
             config.BUILD / "national_totals.parquet", index=False)
