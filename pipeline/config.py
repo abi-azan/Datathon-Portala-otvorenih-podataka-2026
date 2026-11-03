@@ -22,6 +22,11 @@ WFS_POP = ("https://transformiraj.nipp.hr/ows/services/org.14.f834670c-e1ce-4714
            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=pd:StatisticalDistribution&COUNT=10"
            "&OUTPUTFORMAT=application/geo%2Bjson")
 
+# DZS INSPIRE WFS, Popis 2021 statistical units = town/municipality polygons (su-vector:AreaStatisticalUnit)
+WFS_BOUNDARIES = ("https://transformiraj.nipp.hr/ows/services/org.14.b8096c46-3962-421f-baf8-918a45735eed_wfs"
+                  "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=su-vector:AreaStatisticalUnit"
+                  "&COUNT=1000&OUTPUTFORMAT=application/geo%2Bjson&SRSNAME=EPSG:4326")
+
 POPULATION_RH_2021 = 3_871_833
 
 # Capital grants and donations inside class 6. They fund projects, not running costs,

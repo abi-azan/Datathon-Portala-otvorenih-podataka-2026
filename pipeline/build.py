@@ -8,6 +8,8 @@ Outputs in data/build/:
   prras_long.parquet every PR-RAS value used, with workbook, sheet and row
   results.parquet    one row per unit and year: aux values, indicators, scores, flags
   results.json       the same, nested per unit
+  geo/jls.topo.json  simplified boundaries (layers jls, zupanije) for the map
+  geo/susjedi.json   land neighbours and sea links per unit (merger simulator, Karta reforme)
 """
 import argparse
 import json
@@ -16,7 +18,7 @@ import sys
 
 import pandas as pd
 
-from . import config, methodology, mf, openness, population, sources, units
+from . import config, geo, methodology, mf, openness, population, sources, units
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -104,6 +106,15 @@ def main():
     reg["stanovnici_2021"] = reg["stanovnici_2021"].astype(int)
     reg["skupina"] = [peer_group(u) for u in reg.itertuples()]
     print(f"Šifrarnik: {len(reg)} jedinica, {reg.vrsta.value_counts().to_dict()}")
+
+    print("Granice i susjedstvo (DZS WFS) ...")
+    reg = reg.merge(geo.build_geo(reg, a.offline), on="sifra", how="left")
+    is_cty = reg.vrsta == "zupanija"
+    county_area = reg[~is_cty].groupby("zup_id")["povrsina_km2"].sum()
+    reg.loc[is_cty, "povrsina_km2"] = reg.loc[is_cty, "zup_id"].map(county_area).round(3)
+    jls_geo = reg[~is_cty]
+    print(f"  {len(jls_geo)} poligona, {int(jls_geo.n_susjeda.sum()) // 2} parova susjeda, "
+          f"{int(jls_geo.morske_veze.sum()) // 2} veza preko mora, {int(jls_geo.otok.sum())} otočnih jedinica")
 
     print("Otvorenost (data.gov.hr CKAN API) ...")
     opn, unmatched = openness.build_openness(reg, openness.fetch_packages(a.offline))

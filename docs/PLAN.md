@@ -165,7 +165,7 @@ Prikaz: "bez zastavica", "1-2: pojačano praćenje", "3 i više: strukturni rizi
 
 ## 4. Simulator spajanja
 
-1. **Odabir:** 2-4 jedinice koje se međusobno dodiruju i pripadaju istoj županiji. Susjedstvo se računa iz poligona (Queen); otoci i mostovi dodaju se ručno.
+1. **Odabir:** 2-4 jedinice koje se međusobno dodiruju i pripadaju istoj županiji. Susjedstvo se računa iz poligona (Queen, `pipeline/geo.py`): 1.360 parova, od kojih se 9 dodiruje samo u točki. Otoci se ne dodaju ručno nego jednim pravilom: unutar svake županije kopnene komponente spajaju se vezom preko mora između dviju najbližih jedinica, od najkraće udaljenosti prema duljoj, dok županija ne postane povezana. Tako nastaje 17 veza. To su redom mostovi i trajektni pravci (Krk-Kraljevica 0,4 km, Vir-Privlaka 0,4 km, Slivno-Ston 2,1 km, Dubrovnik-Mljet 5,7 km, Korčula-Lastovo 11,1 km). U sučelju se označavaju kao "veza preko mora".
 2. **Zbirni profil (činjenice):** tokovi, stanja i stanovnici se zbrajaju, a ocjena i zastavice ponovno računaju. Prikazuje se usporedba prije i poslije.
 3. **Ušteda samo na općoj upravi (01 bez 017 i 018), u tri sloja:**
    - **Strukturni jaz (gornja granica):** stvarni zbirni trošak umanjen za očekivani trošak za veličinu spojene jedinice. Očekivani trošak dolazi iz krivulje razmjera: log-log regresija unutar vrste, uz kontrolu površine, naselja, razvijenosti i obale, s predikcijskim intervalom.

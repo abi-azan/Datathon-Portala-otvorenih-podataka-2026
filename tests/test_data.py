@@ -1,4 +1,6 @@
 """Checks against the built data (PLAN §3.7). Run after `python -m pipeline.build`."""
+import json
+
 import pandas as pd
 import pytest
 
@@ -58,6 +60,41 @@ def test_overdue_rules_match_the_units_own_notes():
     assert sm.kredit_iskazan_dospio and abs(sm.DO - 1625.85) < 1.0
     pov = last.loc["Općina Povljana"]
     assert not pov.kredit_iskazan_dospio and pov.ogranicenje_do and pov.ocjena == 2
+
+
+def test_geometry_covers_every_town_and_municipality(units):
+    topo = json.loads((config.BUILD / "geo" / "jls.topo.json").read_text(encoding="utf-8"))
+    codes = {g["properties"]["sifra"] for g in topo["objects"]["jls"]["geometries"]}
+    assert codes == set(units[units.vrsta != "zupanija"].sifra)
+    assert len(topo["objects"]["zupanije"]["geometries"]) == 21
+    # official areas add up to the DZS total for Croatia (56.561,5 km²)
+    assert abs(units[units.vrsta != "zupanija"].povrsina_km2.sum() - 56_561.5) < 1
+
+
+def test_neighbours_are_symmetric_and_every_county_is_connected(units):
+    s = json.loads((config.BUILD / "geo" / "susjedi.json").read_text(encoding="utf-8"))
+    for a, v in s.items():
+        for kind in ("kopno", "more"):
+            for b, km in v[kind].items():
+                assert s[b][kind][a] == km, (a, b, kind)
+    jls = units[units.vrsta != "zupanija"]
+    for zup, grp in jls.groupby("zup_id"):
+        codes = set(grp.sifra)
+        seen, stack = set(), [next(iter(codes))]
+        while stack:
+            c = stack.pop()
+            if c not in seen:
+                seen.add(c)
+                stack += [n for kind in ("kopno", "more") for n in s[c][kind] if n in codes]
+        assert seen == codes, zup
+
+
+def test_islands_match_the_map(units):
+    jls = units[units.vrsta != "zupanija"].set_index("naziv")
+    no_land = set(jls[jls.n_susjeda == 0].index)
+    assert no_land == {"Općina Lastovo", "Općina Mljet", "Općina Sali", "Općina Šolta", "Općina Vir"}
+    assert jls.otok.astype(bool).sum() == 44
+    assert jls.loc["Grad Krk", "otok"] and not jls.loc["Općina Orebić", "otok"]   # Pelješac is a peninsula
 
 
 def test_every_unit_has_a_grade_in_last_year():

@@ -25,7 +25,7 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
 .venv/Scripts/python -m pytest -q tests/test_methodology.py::test_flags   # one test
 ```
 
-`tests/test_data.py` runs against `data/build/`, so build first; it is skipped when the build is missing.
+`tests/test_data.py` runs against `data/build/`, so build first; it is skipped when the build is missing. The build needs Node.js on PATH, because the geo step runs `npx -y mapshaper@0.6.102`.
 
 ## Architecture (ETL)
 
@@ -38,6 +38,10 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
   - PR-RAS sheet names are matched to Bilanca names within each county.
   - The OIB is then looked up in `data/reference/jls_master.csv`. That file is curated, holds 556 JLS, and was built from the DGU ATOM boundaries, the development index and an island flag.
 - `pipeline/population.py` reads Popis 2021 from the DZS WFS.
+- `pipeline/geo.py` reads the 556 unit polygons from the DZS WFS. It computes the official area, Queen neighbours with shared border length, an island flag and sea links. It also writes `data/build/geo/jls.topo.json` (layers `jls` and `zupanije`, simplified to 4% with mapshaper through `npx`) and `susjedi.json`.
+  - Sea links connect the land components of a county, shortest gap first. The merger simulator and Karta reforme stay inside one county, so every county graph has to be connected.
+  - Island units are those with no land path to Zagreb or Konavle (Konavle is in the Dubrovnik exclave beyond Neum).
+  - `jls_master.csv` no longer holds area, island flag or neighbour count; they come from this step.
 - `pipeline/openness.py` builds the openness layer.
   - It pages through all portal datasets with CKAN `package_search` (about 4,000 datasets, 4 calls) and maps each publishing organization to a unit.
   - It matches names without diacritics, because the portal writes "Konjšćina" and MF writes "KONJŠČINA". A county suffix such as "(ZD)" settles duplicate names like Privlaka.
@@ -45,7 +49,7 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
 - `pipeline/methodology.py` holds PLAN §3 as pure functions: auxiliary quantities, windowed indicators I1-I5, 0-100 scores, grades, four weight scenarios, flags Z1-Z4 and context measures. It also holds the two overdue-liability rules, decided 2026-11-03 (background in `docs/research/05`):
   - A loan reported as entirely overdue, while its principal is repaid at 3% a year or more, does not count toward DO. The unit gets the quality note `kredit_iskazan_kao_dospio`.
   - DO ≥ 30% of operating spending caps points at 39.9, so the grade is at most 2. `bodovi_bez_ogranicenja` keeps the uncapped points.
-- `pipeline/build.py` orchestrates the steps above and writes `data/build/units.csv`, `results.parquet` and `results.json`.
+- `pipeline/build.py` orchestrates the steps above and writes `data/build/units.csv`, `results.parquet`, `results.json` and `geo/`.
 
 Source documents:
 - Rules: `1792415200857_praviladatathonfinal.pdf` (in repo)
@@ -86,6 +90,9 @@ Tie-breakers: Izvedivost first, then open data use. The organizer may withhold a
 - Sudski registar API v3.0.4 uses OAuth2 client credentials (`/api/oauth/token`). It serves whole tables paged with `offset`/`limit` per `snapshot_id`: `/subjekti` (`datum_osnivanja`, `datum_brisanja`, `postupak`, `glavna_djelatnost` as an NKD code), `/sjedista` (`sifra_opcine`, `naziv_opcine`; DGU code lists are not included), `/postupci` (bankruptcy and liquidation), `/gfi` (which annual financial reports were filed and when), `/promjene`. It covers companies only, not obrti.
 - CKAN responses carry no CORS header, so a browser can't call the portal API directly. API use has to happen in the ETL or CI.
 - Municipal boundaries plus Census 2021 population per unit: the DZS INSPIRE WFS at `transformiraj.nipp.hr` (556 polygons, GeoJSON, CORS enabled). The DGU "Upravne jedinice INSPIRE" ATOM ZIP is the fallback with an explicit Otvorena dozvola licence. The DGU WFS is disabled. Exact URLs are in `docs/research/04-podaci-granice-i-varijable.md`.
+  - Polygons come from `su-vector:AreaStatisticalUnit` (`config.WFS_BOUNDARIES`), about 196 MB in 20 s. The service sends no ETag, so every online build downloads it again.
+  - GeoJSON output is always lon/lat, whatever `SRSNAME` says. The feature `id` is `StatisticalUnit_<code>`, `areaValue` is m², and the names are mojibake, so names come from the register.
+  - Borders are topologically clean: tolerances of 0.5 m and 5 m give the same 1,360 Queen pairs. Areas add up to 56,561.75 km², against the DZS figure of 56,561.5.
 - Ministry of Finance local-budget data (PR-RAS, RAS-funkcijski, Bilanca) is on mfin.gov.hr only, not on the portal, and has no stated licence.
 - Overdue liabilities exist in every Bilanca year from 2019 to 2025. 2025 labels the columns `dio 23 D` / `dio 23 N`. Earlier years label both columns `dio 23`, and only the second header row says "- dospjele" or "- nedospjele" (verified 2026-11-02; this corrects an earlier note that they exist only for 2025).
 - MF level 22 is the unit's own budget without its budget users: account 367 (transfers to own budget users) is still in 3.
