@@ -15,6 +15,11 @@ export default function App() {
     loadIndex().then(setIndex).catch(() => setError(true))
   }, [])
 
+  // On the home page, fetch the lazy map chunk alongside the index instead of after it.
+  useEffect(() => {
+    if (route.page === 'home') import('./components/GradeMap').catch(() => {})
+  }, [route.page])
+
   useEffect(() => {
     if (route.page !== 'unit') document.title = 'Fiskalna karta · financije općina, gradova i županija'
   }, [route])

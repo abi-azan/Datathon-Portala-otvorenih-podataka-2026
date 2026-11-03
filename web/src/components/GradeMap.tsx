@@ -2,6 +2,8 @@ import * as maplibregl from 'maplibre-gl'
 // The worker is self-contained; point MapLibre at it explicitly, because Vite's dependency
 // pre-bundling (dev) and chunking (build) break the default URL next to maplibre-gl.mjs.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
+// Imported here, not in index.css, so the stylesheet ships in the lazy map chunk.
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef, useState } from 'react'
 import { feature } from 'topojson-client'
 import type { Topology } from 'topojson-specification'
@@ -36,9 +38,23 @@ function quietBasemap(m: maplibregl.Map) {
   }
 }
 
+/** What the fill encodes. Only the grade for now; add a member and its COLOR_BY entry for new layers. */
+export type MapColorBy = 'ocjena'
+
+// Per colouring: the feature-state value `g` of a unit in a year, and the fill expression that reads it.
+const COLOR_BY: Record<MapColorBy, { value: (u: UnitIndex, year: string) => number; fill: maplibregl.ExpressionSpecification }> = {
+  ocjena: { value: (u, year) => u.ocjena[year] ?? 0, fill: fillColor },
+}
+
 interface Props {
   units: UnitIndex[]
   year: string
+  colorBy?: MapColorBy
+  /** Click picks a unit (onSelect) instead of opening its profile. */
+  selectable?: boolean
+  /** Šifre of units drawn with a thick outline. */
+  selected?: string[]
+  onSelect?: (sifra: string) => void
 }
 
 interface Hover {
@@ -56,7 +72,7 @@ const BLANK: maplibregl.StyleSpecification = {
   layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#fdfdfc' } }],
 }
 
-export function GradeMap({ units, year }: Props) {
+export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, selected, onSelect }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
@@ -66,6 +82,12 @@ export function GradeMap({ units, year }: Props) {
   useEffect(() => {
     bySifra.current = new Map(units.map((u) => [u.sifra, u]))
   }, [units])
+  // the map's click handler is registered once, so it reads the latest props from here
+  const clickProps = useRef({ selectable, onSelect })
+  useEffect(() => {
+    clickProps.current = { selectable, onSelect }
+  }, [selectable, onSelect])
+  const outlined = useRef(new Set<string>())
 
   useEffect(() => {
     if (!box.current) return
@@ -83,6 +105,7 @@ export function GradeMap({ units, year }: Props) {
     m.touchZoomRotate.disableRotation()
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     map.current = m
+    outlined.current = new Set()
     let removed = false
     let styleOk = false
     m.on('style.load', () => {
@@ -114,9 +137,18 @@ export function GradeMap({ units, year }: Props) {
       const firstLabel = m.getStyle().layers.find((l: maplibregl.LayerSpecification) => l.type === 'symbol')?.id
       m.addSource('jls', { type: 'geojson', data: jls, promoteId: 'sifra' })
       m.addSource('zup', { type: 'geojson', data: zup })
-      m.addLayer({ id: 'jls-fill', type: 'fill', source: 'jls', paint: { 'fill-color': fillColor, 'fill-opacity': 0.94 } }, firstLabel)
+      m.addLayer({ id: 'jls-fill', type: 'fill', source: 'jls', paint: { 'fill-color': COLOR_BY.ocjena.fill, 'fill-opacity': 0.94 } }, firstLabel)
       m.addLayer({ id: 'jls-line', type: 'line', source: 'jls', paint: { 'line-color': '#ffffff', 'line-width': 0.5, 'line-opacity': 0.9 } }, firstLabel)
       m.addLayer({ id: 'zup-line', type: 'line', source: 'zup', paint: { 'line-color': '#52514e', 'line-width': 1, 'line-opacity': 0.7 } }, firstLabel)
+      m.addLayer({
+        id: 'jls-selected',
+        type: 'line',
+        source: 'jls',
+        paint: {
+          'line-color': '#0b0b0b',
+          'line-width': ['case', ['boolean', ['feature-state', 'selected'], false], 3.5, 0],
+        },
+      })
       m.addLayer({
         id: 'jls-hover',
         type: 'line',
@@ -154,7 +186,14 @@ export function GradeMap({ units, year }: Props) {
       setHover(null)
     })
     m.on('click', 'jls-fill', (e: maplibregl.MapLayerMouseEvent) => {
-      const slug = e.features?.[0]?.properties?.slug as string | undefined
+      const props = e.features?.[0]?.properties
+      const { selectable, onSelect } = clickProps.current
+      if (selectable) {
+        const sifra = props?.sifra as string | undefined
+        if (sifra) onSelect?.(sifra)
+        return
+      }
+      const slug = props?.slug as string | undefined
       if (slug) go(unitHref(slug))
     })
     return () => {
@@ -163,23 +202,39 @@ export function GradeMap({ units, year }: Props) {
     }
   }, [])
 
-  // recolour when the year changes
+  // recolour when the year or the colouring changes
   useEffect(() => {
     const m = map.current
     if (!ready || !m) return
+    const by = COLOR_BY[colorBy]
+    m.setPaintProperty('jls-fill', 'fill-color', by.fill)
     for (const u of units) {
       if (u.vrsta === 'zupanija') continue
-      m.setFeatureState({ source: 'jls', id: u.sifra }, { g: u.ocjena[year] ?? 0 })
+      m.setFeatureState({ source: 'jls', id: u.sifra }, { g: by.value(u, year) })
     }
-  }, [ready, units, year])
+  }, [ready, units, year, colorBy])
+
+  // outline the selected units; only the difference to the last call touches the map
+  useEffect(() => {
+    const m = map.current
+    if (!ready || !m) return
+    const next = new Set(selected ?? [])
+    for (const s of outlined.current) if (!next.has(s)) m.setFeatureState({ source: 'jls', id: s }, { selected: false })
+    for (const s of next) if (!outlined.current.has(s)) m.setFeatureState({ source: 'jls', id: s }, { selected: true })
+    outlined.current = next
+  }, [ready, selected])
 
   const h = hover && grade(hover.unit.ocjena[year])
+  const hoverSelected = hover != null && (selected ?? []).includes(hover.unit.sifra)
   return (
     <div className="relative h-full w-full overflow-hidden rounded-2xl border border-hairline bg-surface">
       <div ref={box} className="h-full w-full" aria-label="Karta ocjena općina i gradova" role="region" />
-      <div className="pointer-events-none absolute top-4 left-4 rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur">
+      {/* max width keeps the caption clear of the zoom buttons on narrow screens */}
+      <div className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur">
         <div className="text-sm font-semibold">Ocjena financijske stabilnosti, {year}.</div>
-        <div className="text-xs text-muted">556 općina i gradova · prijeđi mišem, klikni za svjedodžbu</div>
+        <div className="text-xs text-muted">
+          556 općina i gradova · prijeđi mišem, klikni za {selectable ? 'odabir' : 'svjedodžbu'}
+        </div>
       </div>
       {!ready && (
         <div className="absolute inset-0 grid place-items-center text-sm text-muted">
@@ -199,7 +254,9 @@ export function GradeMap({ units, year }: Props) {
             {h ? <GradeChip g={h.value} /> : <span className="text-sm text-muted">nema podataka</span>}
             <span className="tabular text-sm text-ink-2">{num(hover.unit.bodovi[year], 1)} / 100 bodova</span>
           </div>
-          <div className="mt-2 text-xs text-muted">Klikni za svjedodžbu jedinice</div>
+          <div className="mt-2 text-xs text-muted">
+            {!selectable ? 'Klikni za svjedodžbu jedinice' : hoverSelected ? 'Klikni za uklanjanje iz odabira' : 'Klikni za odabir jedinice'}
+          </div>
         </div>
       )}
     </div>

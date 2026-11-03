@@ -5,24 +5,29 @@ export function Header({ current }: { current: 'home' | 'unit' | 'methodology' }
     <a
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`rounded-lg px-3 py-1.5 text-sm transition ${active ? 'bg-ink text-white' : 'text-ink-2 hover:bg-hairline/60 hover:text-ink'}`}
+      className={`shrink-0 rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition ${active ? 'bg-ink text-white' : 'text-ink-2 hover:bg-hairline/60 hover:text-ink'}`}
     >
       {label}
     </a>
   )
+  // Below lg the logo and the menu (about 760 px with padding) do not fit one row: the menu becomes a
+  // second row that scrolls sideways on its own, edge to edge, padded so focus rings are not clipped.
   return (
     <header className="border-b border-hairline bg-page/90 backdrop-blur supports-[backdrop-filter]:bg-page/75 sticky top-0 z-30">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-6 px-6 lg:px-10">
-        <a href="#/" className="flex items-center gap-2.5">
+      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-6 px-6 lg:h-16 lg:flex-nowrap lg:px-10">
+        <a href="#/" className="flex h-12 items-center gap-2.5 lg:h-auto">
           <img src="./favicon.svg" alt="" className="h-7 w-7" />
           <span className="font-serif text-xl font-semibold tracking-tight">Fiskalna karta</span>
         </a>
-        <nav className="ml-auto flex items-center gap-1" aria-label="Glavna navigacija">
+        <nav
+          className="-mx-6 flex w-[calc(100%+3rem)] items-center gap-1 overflow-x-auto px-6 pt-1 pb-2.5 lg:mr-0 lg:ml-auto lg:w-auto lg:overflow-visible lg:p-0"
+          aria-label="Glavna navigacija"
+        >
           {link('#/', 'Karta', current === 'home')}
-          <span className="cursor-not-allowed rounded-lg px-3 py-1.5 text-sm text-muted" title="Uskoro">
+          <span className="shrink-0 cursor-not-allowed rounded-lg px-3 py-1.5 text-sm whitespace-nowrap text-muted" title="Uskoro">
             Simulator spajanja
           </span>
-          <span className="cursor-not-allowed rounded-lg px-3 py-1.5 text-sm text-muted" title="Uskoro">
+          <span className="shrink-0 cursor-not-allowed rounded-lg px-3 py-1.5 text-sm whitespace-nowrap text-muted" title="Uskoro">
             Karta reforme
           </span>
           {link('#/metodologija', 'Metodologija i podaci', current === 'methodology')}

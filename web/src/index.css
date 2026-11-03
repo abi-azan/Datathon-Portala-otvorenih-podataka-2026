@@ -1,6 +1,5 @@
 @import "@fontsource-variable/public-sans";
 @import "@fontsource-variable/source-serif-4";
-@import "maplibre-gl/dist/maplibre-gl.css";
 @import "tailwindcss";
 
 /* Design tokens. Grade colours are a diverging scale (blue = stable, red = under pressure,
@@ -53,7 +52,8 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* MapLibre controls in the site's quiet style */
+/* MapLibre controls in the site's quiet style. MapLibre's own CSS loads later with the lazy map
+   chunk; these rules still win (!important, or a property MapLibre sets only on an ancestor). */
 .maplibregl-ctrl-group {
   border-radius: 8px !important;
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.08) !important;

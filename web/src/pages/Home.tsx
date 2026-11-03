@@ -1,7 +1,6 @@
 import { Pause, Play } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { GradeLegend } from '../components/Grade'
-import { GradeMap } from '../components/GradeMap'
 import { Eyebrow } from '../components/Layout'
 import { Search } from '../components/Search'
 import type { IndexFile } from '../lib/data'
@@ -9,6 +8,26 @@ import { num } from '../lib/format'
 import { unitHref } from '../lib/router'
 
 const YEARS = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']
+
+// MapLibre is about 1 MB, so the map is a separate chunk: the profile and methodology pages never load it.
+const GradeMap = lazy(() =>
+  import('../components/GradeMap')
+    .then((m) => ({ default: m.GradeMap }))
+    // offline or a stale deploy (chunk or its CSS missing): keep the page usable, the search still works
+    .catch(() => ({ default: MapFailed })),
+)
+
+function MapFailed() {
+  return <MapPlaceholder>Karta se nije učitala. Osvježi stranicu ili koristi pretragu.</MapPlaceholder>
+}
+
+function MapPlaceholder({ children }: { children: ReactNode }) {
+  return (
+    <div className="grid h-full w-full place-items-center rounded-2xl border border-hairline bg-surface px-6 text-center text-sm text-muted">
+      {children}
+    </div>
+  )
+}
 
 export function Home({ index }: { index: IndexFile }) {
   const [year, setYear] = useState(String(index.zadnja_godina))
@@ -131,8 +150,11 @@ export function Home({ index }: { index: IndexFile }) {
         </p>
       </div>
 
-      <div className="h-[min(78vh,820px)] min-h-[520px] lg:sticky lg:top-24">
-        <GradeMap units={index.jedinice} year={year} />
+      {/* phones: shorter, so the page can still be scrolled past the map */}
+      <div className="h-[60vh] min-h-[420px] lg:sticky lg:top-24 lg:h-[min(78vh,820px)] lg:min-h-[520px]">
+        <Suspense fallback={<MapPlaceholder>Učitavam kartu…</MapPlaceholder>}>
+          <GradeMap units={index.jedinice} year={year} />
+        </Suspense>
       </div>
     </main>
   )
