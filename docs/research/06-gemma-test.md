@@ -164,3 +164,35 @@ Nalazi:
 **Preporuka:** batch radi **31B**. Uz 100 % prolaza iz prvog pokušaja gotovo nijedna jedinica ne dobiva predložak. Trošak je oko 3,6 h od 28,2 h preostale kvote, uz novih 30 h u subotu 7.11. 12B ostaje rezerva (oko 1,7 h).
 
 Sirovi izlaz: `kaggle/results/gemma_test_v6_12b_26b_31b.json`.
+
+## v7 (4.11. oko 0:10-0:30): 31B, Q4_0 s Kaggla prema Unsloth UD-Q4_K_XL
+
+**Zašto ovaj test:**
+- Istraživanje drugih modela nije našlo nijedan otvoreni model koji stane na 2× T4 i koji bi bio jasno bolji od Gemme 4 31B za hrvatski. Prema EuroEvalu najbliži su Qwen3.6-27B i Qwen3.8-27B, izjednačeni s Gemmom na gramatičnosti.
+- Unsloth je izmjerio da Q4_0 s Kaggla (17,65 GB) kod 31B odstupa od nekvantiziranog QAT modela (top-1 87,9 %, KLD 0,093). Njegov `UD-Q4_K_XL` iste veličine odstupa znatno manje (96,7 %, KLD 0,014), prema unsloth.ai/docs/models/gemma-4/qat.
+- Zato smo testirali istu Gemmu u boljoj kvantizaciji.
+
+**Postav:**
+- Bilježnica je `albertmari/fiskalna-karta-jls-gemma-v7`.
+- 20 novih jedinica (`--fresh`), bez preklapanja s v2-v6.
+- `UD-Q4_K_XL` (Apache-2.0, `unsloth/gemma-4-31B-it-qat-GGUF`) preuzima se u sesiji s Hugging Facea (`--hf`). Preuzimanje 17,3 GB trajalo je 172 s.
+- Sesija je trajala 1.223 s, odnosno 0,34 h kvote.
+
+| | 31B Q4_0 (Kaggle Models) | 31B UD-Q4_K_XL (Unsloth, HF) |
+|---|---|---|
+| Prošlo punu provjeru | 20/20 | 20/20 |
+| Iz prvog pokušaja | 20/20 | 20/20 |
+| s po tekstu | 20,7 | 20,3 |
+| Učitavanje | 146 s | 76 s (+172 s preuzimanje) |
+
+**Tekstovi su gotovo isti.**
+- 15/20 identičnih.
+- U ostalih 5 razlikuje se samo interpunkcija (zarez prema točki sa zarezom ili "te") i to je li navedeno "za 2025. godinu".
+- S ovim promptom kvantizacija ne mijenja rezultat.
+- **31B Q4_0 je ukupno 40/40 na jedinicama koje nije vidio** (v6 i v7).
+
+**Preporuka:** batch radi **31B Q4_0 s Kaggle Models**.
+- Službeni je izvor, priključuje se kao model i ne treba ga preuzimati, a kvaliteta je u praksi ista.
+- `UD-Q4_K_XL` ima smisla tek ako se prompt olabavi radi prirodnijeg stila, jer tada model ima više slobode, pa preciznost više vrijedi.
+
+Sirovi izlaz: `kaggle/results/gemma_test_v7_31b_q4_0_ud.json`.

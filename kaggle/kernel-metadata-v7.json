@@ -1,0 +1,19 @@
+{
+  "id": "albertmari/fiskalna-karta-jls-gemma-v7",
+  "title": "Fiskalna karta JLS - Gemma v7",
+  "code_file": "gemma_test.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [
+    "albertmari/fiskalna-karta-jls-gemma-test"
+  ],
+  "model_sources": [
+    "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2"
+  ]
+}

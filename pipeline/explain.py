@@ -136,9 +136,11 @@ def pick_test_units(packs, n, seed=7, fresh=False):
     return chosen
 
 
-def write_kaggle_test(n, fresh=False):
+def write_kaggle_test(n, fresh=False, hf=()):
     """kaggle/gemma_test.py: the runner with the number check, the prompt code and the fact
-    packs embedded, so the Kaggle notebook needs nothing but the attached model."""
+    packs embedded, so the Kaggle notebook needs nothing but the attached model.
+    hf: "repo:file" GGUF files the notebook downloads from Hugging Face."""
+    hf_models = [s.split(":", 1) for s in hf]
     packs = pick_test_units(load_packs()[0], n, seed=11 if fresh else 7, fresh=fresh)
     here = config.ROOT / "kaggle"
     src = (here / "gemma_runner.py").read_text(encoding="utf-8")
@@ -149,7 +151,8 @@ def write_kaggle_test(n, fresh=False):
               .replace("# __PROMPT__", prompt_src)
               .replace('"__PACKS__"', json.dumps(json.dumps(packs, ensure_ascii=False, separators=(",", ":")),
                                                  ensure_ascii=False))
-              .replace("__MAX_RETRIES__", str(MAX_RETRIES)))
+              .replace("__MAX_RETRIES__", str(MAX_RETRIES))
+              .replace("__HF_MODELS__", json.dumps(hf_models)))
     dest = here / "gemma_test.py"
     dest.write_text(out, encoding="utf-8")
     print(f"{dest} ({len(packs)} jedinica, {len(out) // 1024} KB)")
@@ -179,10 +182,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--kaggle-test", type=int, metavar="N")
     ap.add_argument("--fresh", action="store_true", help="test units not used in any earlier test")
+    ap.add_argument("--hf", action="append", default=[], metavar="REPO:FILE",
+                    help="GGUF on Hugging Face that the notebook downloads, e.g. "
+                         "unsloth/gemma-4-31B-it-qat-GGUF:gemma-4-31B-it-qat-UD-Q4_K_XL.gguf")
     ap.add_argument("--check", metavar="OUTPUT_JSON")
     a = ap.parse_args()
     if a.kaggle_test:
-        write_kaggle_test(a.kaggle_test, fresh=a.fresh)
+        write_kaggle_test(a.kaggle_test, fresh=a.fresh, hf=a.hf)
     if a.check:
         check_output(a.check)
 

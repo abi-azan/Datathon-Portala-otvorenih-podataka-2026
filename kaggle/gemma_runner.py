@@ -28,6 +28,8 @@ import urllib.request
 
 PACKS = json.loads("__PACKS__")
 MAX_RETRIES = __MAX_RETRIES__
+HF_MODELS = __HF_MODELS__                 # [[repo, file], ...] downloaded from Hugging Face in the session
+HF_DIR = "/tmp/hf-models"                 # not /kaggle/working: the 20 GB output would keep the file
 SRC = "/tmp/llama.cpp"
 SERVER = f"{SRC}/build/bin/llama-server"
 OUT = "/kaggle/working/gemma_test_output.json"
@@ -92,9 +94,20 @@ def build_llama_cpp():
     return commit
 
 
+def download_hf_models():
+    """GGUF files that are not on Kaggle Models (e.g. Unsloth quants), fetched over HTTPS."""
+    os.makedirs(HF_DIR, exist_ok=True)
+    for repo, name in HF_MODELS:
+        dest = os.path.join(HF_DIR, name)
+        if not os.path.exists(dest):
+            sh(f"curl -L --fail --retry 3 -sS -o {dest} https://huggingface.co/{repo}/resolve/main/{name} && ls -la {dest}")
+
+
 def find_models():
-    """Every attached GGUF model except the vision projector, smallest first."""
-    files = [f for f in glob.glob("/kaggle/input/**/*.gguf", recursive=True) if "mmproj" not in f]
+    """Every attached or downloaded GGUF model except the vision projector and MTP drafter,
+    smallest first."""
+    files = glob.glob("/kaggle/input/**/*.gguf", recursive=True) + glob.glob(f"{HF_DIR}/*.gguf")
+    files = [f for f in files if "mmproj" not in f and "mtp-" not in os.path.basename(f)]
     files.sort(key=os.path.getsize)
     print("GGUF files:", files, flush=True)
     if not files:
@@ -158,7 +171,11 @@ def main():
     t0 = time.time()
     commit = build_llama_cpp()
     gpu = sh("nvidia-smi --query-gpu=name --format=csv,noheader").strip()
-    out = {"partial": True, "meta": {"llama_cpp_commit": commit, "gpu": gpu, "max_retries": MAX_RETRIES}, "models": {}}
+    out = {"partial": True, "meta": {"llama_cpp_commit": commit, "gpu": gpu, "max_retries": MAX_RETRIES,
+                                     "hf_models": HF_MODELS}, "models": {}}
+    t_dl = time.time()
+    download_hf_models()
+    out["meta"]["hf_download_seconds"] = round(time.time() - t_dl)
     for model in find_models():
         name = os.path.basename(model)
         t1 = time.time()
