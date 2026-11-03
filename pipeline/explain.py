@@ -27,17 +27,25 @@ SYSTEM = ("Ti si urednik javnog portala o financijama općina, gradova i župani
 
 RULES = """Pravila:
 1. Napiši 3 do 5 rečenica, najviše 110 riječi, u jednom odlomku. Bez naslova, natuknica i oznaka (markdown).
-2. Koristi samo činjenice s popisa. Svaku brojku prepiši točno kako je napisana: isti decimalni zarez, isti broj decimala, isti znak % ili €. Ne zaokružuj i ne računaj nove brojke ni razlike.
-3. Počni ocjenom i njezinim opisom riječima. Zatim objasni što najviše utječe na ocjenu: najslabiju sastavnicu (ako je navedena) i jake strane, uz usporedbu s medijanom skupine. Ako postoje upozorenja, pravilo ili napomena o podacima, spomeni ih.
+2. Koristi samo činjenice s popisa. Svaku brojku prepiši točno kako je napisana, zajedno s riječju ili znakom uz nju (boda, %, €). Ne zaokružuj i ne računaj nove brojke ni razlike.
+3. Redoslijed: ocjena i njezin opis riječima; zatim najslabija sastavnica (ako je navedena) s usporedbom s medijanom skupine; zatim jake strane; na kraju upozorenja, pravilo i napomena o podacima, ako postoje.
 4. Ton je neutralan i opisan. Ne koristi riječi "loše", "dobro", "uspjeh" ni "neuspjeh". Ne savjetuj, ne nagađaj o uzrocima i ne spominji političare ni stranke.
-5. Naziv jedinice koristi u ovim oblicima: {nom} (nominativ), {gen} (genitiv), {lok} (lokativ)."""
+5. Naziv jedinice piši samo u nominativu, kao subjekt rečenice ("{nom} ima ocjenu …"). Ne sklanjaj ga. U ostalim rečenicama piši "jedinica" ili naziv izostavi.
+6. Pazi na slaganje: "sastavnica je", "obveze su", "jedna od jakih strana", "34,2 boda"."""
+
+EXAMPLE = ("PRIMJER za izmišljenu jedinicu (samo za stil; njegove brojke ne koristi):\n"
+           "Općina Primjerovo za 2025. godinu ima ocjenu 2 (pod pritiskom) i 31,4 boda od 100, dok je medijan "
+           "usporedne skupine 78,8 boda. Ocjenu najviše spuštaju dospjele neplaćene obveze, koje na kraju godine "
+           "iznose 512.300 €, odnosno 41,2 % rashoda poslovanja, uz medijan skupine od 2,0 %. Zbog toga je ocjena "
+           "ograničena na najviše 2. Jaka strana jedinice je servis duga. Upozorenje: novca na računu ima manje "
+           "nego za mjesec dana rashoda poslovanja.")
 
 
 def messages(pack):
     n = pack["naziv"]
     lines = "\n".join(f"- {f['label']}: {f['value']}" for f in pack["facts"])
-    user = (f"Napiši objašnjenje ocjene financijske stabilnosti {n['gen']} za {pack['year']}. godinu.\n\n"
-            + RULES.format(**n) + f"\n\nČINJENICE:\n{lines}")
+    user = (f"Jedinica: {n['nom']}. Napiši objašnjenje njezine ocjene financijske stabilnosti za {pack['year']}. godinu.\n\n"
+            + RULES.format(**n) + f"\n\n{EXAMPLE}\n\nČINJENICE:\n{lines}")
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
 
@@ -107,7 +115,7 @@ def write_kaggle_test(n):
     here = config.ROOT / "kaggle"
     src = (here / "gemma_runner.py").read_text(encoding="utf-8")
     verify_src = (config.ROOT / "pipeline" / "verify.py").read_text(encoding="utf-8")
-    prompt_src = (f"SYSTEM = {SYSTEM!r}\nRULES = {RULES!r}\n\n\n"
+    prompt_src = (f"SYSTEM = {SYSTEM!r}\nRULES = {RULES!r}\nEXAMPLE = {EXAMPLE!r}\n\n\n"
                   + inspect.getsource(messages) + "\n\n" + inspect.getsource(feedback))
     out = (src.replace("# __VERIFY__", verify_src)
               .replace("# __PROMPT__", prompt_src)
@@ -123,15 +131,19 @@ def check_output(path):
     """Re-verify a downloaded Kaggle output with the local packs and print a summary."""
     out = json.loads(Path(path).read_text(encoding="utf-8"))
     packs = {p["oib"]: p for p in load_packs()[0]}
-    first_ok = sum(r["attempts"][0]["check"]["ok"] for r in out["results"])
-    final_ok = 0
-    for r in out["results"]:
-        c = verify.verify(r["text"], packs[r["oib"]])
-        final_ok += c["ok"] and r["source"] == "ai"
-        print(f"[{'OK' if c['ok'] else '--'}] {r['naziv']} ({r['source']}, {len(r['attempts'])} pokušaja, "
-              f"{c['n_brojki']} brojki, nepoznate: {c['nepoznate']})\n    {r['text']}\n")
-    n = len(out["results"])
-    print(f"Prvi pokušaj prošao: {first_ok}/{n}; AI tekst nakon ponavljanja: {final_ok}/{n}")
+    models = out.get("models") or {out.get("meta", {}).get("model_file", "model"): {"results": out["results"]}}
+    for name, m in models.items():
+        results = m["results"]
+        first_ok = sum(r["attempts"][0]["check"]["ok"] for r in results)
+        final_ok = 0
+        print(f"===== {name} ({m.get('seconds', '?')} s)")
+        for r in results:
+            c = verify.verify(r["text"], packs[r["oib"]])
+            final_ok += c["ok"] and r["source"] == "ai"
+            print(f"[{'OK' if c['ok'] else '--'}] {r['naziv']} ({r['source']}, {len(r['attempts'])} pokušaja, "
+                  f"{c['n_brojki']} brojki, nepoznate: {c['nepoznate']})\n    {r['text']}\n")
+        n = len(results)
+        print(f"{name}: prvi pokušaj prošao {first_ok}/{n}; AI tekst nakon ponavljanja {final_ok}/{n}\n")
 
 
 def main():

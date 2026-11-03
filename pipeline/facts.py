@@ -99,6 +99,36 @@ def describe(code, value, row):
     raise KeyError(code)
 
 
+def median_phrase(code, mv):
+    """The peer median in the same words as the unit's value, so a deficit is never set
+    against a surplus without saying so."""
+    if pd.isna(mv):
+        return "medijan skupine nije dostupan"
+    if code == "I1":
+        return f"medijan skupine: {'višak' if mv >= 0 else 'manjak'} {pct(abs(mv))} tekućih prihoda"
+    if code == "I2":
+        return f"medijan skupine: {'ostaje' if mv >= 0 else 'nedostaje'} {pct(abs(mv))} tekućih prihoda"
+    if code == "I3":
+        return "većina jedinica u skupini nema neto duga" if mv < 0.05 else f"medijan skupine {years(mv)}"
+    if code == "I4":
+        return f"medijan skupine {pct(mv)} zakonske osnovice"
+    return f"medijan skupine {pct(mv)} rashoda poslovanja"
+
+
+def not_worse_than_median(code, value, mv):
+    """I1 and I2: higher is better; I3, I4 and I5: lower is better."""
+    if pd.isna(mv) or value is None or pd.isna(value):
+        return True
+    return value >= mv if code in ("I1", "I2") else value <= mv
+
+
+def points(x):
+    """Points with the right noun: 34,2 boda (decimals take the genitive singular), 100 bodova."""
+    if float(x).is_integer():
+        return f"{num(x)} {plural(x, 'bod', 'boda', 'bodova')}"
+    return f"{num(x, 1)} boda"
+
+
 def peer_medians(results):
     cols = ["I1", "I2", "I4", "I5", "uprava_pc", "udio_tekucih_pomoci", "bodovi"]
     med = results.groupby(["skupina", "year"])[cols].median()
@@ -114,16 +144,25 @@ def fact_pack(unit, history, med, year):
     m = med.loc[(r["skupina"], year)]
     names = cases(unit["naziv"], unit["vrsta"])
     n_peer = int(r["n_skupine"])
+    peers = n_peer > 1                      # Grad Zagreb is a group of one: no comparison (PLAN §3.6)
     pop = int(unit["stanovnici_2021"])
     facts = [
         ("Jedinica", f"{names['nom']} ({unit['zupanija']}), {num(pop)} "
                      f"{plural(pop, 'stanovnik', 'stanovnika', 'stanovnika')} (Popis 2021.)"),
-        ("Usporedna skupina", f"{r['skupina']} ({n_peer} {plural(n_peer, 'jedinica', 'jedinice', 'jedinica')})"),
         (f"Ocjena financijske stabilnosti za {year}.",
          f"{int(r['ocjena'])} ({r['ocjena_rijec']}) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno)"),
-        ("Bodovi", f"{num(r['bodovi'], 1)} od 100; medijan skupine {num(m['bodovi'], 1)}"),
-        ("Mjesto u skupini", f"{int(r['rang'])}. od {int(r['n_skupine'])}"),
     ]
+    if peers:
+        facts += [
+            ("Usporedna skupina", f"{r['skupina']} ({n_peer} {plural(n_peer, 'jedinica', 'jedinice', 'jedinica')})"),
+            ("Bodovi", f"{points(r['bodovi'])} od 100; medijan skupine {points(m['bodovi'])}"),
+            ("Mjesto u skupini", f"{int(r['rang'])}. od {n_peer}"),
+        ]
+    else:
+        facts += [
+            ("Bodovi", f"{points(r['bodovi'])} od 100"),
+            ("Usporedba", "jedinica nema usporedive skupine, pa se ocjenjuje samo prema pragovima"),
+        ]
     if prev is not None and pd.notna(prev.get("ocjena")):
         facts.append((f"Ocjena za {year - 1}.", f"{int(prev['ocjena'])} ({prev['ocjena_rijec']})"))
     window = int(r["prozor_godina"])
@@ -133,23 +172,17 @@ def fact_pack(unit, history, med, year):
     scores = {c: r[f"S{c[1]}"] for c in COMPONENTS}
     for c, label in COMPONENTS.items():
         line = describe(c, r[c], r)
-        mv = m[c]
-        if c == "I3":
-            if pd.isna(mv) or mv < 0.05:
-                line += "; većina jedinica u skupini nema neto duga"
-            else:
-                line += f"; medijan skupine {years(mv)}"
-        elif c == "I5":
-            line += f"; medijan skupine {pct(mv)} rashoda poslovanja"
-        else:
-            line += f"; medijan skupine {pct(mv)}"
+        if peers:
+            line += "; " + median_phrase(c, m[c])
         facts.append((f"Sastavnica: {label}", line))
-    # the story: the weakest component (if it is weak at all) and the clear strengths
+    # the story: the weakest component (if it is weak at all) and the clear strengths.
+    # A strength must score high and, where there is a peer group, not be worse than its median.
     valid = {c: s for c, s in scores.items() if s is not None and not pd.isna(s)}
     weakest = min(valid, key=valid.get)
     if valid[weakest] < 80:
         facts.append(("Najslabija sastavnica", COMPONENTS[weakest]))
-    strong = [COMPONENTS[c] for c, s in valid.items() if s >= 90]
+    strong = [COMPONENTS[c] for c, s in valid.items()
+              if s >= 90 and (not peers or not_worse_than_median(c, r[c], m[c]))]
     facts.append(("Jake strane", ", ".join(strong) if strong else "nijedna sastavnica nije izrazito jaka"))
 
     flags = [f for f in str(r.get("zastavice") or "").split(",") if f]
@@ -159,9 +192,10 @@ def fact_pack(unit, history, med, year):
     if r.get("kredit_iskazan_dospio"):
         facts.append(("Napomena o podacima", "u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, "
                                               "pa se ne broji u dospjele obveze"))
-    facts.append(("Ovisnost o pomoćima", f"tekuće pomoći čine {pct(r['udio_tekucih_pomoci'])} tekućih prihoda; "
-                                         f"medijan skupine {pct(m['udio_tekucih_pomoci'])}"))
-    facts.append(("Trošak opće uprave po stanovniku", f"{eur(r['uprava_pc'])}; medijan skupine {eur(m['uprava_pc'])}"))
+    facts.append(("Ovisnost o pomoćima", f"tekuće pomoći čine {pct(r['udio_tekucih_pomoci'])} tekućih prihoda"
+                                         + (f"; medijan skupine {pct(m['udio_tekucih_pomoci'])}" if peers else "")))
+    facts.append(("Trošak opće uprave po stanovniku", eur(r["uprava_pc"])
+                  + (f"; medijan skupine {eur(m['uprava_pc'])}" if peers else "")))
     grades = [int(r["ocjena"])] + ([int(prev["ocjena"])] if prev is not None and pd.notna(prev.get("ocjena")) else [])
     return {"oib": unit["oib"], "naziv": names, "year": year, "ocjena": int(r["ocjena"]), "ocjene": grades,
             "facts": [{"label": k, "value": v} for k, v in facts]}

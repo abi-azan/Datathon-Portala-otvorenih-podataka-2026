@@ -46,9 +46,32 @@ def sh(cmd, check=True):
     return r.stdout if not r.returncode else None
 
 
+BIN_OUT = "/kaggle/working/llama-bin"     # saved with the notebook output, reused by later runs
+
+
+def cached_build():
+    """A llama-server built by an earlier run, attached as a kernel source."""
+    hits = glob.glob("/kaggle/input/**/llama-bin/llama-server", recursive=True)
+    if not hits:
+        return None
+    src = os.path.dirname(hits[0])
+    sh(f"mkdir -p {SRC}/build && cp -r {src} {SRC}/build/bin && chmod +x {SERVER}")
+    commit = open(os.path.join(src, "COMMIT")).read().strip() if os.path.exists(os.path.join(src, "COMMIT")) else "?"
+    print("using cached llama-server from", src, commit, flush=True)
+    return commit
+
+
+def save_build(commit):
+    sh(f"mkdir -p {BIN_OUT} && cp {SRC}/build/bin/llama-server {BIN_OUT}/ && "
+       f"cp {SRC}/build/bin/*.so* {BIN_OUT}/ 2>/dev/null; echo {commit} > {BIN_OUT}/COMMIT; ls -la {BIN_OUT}")
+
+
 def build_llama_cpp():
     os.environ["PATH"] = "/usr/local/cuda/bin:" + os.environ["PATH"]
     sh("nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv")
+    cached = cached_build()
+    if cached:
+        return cached
     sh("nvcc --version | tail -2; cmake --version | head -1")
     sh(f"git clone --depth 1 https://github.com/ggml-org/llama.cpp {SRC}")
     commit = sh(f"git -C {SRC} rev-parse HEAD").strip()
@@ -64,15 +87,18 @@ def build_llama_cpp():
         sh(f"rm -rf {SRC}/build")
         sh(base + " -DGGML_CUDA_NO_VMM=ON")
     sh(f"cmake --build {SRC}/build --config Release -j {os.cpu_count()} --target llama-server")
+    save_build(commit)
     return commit
 
 
-def find_model():
+def find_models():
+    """Every attached GGUF model except the vision projector, smallest first."""
     files = [f for f in glob.glob("/kaggle/input/**/*.gguf", recursive=True) if "mmproj" not in f]
+    files.sort(key=os.path.getsize)
     print("GGUF files:", files, flush=True)
     if not files:
         raise SystemExit("no GGUF model attached")
-    return files[0]
+    return files
 
 
 def start_server(model):
@@ -128,22 +154,29 @@ def run_job(pack):
 def main():
     t0 = time.time()
     commit = build_llama_cpp()
-    model = find_model()
-    proc = start_server(model)
-    results = []
-    for i, pack in enumerate(PACKS, 1):
-        r = run_job(pack)
-        results.append(r)
-        print(f"[{i}/{len(PACKS)}] {r['naziv']}: {r['source']}, {len(r['attempts'])} pokušaja, "
-              f"{r['check']['n_brojki']} brojki, nepoznate {r['check']['nepoznate']}", flush=True)
-        json.dump({"partial": True, "results": results}, open(OUT, "w"), ensure_ascii=False, indent=1)
-    proc.terminate()
-    meta = {"llama_cpp_commit": commit, "model_file": os.path.basename(model),
-            "gpu": sh("nvidia-smi --query-gpu=name --format=csv,noheader").strip(),
-            "seconds_total": round(time.time() - t0), "max_retries": MAX_RETRIES}
-    json.dump({"partial": False, "meta": meta, "results": results}, open(OUT, "w"), ensure_ascii=False, indent=1)
-    ok = sum(r["source"] == "ai" for r in results)
-    print(f"Gotovo: {ok}/{len(results)} tekstova prošlo provjeru; {meta}")
+    gpu = sh("nvidia-smi --query-gpu=name --format=csv,noheader").strip()
+    out = {"partial": True, "meta": {"llama_cpp_commit": commit, "gpu": gpu, "max_retries": MAX_RETRIES}, "models": {}}
+    for model in find_models():
+        name = os.path.basename(model)
+        t1 = time.time()
+        proc = start_server(model)
+        results = []
+        for i, pack in enumerate(PACKS, 1):
+            r = run_job(pack)
+            results.append(r)
+            print(f"[{name} {i}/{len(PACKS)}] {r['naziv']}: {r['source']}, {len(r['attempts'])} pokušaja, "
+                  f"{r['check']['n_brojki']} brojki, nepoznate {r['check']['nepoznate']}", flush=True)
+            out["models"][name] = {"results": results}
+            json.dump(out, open(OUT, "w"), ensure_ascii=False, indent=1)
+        proc.terminate()
+        proc.wait(timeout=60)
+        out["models"][name]["seconds"] = round(time.time() - t1)
+        ok = sum(r["source"] == "ai" for r in results)
+        print(f"{name}: {ok}/{len(results)} tekstova prošlo provjeru u {out['models'][name]['seconds']} s", flush=True)
+    out["partial"] = False
+    out["meta"]["seconds_total"] = round(time.time() - t0)
+    json.dump(out, open(OUT, "w"), ensure_ascii=False, indent=1)
+    print("Gotovo:", out["meta"])
 
 
 if __name__ == "__main__":

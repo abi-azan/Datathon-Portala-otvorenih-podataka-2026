@@ -1,0 +1,612 @@
+{
+ "partial": false,
+ "meta": {
+  "llama_cpp_commit": "2cbca389f515df455412dafa07e2b1359cc72a6d",
+  "model_file": "gemma-4-E4B_q4_0-it.gguf",
+  "gpu": "Tesla T4\nTesla T4",
+  "seconds_total": 1889,
+  "max_retries": 2
+ },
+ "results": [
+  {
+   "oib": "89238941129",
+   "naziv": "Općina Kloštar Podravski",
+   "text": "Ocjena financijske stabilnosti Općine Kloštar Podravski za 2025. godinu je 2 (pod pritiskom) na ljestvici od 1 do 5. Općina Kloštar Podravski ostvarila je 34,2 od 100 bodova, što je niže od medijana skupine od 87,8. Najslabija sastavnica Općine Kloštar Podravski su dospjele neplaćene obveze, koje iznose 1.767.926 €, što je 80,9 % rashoda poslovanja. Upozorenja ukazuju na preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 10,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Kloštar Podravski za 2025. godinu je 2 (pod pritiskom) na ljestvici od 1 do 5. Općina Kloštar Podravski ostvarila je 34,2 od 100 bodova, što je niže od medijana skupine od 87,8. Najslabija sastavnica Općine Kloštar Podravski su dospjele neplaćene obveze, koje iznose 1.767.926 €, što je 80,9 % rashoda poslovanja. Upozorenja ukazuju na preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "seconds": 4.1,
+     "usage": {
+      "completion_tokens": 174,
+      "prompt_tokens": 1081,
+      "total_tokens": 1255,
+      "prompt_tokens_details": {
+       "cached_tokens": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "61106276570",
+   "naziv": "Grad Senj",
+   "text": "Ocjena financijske stabilnosti Grada Senj za 2025. godinu je 2 (pod pritiskom), što se odražava na bodovima 28,5 od 100, u usporedbi s medijanom skupine 70,1. Najslabija sastavnica Grada Senj su operativni saldo, gdje operativni manjak iznosi 12,5 % tekućih prihoda, u usporedbi s medijanom skupine od 8,1 %. Jake strane Grada Senj su godine otplate neto duga i servis duga. Upozorenja navode da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda, a otplata duga i dospjele obveze su blizu zakonskog limita.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 8,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Grada Senj za 2025. godinu je 2 (pod pritiskom), što se odražava na bodovima 28,5 od 100, u usporedbi s medijanom skupine 70,1. Najslabija sastavnica Grada Senj su operativni saldo, gdje operativni manjak iznosi 12,5 % tekućih prihoda, u usporedbi s medijanom skupine od 8,1 %. Jake strane Grada Senj su godine otplate neto duga i servis duga. Upozorenja navode da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda, a otplata duga i dospjele obveze su blizu zakonskog limita.",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "seconds": 3.9,
+     "usage": {
+      "completion_tokens": 187,
+      "prompt_tokens": 1017,
+      "total_tokens": 1204,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "47207249296",
+   "naziv": "Općina Povljana",
+   "text": "Ocjena financijske stabilnosti za Općinu Povljana za 2025. godinu je 2 (pod pritiskom), što je ispod medijana skupine od 78,8. Najslabija sastavnica su dospjele neplaćene obveze, koje iznose 1.045.908 €, što je 49,4 % rashoda poslovanja. Jake strane Općine Povljane uključuju operativni saldo od 26,9 % tekućih prihoda i slobodni saldo nakon otplate glavnice od 26,1 % tekućih prihoda. Upozorenje je da su otplata duga i dospjele obveze blizu zakonskog limita.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 7,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti za Općinu Povljana za 2025. godinu je 2 (pod pritiskom), što je ispod medijana skupine od 78,8. Najslabija sastavnica su dospjele neplaćene obveze, koje iznose 1.045.908 €, što je 49,4 % rashoda poslovanja. Jake strane Općine Povljane uključuju operativni saldo od 26,9 % tekućih prihoda i slobodni saldo nakon otplate glavnice od 26,1 % tekućih prihoda. Upozorenje je da su otplata duga i dospjele obveze blizu zakonskog limita.",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "seconds": 3.6,
+     "usage": {
+      "completion_tokens": 170,
+      "prompt_tokens": 1016,
+      "total_tokens": 1186,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "78755598868",
+   "naziv": "Grad Split",
+   "text": "Ocjena financijske stabilnosti Grada Split za 2025. godinu je 3 (umjereno) na ljestvici od 1 do 5. Grad Split ima bodove 46,1 od 100, što ga pozicionira na 15. mjestu od 15 jedinica u usporednoj skupini. Najslabija sastavnica Grada Split je slobodni saldo nakon otplate glavnice, koji nedostaje 5,2 % tekućih prihoda, u usporedbi s medijanom skupine od 7,7 %. Jedna od jake strana Grada Split su dospjele neplaćene obveze, koje iznose 2,7 % rashoda poslovanja, dok je medijan skupine 1,0 %. Upozorenja navode da je preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 13,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Grada Split za 2025. godinu je 3 (umjereno) na ljestvici od 1 do 5. Grad Split ima bodove 46,1 od 100, što ga pozicionira na 15. mjestu od 15 jedinica u usporednoj skupini. Najslabija sastavnica Grada Split je slobodni saldo nakon otplate glavnice, koji nedostaje 5,2 % tekućih prihoda, u usporedbi s medijanom skupine od 7,7 %. Jedna od jake strana Grada Split su dospjele neplaćene obveze, koje iznose 2,7 % rashoda poslovanja, dok je medijan skupine 1,0 %. Upozorenja navode da je preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+     "check": {
+      "ok": true,
+      "n_brojki": 13,
+      "nepoznate": []
+     },
+     "seconds": 4.2,
+     "usage": {
+      "completion_tokens": 207,
+      "prompt_tokens": 948,
+      "total_tokens": 1155,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "90811277065",
+   "naziv": "Općina Primorski Dolac",
+   "text": "Ocjena financijske stabilnosti Općine Primorski Dolac za 2025. godinu je 1 (ozbiljan pritisak), što je ispod medijana skupine od 78,8. Najslabija sastavnica Općine Primorski Dolac su operativni saldo, gdje operativni manjak iznosi 20,6 % tekućih prihoda, u usporedbi s medijanjom skupine od 13,3 %. Općina Primorski Dolac ima neto dug, a nema operativnog viška za njegovu otplatu, dok većina jedinica u skupini nema neto dug. Jedina napomena o podacima je da u Bilanci je cijeli kredit iskazan kao dospio, ali se redovito otplaćuje.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 5,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Primorski Dolac za 2025. godinu je 1 (ozbiljan pritisak), što je ispod medijana skupine od 78,8. Najslabija sastavnica Općine Primorski Dolac su operativni saldo, gdje operativni manjak iznosi 20,6 % tekućih prihoda, u usporedbi s medijanjom skupine od 13,3 %. Općina Primorski Dolac ima neto dug, a nema operativnog viška za njegovu otplatu, dok većina jedinica u skupini nema neto dug. Jedina napomena o podacima je da u Bilanci je cijeli kredit iskazan kao dospio, ali se redovito otplaćuje.",
+     "check": {
+      "ok": true,
+      "n_brojki": 5,
+      "nepoznate": []
+     },
+     "seconds": 3.8,
+     "usage": {
+      "completion_tokens": 178,
+      "prompt_tokens": 1084,
+      "total_tokens": 1262,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "90017522601",
+   "naziv": "Istarska županija",
+   "text": "Ocjena financijske stabilnosti Istarske županije za 2025. godinu je 5 (vrlo stabilno) na ljestvici od 1 do 5. Istarska županija ostvaruje ocjenu od 91,2 od 100, što je bolje od medijana skupine od 68,3, te zauzima 1. mjesto od 20 županija. Jake strane Istarske županije su operativni saldo i godine otplate neto duga. Sastavnica operativni saldo pokazuje višak od 18,8 % tekućih prihoda, u usporedbi s medijanom skupine od -1,0 %.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 11,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Istarske županije za 2025. godinu je 5 (vrlo stabilno) na ljestvici od 1 do 5. Istarska županija ostvaruje ocjenu od 91,2 od 100, što je bolje od medijana skupine od 68,3, te zauzima 1. mjesto od 20 županija. Jake strane Istarske županije su operativni saldo i godine otplate neto duga. Sastavnica operativni saldo pokazuje višak od 18,8 % tekućih prihoda, u usporedbi s medijanom skupine od -1,0 %.",
+     "check": {
+      "ok": true,
+      "n_brojki": 11,
+      "nepoznate": []
+     },
+     "seconds": 3.3,
+     "usage": {
+      "completion_tokens": 156,
+      "prompt_tokens": 901,
+      "total_tokens": 1057,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "33141736361",
+   "naziv": "Općina Sveta Marija",
+   "text": "Ocjena financijske stabilnosti Općine Sveta Marija za 2025. godinu je 5 (vrlo stabilno), što je iznad medijana skupine. Najslabija sastavnica je servis duga, koji iznosi 6,7 % zakonske osnovice, dok je medijan skupine 3,1 %. Jake strane Općine Sveta Marije uključuju operativni saldo od 27,6 % tekućih prihoda i slobodni saldo nakon otplate glavnice od 23,8 % tekućih prihoda. Općina Sveta Marija se nalazi na poziciji 33. od 202 jedinice u usporednoj skupini.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 8,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Sveta Marija za 2025. godinu je 5 (vrlo stabilno), što je iznad medijana skupine. Najslabija sastavnica je servis duga, koji iznosi 6,7 % zakonske osnovice, dok je medijan skupine 3,1 %. Jake strane Općine Sveta Marije uključuju operativni saldo od 27,6 % tekućih prihoda i slobodni saldo nakon otplate glavnice od 23,8 % tekućih prihoda. Općina Sveta Marija se nalazi na poziciji 33. od 202 jedinice u usporednoj skupini.",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "seconds": 3.4,
+     "usage": {
+      "completion_tokens": 158,
+      "prompt_tokens": 1008,
+      "total_tokens": 1166,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "61817894937",
+   "naziv": "Grad Zagreb",
+   "text": "Ocjena financijske stabilnosti Grada Zagreba za 2025. godinu je 5 (vrlo stabilno) na ljestvici od 1 do 5. Grad Zagreb ima bod 80,1 od 100, što je jednako medijanu skupine. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 5,7 % tekućih prihoda, jednako medijanu skupine. Jake strane Grada Zagreba su godine otplate neto duga i dospjele neplaćene obveze. Nemaju upozorenja.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 7,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Grada Zagreba za 2025. godinu je 5 (vrlo stabilno) na ljestvici od 1 do 5. Grad Zagreb ima bod 80,1 od 100, što je jednako medijanu skupine. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 5,7 % tekućih prihoda, jednako medijanu skupine. Jake strane Grada Zagreba su godine otplate neto duga i dospjele neplaćene obveze. Nemaju upozorenja.",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "seconds": 3.0,
+     "usage": {
+      "completion_tokens": 136,
+      "prompt_tokens": 913,
+      "total_tokens": 1049,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "54944238149",
+   "naziv": "Općina Tordinci",
+   "text": "Ocjena financijske stabilnosti za 2025. godinu za Općinu Tordinci je 1 (ozbiljan pritisak) na ljestvici od 1 do 5. Općina Tordinci ostvaruje bod 14,7 od 100, što je niže od medijana skupine od 78,8. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, gdje nedostaje 7,1 % tekućih prihoda, za razliku od medijana skupine od 10,8 %. Općina Tordinci ima neto dug, a nema operativnog viška za njegovu otplatu, dok većina jedinica u skupini nema neto dug. Upozorenja uključuju da su preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 10,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti za 2025. godinu za Općinu Tordinci je 1 (ozbiljan pritisak) na ljestvici od 1 do 5. Općina Tordinci ostvaruje bod 14,7 od 100, što je niže od medijana skupine od 78,8. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, gdje nedostaje 7,1 % tekućih prihoda, za razliku od medijana skupine od 10,8 %. Općina Tordinci ima neto dug, a nema operativnog viška za njegovu otplatu, dok većina jedinica u skupini nema neto dug. Upozorenja uključuju da su preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "seconds": 4.1,
+     "usage": {
+      "completion_tokens": 197,
+      "prompt_tokens": 1013,
+      "total_tokens": 1210,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "70479631665",
+   "naziv": "Općina Zrinski Topolovac",
+   "text": "Ocjena financijske stabilnosti Općine Zrinski Topolovac za 2025. godinu je 2 (pod pritiskom). Općina Zrinski Topolovac ostvaruje bod 24,7 od 100, što je ispod medijana skupine od 78,8. Najslabija sastavnica je godina otplate neto duga, gdje neto dug bi se mogao otplatiti iz operativnog viška za 93,5 godine, dok većina jedinica u skupini nema neto duga. Općina Zrinski Topolovac ima značajnu ovisnost o tekućim pomoći, koje čine 69,0 % tekućih prihoda, za razliku od medijana skupine od 36,0 %.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 8,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Zrinski Topolovac za 2025. godinu je 2 (pod pritiskom). Općina Zrinski Topolovac ostvaruje bod 24,7 od 100, što je ispod medijana skupine od 78,8. Najslabija sastavnica je godina otplate neto duga, gdje neto dug bi se mogao otplatiti iz operativnog viška za 93,5 godine, dok većina jedinica u skupini nema neto duga. Općina Zrinski Topolovac ima značajnu ovisnost o tekućim pomoći, koje čine 69,0 % tekućih prihoda, za razliku od medijana skupine od 36,0 %.",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "seconds": 3.7,
+     "usage": {
+      "completion_tokens": 174,
+      "prompt_tokens": 1035,
+      "total_tokens": 1209,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "95584171878",
+   "naziv": "Grad Stari Grad",
+   "text": "Ocjena financijske stabilnosti Grada Stari Grad za 2025. godinu je 3 (umjereno) na ljestvici od 1 do 5. Najslabija sastavnica Grada Stari Grad su operativni saldo, gdje operativni manjak iznosi 19,1 % tekućih prihoda, u usporedbi s medijanom skupine od 14,1 %. Jake strane Grada Stari Grad su servis duga i dospjele neplaćene obveze. Grad Stari Grad se nalazi na 20. mjestu od 21 jedinice u usporednoj skupini.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 8,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Grada Stari Grad za 2025. godinu je 3 (umjereno) na ljestvici od 1 do 5. Najslabija sastavnica Grada Stari Grad su operativni saldo, gdje operativni manjak iznosi 19,1 % tekućih prihoda, u usporedbi s medijanom skupine od 14,1 %. Jake strane Grada Stari Grad su servis duga i dospjele neplaćene obveze. Grad Stari Grad se nalazi na 20. mjestu od 21 jedinice u usporednoj skupini.",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "seconds": 3.2,
+     "usage": {
+      "completion_tokens": 145,
+      "prompt_tokens": 937,
+      "total_tokens": 1082,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "08909915246",
+   "naziv": "Općina Lobor",
+   "text": "Ocjena financijske stabilnosti Općine Lobor za 2025. godinu je 4 (stabilno). Općina Lobor ostvarila je bod 70,3 od 100, što je niže od medijana skupine od 87,8. Najslabija sastavnica Općine Lobor je servis duga, koji iznosi 23,1 % zakonske osnovice, dok je medijan skupine 3,8 %. Jake strane Općine Lobor su operativni saldo, koji iznosi 20,5 % tekućih prihoda, te godine otplate neto duga. Upozorenje je da otplata duga i dospjele obveze su blizu zakonskog limita.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 8,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Lobor za 2025. godinu je 4 (stabilno). Općina Lobor ostvarila je bod 70,3 od 100, što je niže od medijana skupine od 87,8. Najslabija sastavnica Općine Lobor je servis duga, koji iznosi 23,1 % zakonske osnovice, dok je medijan skupine 3,8 %. Jake strane Općine Lobor su operativni saldo, koji iznosi 20,5 % tekućih prihoda, te godine otplate neto duga. Upozorenje je da otplata duga i dospjele obveze su blizu zakonskog limita.",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "seconds": 3.6,
+     "usage": {
+      "completion_tokens": 170,
+      "prompt_tokens": 984,
+      "total_tokens": 1154,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "18648820219",
+   "naziv": "Općina Sveti Križ Začretje",
+   "text": "Ocjena financijske stabilnosti Općine Sveti Križ Začretje za 2025. godinu je 5 (vrlo stabilno) na ljestvici od 1 do 5. Općina Sveti Križ Začretje ostvaruje bod 97,9 od 100, što je iznad medijana skupine od 82,5, te zauzima 5. mjesto od 28 jedinica. Najjače sastavnice su operativni saldo s 23,7 % tekućih prihoda i slobodni saldo nakon otplate glavnice s 21,9 % tekućih prihoda. Jedna od primijećenih sastavnica je dospjele neplaćene obveze koje iznose 39.872 €, što predstavlja 1,3 % rashoda poslovanja.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 13,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Sveti Križ Začretje za 2025. godinu je 5 (vrlo stabilno) na ljestvici od 1 do 5. Općina Sveti Križ Začretje ostvaruje bod 97,9 od 100, što je iznad medijana skupine od 82,5, te zauzima 5. mjesto od 28 jedinica. Najjače sastavnice su operativni saldo s 23,7 % tekućih prihoda i slobodni saldo nakon otplate glavnice s 21,9 % tekućih prihoda. Jedna od primijećenih sastavnica je dospjele neplaćene obveze koje iznose 39.872 €, što predstavlja 1,3 % rashoda poslovanja.",
+     "check": {
+      "ok": true,
+      "n_brojki": 13,
+      "nepoznate": []
+     },
+     "seconds": 4.1,
+     "usage": {
+      "completion_tokens": 197,
+      "prompt_tokens": 973,
+      "total_tokens": 1170,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "97782176849",
+   "naziv": "Općina Krapinske Toplice",
+   "text": "Ocjena financijske stabilnosti Općine Krapinske Toplice za 2025. godinu je 1 (ozbiljan pritisak), što je ispod medijana skupine. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 18,6 % tekućih prihoda, u usporedbi s medijanom skupine od 20,0 %. Jedna od napomena je da jedinica ima neto dug, a nema operativnog viška za njegovu otplatu. Upozorenja uključuju da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 5,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Krapinske Toplice za 2025. godinu je 1 (ozbiljan pritisak), što je ispod medijana skupine. Najslabija sastavnica je operativni saldo, gdje operativni manjak iznosi 18,6 % tekućih prihoda, u usporedbi s medijanom skupine od 20,0 %. Jedna od napomena je da jedinica ima neto dug, a nema operativnog viška za njegovu otplatu. Upozorenja uključuju da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda.",
+     "check": {
+      "ok": true,
+      "n_brojki": 5,
+      "nepoznate": []
+     },
+     "seconds": 3.3,
+     "usage": {
+      "completion_tokens": 151,
+      "prompt_tokens": 1025,
+      "total_tokens": 1176,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "71211305734",
+   "naziv": "Općina Tkon",
+   "text": "Ocjena financijske stabilnosti Općine Tkon za 2025. godinu je 2 (pod pritiskom). Najveći utjecaj na ocjenu imaju dospjele neplaćene obveze, koje iznose 433.273 €, što je 47,8 % rashoda poslovanja. Jake strane Općine Tkon su operativni saldo, slobodni saldo nakon otplate glavnice i godine otplate neto duga. Općina Tkon ima 39,9 od 100 bodova, dok je medijan skupine 78,8. Upozorenja uključuju da su otplata duga i dospjele obveze blizu zakonskog limita.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 7,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Tkon za 2025. godinu je 2 (pod pritiskom). Najveći utjecaj na ocjenu imaju dospjele neplaćene obveze, koje iznose 433.273 €, što je 47,8 % rashoda poslovanja. Jake strane Općine Tkon su operativni saldo, slobodni saldo nakon otplate glavnice i godine otplate neto duga. Općina Tkon ima 39,9 od 100 bodova, dok je medijan skupine 78,8. Upozorenja uključuju da su otplata duga i dospjele obveze blizu zakonskog limita.",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": []
+     },
+     "seconds": 3.6,
+     "usage": {
+      "completion_tokens": 167,
+      "prompt_tokens": 1042,
+      "total_tokens": 1209,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "21647556965",
+   "naziv": "Općina Kumrovec",
+   "text": "Ocjena financijske stabilnosti Općine Kumrovec za 2025. godinu je 3 (umjereno) na ljestvici od 1 do 5. Najslabija sastavnica Općine Kumrovec su operativni saldo, gdje operativni manjak iznosi 22,9 % tekućih prihoda, za medijan skupine koji iznosi 13,3 %. Jedna od jakih strana Općine Kumrovec je godina otplate neto duga, jer Općina Kumrovec nema neto duga. Također, dospjele neplaćene obveze Općine Kumrovec iznose 4.407 €, što je 0,4 % rashoda poslovanja.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 8,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Kumrovec za 2025. godinu je 3 (umjereno) na ljestvici od 1 do 5. Najslabija sastavnica Općine Kumrovec su operativni saldo, gdje operativni manjak iznosi 22,9 % tekućih prihoda, za medijan skupine koji iznosi 13,3 %. Jedna od jakih strana Općine Kumrovec je godina otplate neto duga, jer Općina Kumrovec nema neto duga. Također, dospjele neplaćene obveze Općine Kumrovec iznose 4.407 €, što je 0,4 % rashoda poslovanja.",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": []
+     },
+     "seconds": 3.6,
+     "usage": {
+      "completion_tokens": 168,
+      "prompt_tokens": 940,
+      "total_tokens": 1108,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "38621571773",
+   "naziv": "Općina Šolta",
+   "text": "Ocjena financijske stabilnosti Općine Šolta za 2025. godinu je 4 (stabilno) na ljestvici od 1 do 5. Općina Šolta ostvarila je 67,5 od 100 bodova, što je ispod medijana skupine od 78,8. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 7,4 % tekućih prihoda, dok je medijan skupine 10,8 %. Jake strane Općine Šolta su godine otplate neto duga i servis duga. Napomena je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 10,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Šolta za 2025. godinu je 4 (stabilno) na ljestvici od 1 do 5. Općina Šolta ostvarila je 67,5 od 100 bodova, što je ispod medijana skupine od 78,8. Najslabija sastavnica je slobodni saldo nakon otplate glavnice, koji iznosi 7,4 % tekućih prihoda, dok je medijan skupine 10,8 %. Jake strane Općine Šolta su godine otplate neto duga i servis duga. Napomena je da preneseni manjak iz prethodnih godina iznosi više od 5 % tekućih prihoda.",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": []
+     },
+     "seconds": 3.6,
+     "usage": {
+      "completion_tokens": 166,
+      "prompt_tokens": 950,
+      "total_tokens": 1116,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "97003983043",
+   "naziv": "Općina Dobrinj",
+   "text": "Ocjena financijske stabilnosti Općine Dobrinj za 2025. godinu je 5 (vrlo stabilno), s bodom od 88,8 od 100, što je blago iznad medijana skupine od 87,8. Najslabija sastavnica Općine Dobrinj su slobodni saldo nakon otplate glavnice, koji iznosi 11,7 % tekućih prihoda, dok je medijan skupine 16,9 %. Jake strane Općine Dobrinj uključuju godine otplate neto duga, servis duga i dospjele neplaćene obveze. Općina Dobrinj se nalazi na 94. mjestu od 193 jedinica u usporednoj skupini.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 9,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Dobrinj za 2025. godinu je 5 (vrlo stabilno), s bodom od 88,8 od 100, što je blago iznad medijana skupine od 87,8. Najslabija sastavnica Općine Dobrinj su slobodni saldo nakon otplate glavnice, koji iznosi 11,7 % tekućih prihoda, dok je medijan skupine 16,9 %. Jake strane Općine Dobrinj uključuju godine otplate neto duga, servis duga i dospjele neplaćene obveze. Općina Dobrinj se nalazi na 94. mjestu od 193 jedinica u usporednoj skupini.",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": []
+     },
+     "seconds": 3.7,
+     "usage": {
+      "completion_tokens": 175,
+      "prompt_tokens": 929,
+      "total_tokens": 1104,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "89243140464",
+   "naziv": "Općina Dubravica",
+   "text": "Ocjena financijske stabilnosti Općine Dubravica za 2025. godinu je 1 (ozbiljan pritisak), što je značajno ispod medijana skupine od 78,8 bodova. Najslabija sastavnica Općine Dubravica su operativni saldo, gdje operativni manjak iznosi 21,3 % tekućih prihoda, u usporedbi s medijanjom skupine od 13,3 %. Općina Dubravica ima neto dug, a nema operativnog viška za njegovu otplatu, dok većina jedinica u skupini nema takav dug. Upozorenja ukazuju na preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 6,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Dubravica za 2025. godinu je 1 (ozbiljan pritisak), što je značajno ispod medijana skupine od 78,8 bodova. Najslabija sastavnica Općine Dubravica su operativni saldo, gdje operativni manjak iznosi 21,3 % tekućih prihoda, u usporedbi s medijanjom skupine od 13,3 %. Općina Dubravica ima neto dug, a nema operativnog viška za njegovu otplatu, dok većina jedinica u skupini nema takav dug. Upozorenja ukazuju na preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+     "check": {
+      "ok": true,
+      "n_brojki": 6,
+      "nepoznate": []
+     },
+     "seconds": 3.8,
+     "usage": {
+      "completion_tokens": 175,
+      "prompt_tokens": 1055,
+      "total_tokens": 1230,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  },
+  {
+   "oib": "07707519145",
+   "naziv": "Općina Donja Voća",
+   "text": "Ocjena financijske stabilnosti Općine Donja Voća za 2025. godinu je 2 (pod pritiskom), što je niže od medijana skupine od 87,8 bodova. Najslabija sastavnica Općine Donja Voća su dospjele neplaćene obveze, koje iznose 888.964 €, što predstavlja 64,2 % rashoda poslovanja, dok je medijan skupine na toj sastavnici 1,5 %. Općina Donja Voća ima operativni višak od 4,0 % tekućih prihoda, ali servis duga iznosi 17,5 % zakonske osnovice, što je značajno više od medijana skupine od 3,8 %.",
+   "source": "ai",
+   "check": {
+    "ok": true,
+    "n_brojki": 9,
+    "nepoznate": []
+   },
+   "attempts": [
+    {
+     "text": "Ocjena financijske stabilnosti Općine Donja Voća za 2025. godinu je 2 (pod pritiskom), što je niže od medijana skupine od 87,8 bodova. Najslabija sastavnica Općine Donja Voća su dospjele neplaćene obveze, koje iznose 888.964 €, što predstavlja 64,2 % rashoda poslovanja, dok je medijan skupine na toj sastavnici 1,5 %. Općina Donja Voća ima operativni višak od 4,0 % tekućih prihoda, ali servis duga iznosi 17,5 % zakonske osnovice, što je značajno više od medijana skupine od 3,8 %.",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": []
+     },
+     "seconds": 3.8,
+     "usage": {
+      "completion_tokens": 178,
+      "prompt_tokens": 1019,
+      "total_tokens": 1197,
+      "prompt_tokens_details": {
+       "cached_tokens": 52
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
