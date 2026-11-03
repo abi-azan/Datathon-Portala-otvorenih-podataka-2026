@@ -24,6 +24,8 @@ def test_576_units_with_unique_keys(units):
     assert units.vrsta.value_counts().to_dict() == {"opcina": 428, "grad": 128, "zupanija": 20}
     for col in ("oib", "rkp", "sifra", "slug"):
         assert units[col].is_unique, col
+    assert not units.naziv.str.match(r"^(Grad|Općina) (Grad|Općina) ").any()
+    assert units.set_index("sifra").loc["01333", "slug"] == "grad-zagreb"
 
 
 def test_population_matches_census(units):

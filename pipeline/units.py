@@ -93,7 +93,9 @@ def build_units(sheets, bilanca, master):
     u["zagreb"] = u["sifra"] == "01333"
     prefix = {"opcina": "Općina ", "grad": "Grad ", "zupanija": ""}
     u["naziv"] = [
-        (prefix[v] + n) if v != "zupanija" else zup_names.get(z, nm.title())
+        zup_names.get(z, nm.title()) if v == "zupanija"
+        else n if n.startswith(prefix[v])            # the master already says "Grad Zagreb"
+        else prefix[v] + n
         for v, n, z, nm in zip(u.vrsta, u.naziv, u.zup_id, u.naziv_mf)
     ]
     u["slug"] = u["naziv"].map(slugify)

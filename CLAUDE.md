@@ -49,6 +49,15 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
 - `pipeline/methodology.py` holds PLAN §3 as pure functions: auxiliary quantities, windowed indicators I1-I5, 0-100 scores, grades, four weight scenarios, flags Z1-Z4 and context measures. It also holds the two overdue-liability rules, decided 2026-11-03 (background in `docs/research/05`):
   - A loan reported as entirely overdue, while its principal is repaid at 3% a year or more, does not count toward DO. The unit gets the quality note `kredit_iskazan_kao_dospio`.
   - DO ≥ 30% of operating spending caps points at 39.9, so the grade is at most 2. `bodovi_bez_ogranicenja` keeps the uncapped points.
+- `pipeline/facts.py`, `verify.py` and `explain.py` produce the AI explanation (PLAN §5).
+  - Facts are pre-formatted Croatian strings. Python picks the story: the weakest component, the strengths and the comparison with the peer median.
+  - The verifier fails a text when it contains a number not in the facts, or a grade other than this year's or last year's. A failed text is retried with feedback, at most twice, and then the template is used.
+  - `verify.py` uses only the standard library, because it is embedded verbatim in the Kaggle script.
+- `kaggle/gemma_runner.py` is a template. `python -m pipeline.explain --kaggle-test N` embeds the number check, the prompt code and N fact packs into `kaggle/gemma_test.py`.
+  - Push and run with `KAGGLE_API_TOKEN=<from secrets.txt> .venv/Scripts/kaggle kernels push -p kaggle`, using the Kaggle CLI 2.x (pip `kaggle` and `six`). The token must never be printed.
+  - The Kaggle user is `albertmari`. The notebook builds llama.cpp from source with `-DCMAKE_CUDA_ARCHITECTURES=75` for the T4 and serves the model with `llama-server --jinja`.
+  - The model source string is `google/gemma-4/gguf/gemma-4-e4b-it-qat-q4_0-gguf/2`. The files are `gemma-4-E4B_q4_0-it.gguf` (5.2 GB) and an mmproj.
+  - Re-check a downloaded output with `python -m pipeline.explain --check <gemma_test_output.json>`.
 - `pipeline/build.py` orchestrates the steps above and writes `data/build/units.csv`, `results.parquet`, `results.json` and `geo/`.
 
 Source documents:
