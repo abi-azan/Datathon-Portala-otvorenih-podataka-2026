@@ -70,14 +70,41 @@ def claimed_grades(text):
     return out
 
 
+# Content claims the prompt asks for with fixed phrases, so they can be checked (Gemma test v4):
+# the weakest component, the strengths, and a capped grade, which only rule 2 can cause.
+WEAKEST = re.compile(r"spušta sastavnica\s+[„\"“]([^”\"“]+)[”\"“]", re.IGNORECASE)
+STRENGTHS = re.compile(r"jake strane jedinice su:\s*([^.;]+)", re.IGNORECASE)
+CAPPED = re.compile(r"\bograničen\w*", re.IGNORECASE)
+
+
+def content_issues(text, pack):
+    facts = {f["label"]: f["value"] for f in pack["facts"]}
+    issues = []
+    for name in WEAKEST.findall(text):
+        if name.strip().lower() != facts.get("Najslabija sastavnica", "").lower():
+            issues.append(f"najslabija sastavnica „{name.strip()}”")
+    strong = facts.get("Jake strane", "").lower()
+    for listed in STRENGTHS.findall(text):
+        for part in re.split(r",| i | te ", listed):
+            part = part.strip().lower()
+            if part and part not in strong:
+                issues.append(f"jaka strana „{part}”")
+    if CAPPED.search(text) and "Pravilo" not in facts:
+        issues.append("ograničenje ocjene bez pravila")
+    return issues
+
+
 def verify(text, pack):
-    """{"ok", "n_brojki", "nepoznate"}. ok only if there is at least one number, every number is
-    in the pack and written the Croatian way, and every grade mentioned is the unit's grade
-    (this year or last year)."""
+    """{"ok", "n_brojki", "nepoznate", "sadrzaj"}. ok only if there is at least one number, every
+    number is in the pack and written the Croatian way, every grade mentioned is the unit's grade
+    (this year or last year), and the weakest component, the strengths and any capped grade
+    agree with the pack."""
     ok_vals = allowed(pack)
     found = numbers(text)
     unknown = [tok for v, tok in found if v is None or v not in ok_vals]
     grades = {str(g) for g in pack.get("ocjene", [])}
     if grades:
         unknown += [f"ocjena {g}" for g in claimed_grades(text) if g not in grades]
-    return {"ok": bool(found) and not unknown, "n_brojki": len(found), "nepoznate": unknown}
+    issues = content_issues(text, pack)
+    return {"ok": bool(found) and not unknown and not issues, "n_brojki": len(found), "nepoznate": unknown,
+            "sadrzaj": issues}

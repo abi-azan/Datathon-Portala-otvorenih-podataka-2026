@@ -28,17 +28,18 @@ SYSTEM = ("Ti si urednik javnog portala o financijama općina, gradova i župani
 RULES = """Pravila:
 1. Napiši 3 do 5 rečenica, najviše 100 riječi, u jednom odlomku. Bez naslova, natuknica i oznaka (markdown).
 2. Koristi samo činjenice s popisa. Svaku brojku prepiši točno kako je napisana, zajedno s riječju ili znakom uz nju (boda, %, €). Ne zaokružuj i ne računaj nove brojke ni razlike.
-3. Redoslijed: ocjena i bodovi; najslabija sastavnica (samo ako je navedena) s usporedbom s medijanom skupine; jake strane (samo ako su navedene); na kraju upozorenja, pravilo i napomena o podacima u najviše dvije rečenice.
-4. Najslabiju sastavnicu uvedi točno ovim riječima: 'Ocjenu najviše spušta sastavnica „…”.' Jake strane uvedi riječima: 'Jake strane jedinice su: …' Ne proglašavaj ništa drugo jakom ili slabom stranom; ovisnost o pomoćima i trošak uprave su kontekst.
-5. Ton je neutralan i opisan. Ne koristi riječi "loše", "dobro", "uspjeh" ni "neuspjeh". Ne savjetuj, ne nagađaj o uzrocima i ne spominji političare ni stranke.
-6. Naziv jedinice piši samo u nominativu, kao subjekt rečenice ("{nom} ima ocjenu …"). Ne sklanjaj ga. U ostalim rečenicama piši "jedinica" ili naziv izostavi."""
+3. Redoslijed: ocjena i bodovi; najslabija sastavnica s usporedbom s medijanom skupine; jake strane; upozorenja; pravilo i napomena o podacima. Dio za koji na popisu nema stavke izostavi.
+4. Najslabiju sastavnicu uvedi točno ovim riječima: 'Ocjenu najviše spušta sastavnica „…”.' Jake strane uvedi riječima: 'Jake strane jedinice su: …' Ne proglašavaj ništa drugo jakom ili slabom stranom.
+5. Upozorenja ne mijenjaju ocjenu: nikad ne piši da je ocjena zbog njih ograničena. O ograničenju ocjene piši samo ako na popisu postoji stavka "Pravilo".
+6. Ne dodaj rečenice o izvoru, obradi ili razdoblju podataka. Ton je neutralan i opisan; bez riječi "loše", "dobro", "uspjeh" i "neuspjeh", bez savjeta, nagađanja o uzrocima, političara i stranaka.
+7. Naziv jedinice piši samo u nominativu, kao subjekt rečenice ("{nom} ima ocjenu …"). Ne sklanjaj ga. U ostalim rečenicama piši "jedinica" ili naziv izostavi."""
 
 EXAMPLE = ("PRIMJER za izmišljenu jedinicu (samo za stil; njegove brojke ne koristi):\n"
            "Općina Primjerovo za 2025. godinu ima ocjenu 2 (pod pritiskom) i 31,4 boda od 100, dok je medijan "
            "usporedne skupine 78,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju "
            "godine iznose 512.300 €, odnosno 41,2 % rashoda poslovanja, uz medijan skupine od 2,0 %. Jake strane "
-           "jedinice su: servis duga. Zbog dospjelih obveza ocjena je ograničena na najviše 2, a novca na računu "
-           "ima manje nego za mjesec dana rashoda poslovanja.")
+           "jedinice su: servis duga. Upozorenje: novca na računu ima manje nego za mjesec dana rashoda poslovanja. "
+           "Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.")
 
 
 def messages(pack):
@@ -49,9 +50,15 @@ def messages(pack):
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
 
-def feedback(unknown):
-    return ("Tekst sadrži brojke kojih nema u činjenicama: " + ", ".join(unknown)
-            + ". Napiši tekst ponovno i koristi samo brojke s popisa, prepisane točno.")
+def feedback(unknown, issues=()):
+    parts = []
+    if unknown:
+        parts.append("Tekst sadrži brojke kojih nema u činjenicama: " + ", ".join(unknown)
+                     + ". Koristi samo brojke s popisa, prepisane točno.")
+    if issues:
+        parts.append("Tekst se ne slaže s činjenicama: " + "; ".join(issues)
+                     + ". Najslabiju sastavnicu, jake strane i ograničenje ocjene navedi samo kako piše na popisu.")
+    return " ".join(parts) + " Napiši tekst ponovno."
 
 
 def template(pack):
@@ -61,7 +68,8 @@ def template(pack):
     parts = [f"{pack['naziv']['nom']} za {pack['year']}. godinu ima ocjenu {grade.split(' na ljestvici')[0]}."]
     if "Najslabija sastavnica" in f:
         parts.append(f"Najslabija sastavnica: {f['Najslabija sastavnica']}.")
-    parts.append(f"Jake strane: {f['Jake strane']}.")
+    if "Jake strane" in f:
+        parts.append(f"Jake strane: {f['Jake strane']}.")
     if "Pravilo" in f:
         parts.append(f"{f['Pravilo'][0].upper()}{f['Pravilo'][1:]}.")
     if f.get("Upozorenja", "nema upozorenja") != "nema upozorenja":
@@ -79,7 +87,8 @@ def generate(pack, call):
         attempts.append({"text": text, "check": check})
         if check["ok"]:
             return {"text": text, "source": "ai", "check": check, "attempts": attempts}
-        msgs = msgs + [{"role": "assistant", "content": text}, {"role": "user", "content": feedback(check["nepoznate"])}]
+        msgs = msgs + [{"role": "assistant", "content": text},
+                       {"role": "user", "content": feedback(check["nepoznate"], check.get("sadrzaj", []))}]
     text = template(pack)
     return {"text": text, "source": "predlozak", "check": verify.verify(text, pack), "attempts": attempts}
 

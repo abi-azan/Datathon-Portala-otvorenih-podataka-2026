@@ -182,7 +182,8 @@ def fact_pack(unit, history, med, year):
         facts.append(("Najslabija sastavnica", COMPONENTS[weakest]))
     strong = [COMPONENTS[c] for c, s in valid.items()
               if s >= 90 and (not peers or not_worse_than_median(c, r[c], m[c]))]
-    facts.append(("Jake strane", ", ".join(strong) if strong else "nijedna sastavnica nije izrazito jaka"))
+    if strong:                      # no "nijedna ..." line: the model turned it into "Jake strane su: nijedna" (v4)
+        facts.append(("Jake strane", ", ".join(strong)))
 
     flags = [f for f in str(r.get("zastavice") or "").split(",") if f]
     facts.append(("Upozorenja", "; ".join(FLAGS[f] for f in flags) if flags else "nema upozorenja"))
@@ -191,10 +192,8 @@ def fact_pack(unit, history, med, year):
     if r.get("kredit_iskazan_dospio"):
         facts.append(("Napomena o podacima", "u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, "
                                               "pa se ne broji u dospjele obveze"))
-    facts.append(("Ovisnost o pomoćima", f"tekuće pomoći čine {pct(r['udio_tekucih_pomoci'])} tekućih prihoda"
-                                         + (f"; medijan skupine {pct(m['udio_tekucih_pomoci'])}" if peers else "")))
-    facts.append(("Trošak opće uprave po stanovniku", eur(r["uprava_pc"])
-                  + (f"; medijan skupine {eur(m['uprava_pc'])}" if peers else "")))
+    # Context (grants, administration cost) is on the profile page, not in the pack: in the Gemma
+    # test it only produced filler and invented phrases ("kućne pomoći").
     grades = [int(r["ocjena"])] + ([int(prev["ocjena"])] if prev is not None and pd.notna(prev.get("ocjena")) else [])
     return {"oib": unit["oib"], "naziv": names, "year": year, "ocjena": int(r["ocjena"]), "ocjene": grades,
             "facts": [{"label": k, "value": v} for k, v in facts]}

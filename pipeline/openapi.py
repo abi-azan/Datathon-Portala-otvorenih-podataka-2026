@@ -103,7 +103,9 @@ SCHEMAS = {
                 "izvor": {"type": "string", "enum": ["ai", "predlozak"]},
                 "provjera": {"type": "object", "required": ["ok", "n_brojki", "nepoznate"], "properties": {
                     "ok": {"type": "boolean"}, "n_brojki": {"type": "integer"},
-                    "nepoznate": {"type": "array", "items": {"type": "string"}}}}}},
+                    "nepoznate": {"type": "array", "items": {"type": "string"}},
+                    "sadrzaj": {"type": "array", "items": {"type": "string"},
+                                "description": "Neslaganja sa činjenicama: najslabija sastavnica, jake strane, ograničenje ocjene."}}}}},
         },
     },
     "Skupine": {

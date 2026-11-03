@@ -67,21 +67,49 @@ def test_grade_claims_are_found_beyond_filler_words_and_the_scale_is_not_a_claim
     assert verify.verify("Ocjena za 2025. godinu je 4 (stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno).", pack)["ok"]
 
 
-def test_the_gemma_v2_texts_still_pass():
-    """Regression: the 20 texts from the Kaggle run (docs/research/06) passed the old check."""
+def test_no_false_grade_claims_in_real_model_texts():
+    """Regression on the Kaggle texts (docs/research/06): every grade the checker reads out of a
+    real model text is the unit's real grade, so the grade check raises no false alarms. (The full
+    check is not repeated: the fact packs have changed since those runs.)"""
     import json
     from pathlib import Path
-    out = json.loads((Path(__file__).parent.parent / "kaggle" / "results" / "gemma_test_v2_e4b.json").read_text(encoding="utf-8"))
     from pipeline import config
     if not (config.BUILD / "results.parquet").exists():
         return
     packs = {p["oib"]: p for p in explain.load_packs()[0]}
-    failed = [(r["naziv"], verify.verify(r["text"], packs[r["oib"]])["nepoznate"]) for r in out["results"]]
-    failed = [f for f in failed if f[1]]
-    assert not failed, failed
+    results = Path(__file__).parent.parent / "kaggle" / "results"
+    texts = []
+    for f in results.glob("gemma_test_*.json"):
+        out = json.loads(f.read_text(encoding="utf-8"))
+        for m in (out.get("models") or {"": {"results": out.get("results", [])}}).values():
+            texts += [(r["oib"], r["text"]) for r in m["results"]]
+    assert len(texts) >= 60
+    bad = [(packs[o]["naziv"]["nom"], g) for o, t in texts for g in verify.claimed_grades(t)
+           if int(g) not in packs[o]["ocjene"]]
+    assert not bad, bad
 
 
 def test_an_amount_after_the_word_ocjena_is_not_a_grade():
     """Regression from the 12B run: 'Ocjenu najviše spuštaju … 1.767.926 €' is not grade 1."""
     pack = {"ocjene": [2], "facts": [{"label": "x", "value": "2 (pod pritiskom); 1.767.926 €; 80,9 %"}]}
     assert verify.verify("Ocjenu najviše spuštaju obveze od 1.767.926 €, odnosno 80,9 %, a ocjena je 2.", pack)["ok"]
+
+
+def test_content_claims_must_match_the_pack():
+    """Gemma v4: 'zbog prenesenog manjka ocjena je ograničena' (no rule), invented strengths."""
+    pack = {"ocjene": [2], "facts": [
+        {"label": "Ocjena", "value": "2 (pod pritiskom); 34,2 boda"},
+        {"label": "Najslabija sastavnica", "value": "dospjele neplaćene obveze"},
+        {"label": "Jake strane", "value": "operativni saldo, servis duga"},
+        {"label": "Upozorenja", "value": "preneseni manjak"}]}
+    good = ("Jedinica ima ocjenu 2 i 34,2 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”. "
+            "Jake strane jedinice su: operativni saldo i servis duga.")
+    assert verify.verify(good, pack)["ok"]
+    r = verify.verify(good + " Zbog prenesenog manjka ocjena je ograničena.", pack)
+    assert not r["ok"] and r["sadrzaj"] == ["ograničenje ocjene bez pravila"]
+    r = verify.verify("Ocjena je 2. Ocjenu najviše spušta sastavnica „servis duga”.", pack)
+    assert r["sadrzaj"] == ["najslabija sastavnica „servis duga”"]
+    r = verify.verify("Ocjena je 2. Jake strane jedinice su: ovisnost o pomoćima.", pack)
+    assert r["sadrzaj"] == ["jaka strana „ovisnost o pomoćima”"]
+    with_rule = {**pack, "facts": pack["facts"] + [{"label": "Pravilo", "value": "ocjena je ograničena na najviše 2"}]}
+    assert verify.verify("Ocjena je 2, ograničena na najviše 2.", with_rule)["ok"]
