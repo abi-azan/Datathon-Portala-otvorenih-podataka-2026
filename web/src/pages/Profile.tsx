@@ -111,6 +111,12 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                 : `Ocjena ovisi o ponderima: od ${r.raspon_ocjena?.[0]} do ${r.raspon_ocjena?.[1]} u četiri scenarija.`}
             </div>
           </div>
+          <p className="mt-4 border-t border-hairline pt-3 text-xs leading-relaxed text-muted">
+            Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja. Ocjena nije službena.{' '}
+            <a href="#/metodologija" className="underline underline-offset-2">
+              Kako se računa
+            </a>
+          </p>
         </div>
       </div>
 

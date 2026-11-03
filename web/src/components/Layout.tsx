@@ -79,6 +79,8 @@ export function Footer({ generated }: { generated?: string }) {
             </li>
           </ul>
           <p className="mt-2">
+            Ocjena nije službena: neovisni izračun iz javnih podataka.
+            <br />
             Kod: EUPL-1.2 · Podaci: CC BY 4.0
             {generated && (
               <>
