@@ -19,6 +19,7 @@ Outputs in data/build/geo/:
   jls.topo.json  layers jls (556 units) and zupanije (21), simplified with mapshaper
   susjedi.json   per unit code: land neighbours with shared border in km, sea links in km
 """
+import hashlib
 import json
 import shutil
 import subprocess
@@ -135,23 +136,37 @@ def mainland(nb):
 
 
 def write_topojson(g, units, out):
-    """Simplify with mapshaper and write layers jls and zupanije into one TopoJSON."""
+    """Simplify with mapshaper and write layers jls and zupanije into one TopoJSON.
+
+    Skipped when the boundaries, the unit properties and the mapshaper settings are unchanged
+    (stamp file next to the output), so offline builds do not need Node."""
+    props = units[["sifra", "naziv", "slug", "oib", "zup_id"]]
+    log = json.loads(config.SOURCES_LOG.read_text(encoding="utf-8")) if config.SOURCES_LOG.exists() else {}
+    key = hashlib.sha256("|".join([
+        log.get("dzs_wfs_granice", {}).get("sha256", ""), MAPSHAPER, SIMPLIFY_WEB,
+        props.sort_values("sifra").to_csv(index=False)]).encode()).hexdigest()
+    stamp = out.with_suffix(".stamp")
+    if out.exists() and stamp.exists() and stamp.read_text() == key:
+        print("  TopoJSON: bez promjene")
+        return out
     npx = shutil.which("npx")
     if not npx:
         raise RuntimeError("npx (Node.js) is needed for mapshaper")
-    props = units[["sifra", "naziv", "slug", "oib", "zup_id"]]
     full = out.parent / "_jls_full.geojson"
     g[["sifra", "geometry"]].merge(props, on="sifra").to_file(full, driver="GeoJSON")
     cmd = [npx, "-y", MAPSHAPER, "-i", str(full), "name=jls",
            "-simplify", SIMPLIFY_WEB, "keep-shapes", "-clean",
            "-dissolve", "zup_id", "+", "name=zupanije",
            "-o", "format=topojson", "quantization=1e5", "target=*", str(out)]
-    subprocess.run(cmd, check=True, capture_output=True, text=True)
-    full.unlink()
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    full.unlink(missing_ok=True)
+    if r.returncode:
+        raise RuntimeError(f"mapshaper failed ({r.returncode}): {r.stderr[-3000:]}")
     topo = json.loads(out.read_text(encoding="utf-8"))
     n = {k: len(v["geometries"]) for k, v in topo["objects"].items()}
     if n.get("jls") != len(g) or n.get("zupanije") != 21:
         raise ValueError(f"unexpected TopoJSON layers: {n}")
+    stamp.write_text(key)
     return out
 
 

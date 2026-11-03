@@ -109,6 +109,8 @@ def median_phrase(code, mv):
     if code == "I2":
         return f"medijan skupine: {'ostaje' if mv >= 0 else 'nedostaje'} {pct(abs(mv))} tekućih prihoda"
     if code == "I3":
+        if math.isinf(mv):
+            return "većina jedinica u skupini ima neto dug bez operativnog viška"
         return "većina jedinica u skupini nema neto duga" if mv < 0.05 else f"medijan skupine {years(mv)}"
     if code == "I4":
         return f"medijan skupine {pct(mv)} zakonske osnovice"
@@ -130,11 +132,10 @@ def points(x):
 
 
 def peer_medians(results):
-    cols = ["I1", "I2", "I4", "I5", "uprava_pc", "udio_tekucih_pomoci", "bodovi"]
-    med = results.groupby(["skupina", "year"])[cols].median()
-    finite = results.assign(I3=results.I3.where(~results.I3.map(math.isinf)))
-    med["I3"] = finite.groupby(["skupina", "year"])["I3"].median()
-    return med
+    """Medians per peer group and year. I3 keeps its infinite values (net debt and no operating
+    surplus): they are the worst cases, and dropping them would bias the median towards 'no debt'."""
+    cols = ["I1", "I2", "I3", "I4", "I5", "uprava_pc", "udio_tekucih_pomoci", "bodovi"]
+    return results.groupby(["skupina", "year"])[cols].median()
 
 
 def fact_pack(unit, history, med, year):

@@ -50,3 +50,32 @@ def test_generate_retries_with_feedback_then_falls_back_to_the_template():
     assert out["source"] == "predlozak" and len(out["attempts"]) == 1 + explain.MAX_RETRIES
     assert "97" in seen[-1][-1]["content"]           # the retry tells the model which number was wrong
     assert out["check"]["ok"]                        # the template itself passes the check
+
+
+def test_english_decimals_and_dates_cannot_hide_behind_their_first_part():
+    pack = {"ocjene": [4], "facts": [{"label": "x", "value": "41 % i 512 €"}]}
+    r = verify.verify("Obveze iznose 41.7 % odnosno 512.30 €.", pack)
+    assert not r["ok"] and r["nepoznate"] == ["41.7", "512.30"]
+    assert not verify.verify("Stanje na dan 31.12.2025. iznosi 41 %.", pack)["ok"]
+
+
+def test_grade_claims_are_found_beyond_filler_words_and_the_scale_is_not_a_claim():
+    pack = {"ocjene": [4], "facts": [{"label": "Ocjena", "value": "4 (stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno); 2025."}]}
+    r = verify.verify("Jedinica ima ocjenu financijske stabilnosti 1 (ozbiljan pritisak).", pack)
+    assert not r["ok"] and r["nepoznate"] == ["ocjena 1"]
+    assert verify.verify("Ocjene od 1 do 5 opisuju stabilnost; jedinica ima ocjenu 4.", pack)["ok"]
+    assert verify.verify("Ocjena za 2025. godinu je 4 (stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno).", pack)["ok"]
+
+
+def test_the_gemma_v2_texts_still_pass():
+    """Regression: the 20 texts from the Kaggle run (docs/research/06) passed the old check."""
+    import json
+    from pathlib import Path
+    out = json.loads((Path(__file__).parent.parent / "kaggle" / "results" / "gemma_test_v2_e4b.json").read_text(encoding="utf-8"))
+    from pipeline import config
+    if not (config.BUILD / "results.parquet").exists():
+        return
+    packs = {p["oib"]: p for p in explain.load_packs()[0]}
+    failed = [(r["naziv"], verify.verify(r["text"], packs[r["oib"]])["nepoznate"]) for r in out["results"]]
+    failed = [f for f in failed if f[1]]
+    assert not failed, failed

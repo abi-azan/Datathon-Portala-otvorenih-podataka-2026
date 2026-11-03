@@ -148,6 +148,8 @@ def main():
     res_df["rang"] = res_df.groupby(["skupina", "year"])["bodovi"].rank(ascending=False, method="min")
     res_df["n_skupine"] = res_df.groupby(["skupina", "year"])["bodovi"].transform("count")
     res_df["percentil"] = res_df.groupby(["skupina", "year"])["bodovi"].rank(pct=True) * 100
+    for r in res_df[["oib", "year", "rang", "n_skupine", "percentil"]].to_dict("records"):
+        results[r["oib"]][int(r["year"])].update(rang=r["rang"], n_skupine=r["n_skupine"], percentil=r["percentil"])
 
     config.BUILD.mkdir(parents=True, exist_ok=True)
     reg.to_csv(config.BUILD / "units.csv", index=False, encoding="utf-8")

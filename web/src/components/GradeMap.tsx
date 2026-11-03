@@ -42,9 +42,18 @@ interface Props {
 }
 
 interface Hover {
-  x: number
-  y: number
+  left: number
+  top: number
   unit: UnitIndex
+}
+
+const TOOLTIP_W = 256
+const TOOLTIP_H = 132 // approximate height, to keep the tooltip inside the map
+// Fallback when the OpenFreeMap style cannot be loaded: the choropleth still works on a plain background.
+const BLANK: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {},
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#fdfdfc' } }],
 }
 
 export function GradeMap({ units, year }: Props) {
@@ -52,8 +61,11 @@ export function GradeMap({ units, year }: Props) {
   const map = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
   const [hover, setHover] = useState<Hover | null>(null)
+  const [failed, setFailed] = useState(false)
   const bySifra = useRef(new Map<string, UnitIndex>())
-  bySifra.current = new Map(units.map((u) => [u.sifra, u]))
+  useEffect(() => {
+    bySifra.current = new Map(units.map((u) => [u.sifra, u]))
+  }, [units])
 
   useEffect(() => {
     if (!box.current) return
@@ -71,10 +83,32 @@ export function GradeMap({ units, year }: Props) {
     m.touchZoomRotate.disableRotation()
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     map.current = m
+    let removed = false
+    let styleOk = false
+    m.on('style.load', () => {
+      styleOk = true
+    })
+    m.on('error', (e) => {
+      if (!styleOk && !removed) {
+        console.warn('Basemap unavailable, using a plain background', e.error)
+        styleOk = true
+        m.setStyle(BLANK)
+      }
+    })
 
-    m.on('load', async () => {
+    m.once('load', async () => {
       quietBasemap(m)
-      const topo = (await fetch(topoUrl()).then((r) => r.json())) as Topology
+      let topo: Topology
+      try {
+        topo = (await fetch(topoUrl()).then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`)
+          return r.json()
+        })) as Topology
+      } catch {
+        if (!removed) setFailed(true)
+        return
+      }
+      if (removed) return
       const jls = feature(topo, topo.objects.jls) as FeatureCollection
       const zup = feature(topo, topo.objects.zupanije) as FeatureCollection
       const firstLabel = m.getStyle().layers.find((l: maplibregl.LayerSpecification) => l.type === 'symbol')?.id
@@ -107,7 +141,11 @@ export function GradeMap({ units, year }: Props) {
       }
       m.getCanvas().style.cursor = 'pointer'
       const unit = bySifra.current.get(sifra)
-      if (unit) setHover({ x: e.point.x, y: e.point.y, unit })
+      const { clientWidth: width, clientHeight: height } = m.getContainer()
+      // right of the cursor, or left of it near the right edge; above it near the bottom edge
+      const left = e.point.x + 16 + TOOLTIP_W > width - 8 ? e.point.x - 16 - TOOLTIP_W : e.point.x + 16
+      const top = e.point.y + TOOLTIP_H > height - 8 ? e.point.y - TOOLTIP_H - 12 : e.point.y - 12
+      if (unit) setHover({ left: Math.max(8, left), top: Math.max(8, top), unit })
     })
     m.on('mouseleave', 'jls-fill', () => {
       if (hovered) m.setFeatureState({ source: 'jls', id: hovered }, { hover: false })
@@ -119,7 +157,10 @@ export function GradeMap({ units, year }: Props) {
       const slug = e.features?.[0]?.properties?.slug as string | undefined
       if (slug) go(unitHref(slug))
     })
-    return () => m.remove()
+    return () => {
+      removed = true
+      m.remove()
+    }
   }, [])
 
   // recolour when the year changes
@@ -141,15 +182,14 @@ export function GradeMap({ units, year }: Props) {
         <div className="text-xs text-muted">556 općina i gradova · prijeđi mišem, klikni za svjedodžbu</div>
       </div>
       {!ready && (
-        <div className="absolute inset-0 grid place-items-center text-sm text-muted">Učitavam kartu…</div>
+        <div className="absolute inset-0 grid place-items-center text-sm text-muted">
+          {failed ? 'Karta se nije učitala. Osvježi stranicu ili koristi pretragu.' : 'Učitavam kartu…'}
+        </div>
       )}
       {hover && (
         <div
-          className="pointer-events-none absolute z-10 w-64 rounded-xl border border-hairline bg-card/95 p-3 shadow-lg backdrop-blur"
-          style={{
-            left: Math.min(hover.x + 16, (box.current?.clientWidth ?? 0) - 272),
-            top: Math.max(hover.y - 12, 8),
-          }}
+          className="pointer-events-none absolute z-10 rounded-xl border border-hairline bg-card/95 p-3 shadow-lg backdrop-blur"
+          style={{ left: hover.left, top: hover.top, width: TOOLTIP_W }}
         >
           <div className="font-serif text-lg leading-tight font-semibold">{hover.unit.naziv}</div>
           <div className="mt-0.5 text-xs text-muted">

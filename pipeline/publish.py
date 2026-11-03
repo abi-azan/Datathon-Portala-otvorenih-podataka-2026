@@ -21,7 +21,6 @@ import pandas as pd
 from . import config, explain, facts, verify
 
 API = config.ROOT / "web" / "public" / "api" / "v1"
-INDICATORS = ["I1", "I2", "I3", "I4", "I5"]
 
 
 def clean(x):
@@ -42,12 +41,11 @@ def write(path, obj):
 
 
 def group_medians(res):
-    finite = res.assign(I3=res.I3.where(~res.I3.map(lambda v: isinstance(v, float) and math.isinf(v))))
-    cols = ["bodovi", *INDICATORS, "uprava_pc", "udio_tekucih_pomoci"]
-    med = finite.groupby(["skupina", "year"])[cols].median().reset_index()
+    """skupine.json from the same medians the fact packs use (facts.peer_medians)."""
+    med = facts.peer_medians(res).reset_index()
     out = {}
     for r in med.to_dict("records"):
-        out.setdefault(r["skupina"], {})[str(int(r["year"]))] = {c: r[c] for c in cols}
+        out.setdefault(r["skupina"], {})[str(int(r["year"]))] = {c: r[c] for c in med.columns if c not in ("skupina", "year")}
     return out
 
 
@@ -86,12 +84,8 @@ def main():
     write(API / "jedinice.json", {"generirano": generated, "zadnja_godina": config.LAST_YEAR, "jedinice": index})
     write(API / "skupine.json", group_medians(res))
 
-    ranks = {(r["oib"], str(int(r["year"]))): {"rang": r["rang"], "n_skupine": r["n_skupine"], "percentil": r["percentil"]}
-             for r in res[["oib", "year", "rang", "n_skupine", "percentil"]].to_dict("records")}
     for u in units.to_dict("records"):
         n = nested[u["oib"]]
-        for y, r in n["godine"].items():
-            r.update(ranks.get((u["oib"], y), {}))
         nb = susjedi.get(u["sifra"], {"kopno": {}, "more": {}})
         neighbours = [{"slug": by_code.loc[c, "slug"], "naziv": by_code.loc[c, "naziv"], "vrsta": vrsta, "km": km}
                       for vrsta in ("kopno", "more") for c, km in nb[vrsta].items()]

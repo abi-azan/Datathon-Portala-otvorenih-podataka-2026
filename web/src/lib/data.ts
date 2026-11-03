@@ -34,6 +34,9 @@ export interface YearResult {
   raspon_ocjena: [number, number] | null
   ocjene_scenarija: Record<string, number | null>
   prozor_godina: number
+  rang: number | null
+  n_skupine: number | null
+  percentil: number | null
   I1: number | null
   I2: number | null
   I3: number | null
@@ -85,24 +88,38 @@ export interface UnitDetail {
   godine: Record<string, YearResult>
   susjedi: { slug: string; naziv: string; vrsta: 'kopno' | 'more'; km: number }[]
   cinjenice: { facts: Fact[]; naziv: { nom: string; gen: string; lok: string } } | null
-  objasnjenje: { tekst: string; izvor: 'ai' | 'predlozak'; provjera?: { ok: boolean; n_brojki: number } } | null
+  objasnjenje: {
+    tekst: string
+    izvor: 'ai' | 'predlozak'
+    provjera?: { ok: boolean; n_brojki: number; nepoznate: string[] }
+  } | null
 }
 
 export type GroupMedians = Record<string, Record<string, Record<string, number | null>>>
 
 const BASE = `${import.meta.env.BASE_URL}api/v1/`
 
+export class HttpError extends Error {
+  status: number
+  constructor(path: string, status: number) {
+    super(`${path}: HTTP ${status}`)
+    this.status = status
+  }
+}
+
 const cache = new Map<string, Promise<unknown>>()
 
+/** Cached GET; a failed request is dropped from the cache so the next call retries. */
 function get<T>(path: string): Promise<T> {
   if (!cache.has(path)) {
-    cache.set(
-      path,
-      fetch(BASE + path).then((r) => {
-        if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`)
-        return r.json()
-      }),
-    )
+    const p = fetch(BASE + path).then((r) => {
+      if (!r.ok) throw new HttpError(path, r.status)
+      // a static host may answer a missing file with the app's index.html (200, text/html)
+      if (!(r.headers.get('content-type') ?? '').includes('json')) throw new HttpError(path, 404)
+      return r.json()
+    })
+    p.catch(() => cache.delete(path))
+    cache.set(path, p)
   }
   return cache.get(path) as Promise<T>
 }

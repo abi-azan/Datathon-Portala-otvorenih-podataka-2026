@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { TrendChart } from '../components/TrendChart'
-import { loadGroups, loadUnit, type GroupMedians, type UnitDetail } from '../lib/data'
+import { HttpError, loadGroups, loadUnit, type GroupMedians, type UnitDetail } from '../lib/data'
 import { COMPONENTS, FLAGS, QUALITY, VRSTA, eur, num, pct } from '../lib/format'
 import { unitHref } from '../lib/router'
 
@@ -14,25 +14,31 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
   const [groups, setGroups] = useState<GroupMedians | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // App renders <Profile key={slug}>, so state starts empty for every unit
   useEffect(() => {
-    setUnit(null)
-    setError(null)
     Promise.all([loadUnit(slug), loadGroups()])
       .then(([u, g]) => {
         setUnit(u)
         setGroups(g)
         document.title = `${u.naziv} · Fiskalna karta`
       })
-      .catch(() => setError('Jedinica nije pronađena.'))
+      .catch((e) =>
+        setError(e instanceof HttpError && e.status === 404 ? 'Jedinica nije pronađena.' : 'Podaci se nisu učitali. Provjeri vezu i pokušaj ponovno.'),
+      )
   }, [slug])
 
   if (error)
     return (
       <main className="mx-auto max-w-3xl px-6 py-20 text-center">
         <p className="text-lg">{error}</p>
-        <a href="#/" className="mt-4 inline-block underline">
-          Natrag na kartu
-        </a>
+        <div className="mt-4 flex justify-center gap-4">
+          <button type="button" onClick={() => window.location.reload()} className="underline">
+            Pokušaj ponovno
+          </button>
+          <a href="#/" className="underline">
+            Natrag na kartu
+          </a>
+        </div>
       </main>
     )
   if (!unit || !groups) return <main className="mx-auto max-w-[1440px] px-10 py-20 text-muted">Učitavam svjedodžbu…</main>
@@ -91,7 +97,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             <div>
               <div className="text-xs text-muted">Mjesto u skupini</div>
               <div className="tabular font-medium">
-                {num((r as unknown as { rang: number }).rang)}. od {num((r as unknown as { n_skupine: number }).n_skupine)}
+                {r.rang != null && r.n_skupine != null && r.n_skupine > 1 ? `${num(r.rang)}. od ${num(r.n_skupine)}` : 'bez usporedne skupine'}
               </div>
             </div>
             <div>
@@ -118,7 +124,10 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-page px-2.5 py-1 text-xs text-ink-2">
                   {unit.objasnjenje.izvor === 'ai' ? <Sparkles className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                   {unit.objasnjenje.izvor === 'ai' ? 'AI tekst' : 'Predložak'}
-                  {unit.objasnjenje.provjera && ` · ${unit.objasnjenje.provjera.n_brojki}/${unit.objasnjenje.provjera.n_brojki} brojki provjereno`}
+                  {unit.objasnjenje.provjera &&
+                    (unit.objasnjenje.provjera.ok
+                      ? ` · ${unit.objasnjenje.provjera.n_brojki}/${unit.objasnjenje.provjera.n_brojki} brojki provjereno`
+                      : ` · provjera nije prošla (${unit.objasnjenje.provjera.n_brojki - unit.objasnjenje.provjera.nepoznate.length}/${unit.objasnjenje.provjera.n_brojki})`)}
                 </span>
               </div>
               <p className="mt-3 font-serif text-xl leading-relaxed">{unit.objasnjenje.tekst}</p>

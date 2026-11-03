@@ -21,15 +21,27 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-card focus:px-3 focus:py-2">
+      {/* not href="#main": the hash is the router, so the link would navigate home */}
+      <button
+        type="button"
+        onClick={() => document.getElementById('main')?.focus()}
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-card focus:px-3 focus:py-2"
+      >
         Preskoči na sadržaj
-      </a>
+      </button>
       <Header current={route.page} />
-      <div id="main" className="flex-1">
-        {error && <p className="mx-auto max-w-3xl px-6 py-20 text-center">Podaci se nisu učitali. Pokušaj ponovno.</p>}
+      <div id="main" tabIndex={-1} className="flex-1 outline-none">
+        {error && (
+          <p className="mx-auto max-w-3xl px-6 py-20 text-center">
+            Podaci se nisu učitali.{' '}
+            <button type="button" onClick={() => window.location.reload()} className="underline">
+              Pokušaj ponovno
+            </button>
+          </p>
+        )}
         {!index && !error && <p className="mx-auto max-w-3xl px-6 py-20 text-center text-muted">Učitavam…</p>}
         {index && route.page === 'home' && <Home index={index} />}
-        {index && route.page === 'unit' && <Profile slug={route.slug} lastYear={index.zadnja_godina} />}
+        {index && route.page === 'unit' && <Profile key={route.slug} slug={route.slug} lastYear={index.zadnja_godina} />}
         {route.page === 'methodology' && <Methodology />}
       </div>
       <Footer generated={index?.generirano} />

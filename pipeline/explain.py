@@ -60,8 +60,10 @@ def template(pack):
     grade = next(v for k, v in f.items() if k.startswith("Ocjena financijske"))
     parts = [f"{pack['naziv']['nom']} za {pack['year']}. godinu ima ocjenu {grade.split(' na ljestvici')[0]}."]
     if "Najslabija sastavnica" in f:
-        parts.append(f"Najslabija sastavnica je {f['Najslabija sastavnica']}.")
+        parts.append(f"Najslabija sastavnica: {f['Najslabija sastavnica']}.")
     parts.append(f"Jake strane: {f['Jake strane']}.")
+    if "Pravilo" in f:
+        parts.append(f"{f['Pravilo'][0].upper()}{f['Pravilo'][1:]}.")
     if f.get("Upozorenja", "nema upozorenja") != "nema upozorenja":
         parts.append(f"Upozorenja: {f['Upozorenja']}.")
     return " ".join(parts)
@@ -96,12 +98,12 @@ TEST_FIXED = ["Općina Sveta Marija", "Općina Povljana", "Grad Senj", "Općina 
 
 def pick_test_units(packs, n, seed=7):
     """The fixed stories plus a sample spread over all grades."""
-    chosen = [p for p in packs if p["naziv"]["nom"] in TEST_FIXED]
+    chosen = [p for p in packs if p["naziv"]["nom"] in TEST_FIXED][:n]
     rest = [p for p in packs if p not in chosen]
     rng = random.Random(seed)
     by_grade = {g: [p for p in rest if p["ocjena"] == g] for g in (1, 2, 3, 4, 5)}
     g = 1
-    while len(chosen) < n:
+    while len(chosen) < min(n, len(packs)):
         if by_grade[g]:
             chosen.append(by_grade[g].pop(rng.randrange(len(by_grade[g]))))
         g = g % 5 + 1
