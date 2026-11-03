@@ -126,6 +126,15 @@ SCHEMAS = {
             "url": {"type": "string", "pattern": "^https://", "description": "Datoteka, API ili model."},
             "portal_url": {"type": ["string", "null"], "description": "Stranica skupa (portal ili izdavatelj)."},
             "licenca": {"type": "string", "minLength": 1},
+            "licenca_url": {"type": ["string", "null"], "pattern": "^https://",
+                            "description": "Tekst licence ili uvjeta, odnosno propis na kojem se temelji ponovna uporaba."},
+            "licenca_dokaz": {"type": ["string", "null"], "pattern": "^https://",
+                              "description": "Gdje izdavatelj navodi licencu ili uvjete (metapodaci, uvjeti korištenja)."},
+            "zadnja_izmjena": {"type": ["string", "null"], "format": "date",
+                               "description": "Datum zadnje izmjene kako ga navodi izdavatelj: HTTP Last-Modified "
+                                              "datoteke ili datum revizije u metapodacima. Otvorena dozvola traži da se "
+                                              "navede. Prazno za izvore koji se stalno mijenjaju (katalog portala, OSM): "
+                                              "vrijedi stanje pri preuzimanju."},
             "pristup": {"type": "string", "enum": ["API (CKAN)", "API (OGC WFS)", "datoteka (XLSX/ZIP)",
                                                    "datoteka (PDF)", "vektorske pločice", "model"]},
             "uloga": STR,

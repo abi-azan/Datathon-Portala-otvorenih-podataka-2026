@@ -106,4 +106,6 @@ Snima se zaslon 1920×1080, preglednik bez traka i kursor uvećan.
 - Audacity za glas.
 - Glazba bez glazbe ili pod licencom CC0.
 
-Sve treba navesti u dokumentaciji.
+Sve treba navesti u dokumentaciji (navedeno je u `THIRD_PARTY_LICENSES.md`).
+
+U svakom kadru s kartom mora se vidjeti natpis "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" u kutu karte. MapLibre ga sažme u gumb "i" čim se karta pomakne, pa ga prije snimanja treba otvoriti klikom na "i" ili ga dopisati u montaži. To traže OpenFreeMap i ODbL za video i snimke zaslona.

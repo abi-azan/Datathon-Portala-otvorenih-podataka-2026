@@ -36,7 +36,7 @@ Svi korišteni skupovi s izdavateljem, poveznicom, licencom i načinom pristupa 
 | Katalog Portala otvorenih podataka | data.gov.hr | **API: CKAN** |
 | Upravne jedinice INSPIRE, indeks razvijenosti 2024. | DGU, MRRFEU | jednokratno, u `data/reference/jls_master.csv` |
 
-Podaci Ministarstva financija nisu na Portalu otvorenih podataka i nemaju izričitu licencu; koriste se prema Zakonu o pravu na pristup informacijama, uz navođenje izvora. Preporuka Ministarstvu: objaviti PR-RAS, RAS-funkcijski i Bilancu na data.gov.hr, s licencom i API-jem.
+Podaci Ministarstva financija nisu na Portalu otvorenih podataka i nemaju izričitu licencu. Koriste se prema Zakonu o pravu na pristup informacijama (čl. 27. i 31.) i uz uvjete Otvorene dozvole, koja prema Pravilniku NN 67/17 (čl. 4.) vrijedi kad tijelo nije objavilo druge uvjete. Obrazloženje je u [docs/skupovi-podataka.md](docs/skupovi-podataka.md). Preporuka Ministarstvu: objaviti PR-RAS, RAS-funkcijski i Bilancu na data.gov.hr, s licencom i API-jem.
 
 ## Metodologija ukratko
 
@@ -109,23 +109,27 @@ Osnovna adresa je `<stranica>/api/v1/`, a opis je u `openapi.json`.
 
 - **Kod:** [EUPL-1.2](LICENSE).
 - **Podaci koje projekt proizvodi** (rezultati, šifrarnik, API): [CC BY 4.0](LICENSE-DATA.md), uz navođenje izvornih skupova.
-- **Izvorni podaci** ostaju pod svojim uvjetima, popisanima u [docs/skupovi-podataka.md](docs/skupovi-podataka.md).
-  - Otvorena dozvola: DZS, DGU, data.gov.hr.
-  - ODbL: OpenStreetMap.
-  - Podaci MF-a: ponovna uporaba prema ZPPI.
-- **Fontovi:** Public Sans i Source Serif 4, oba SIL OFL 1.1.
+  - Tko ih koristi dalje, zadržava i izjavu o izvoru iz LICENSE-DATA.md.
+- **Izvorni podaci** ostaju pod svojim uvjetima. Popis s dokazom licence i datumom zadnje izmjene je u [docs/skupovi-podataka.md](docs/skupovi-podataka.md).
+  - Otvorena dozvola: DZS, DGU, katalog data.gov.hr.
+  - Podaci MF-a: ponovna uporaba prema ZPPI, uz uvjete Otvorene dozvole (Pravilnik NN 67/17).
+  - Indeks razvijenosti: uvjeti korištenja razvoj.gov.hr (uz navođenje izvora).
+  - ODbL: OpenStreetMap, samo kao podloga karte.
+- **Softver trećih strana:** [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md). Sve je otvorenog koda, a fontovi Public Sans i Source Serif 4 su pod SIL OFL 1.1.
 
 ## Korišteni AI alati
 
 Pravila natjecanja traže popis svih AI alata:
 
-| Alat | Licenca | Za što |
+| Alat | Licenca ili uvjeti | Za što |
 |---|---|---|
-| Gemma 4 12B-it (QAT Q4_0) | Apache-2.0 | u proizvodu: tekst objašnjenja ocjene (odabir modela potvrđuje se 4.11.; test u `docs/research/06-gemma-test.md`) |
+| Gemma 4 31B-it (QAT Q4_0, GGUF) | Apache-2.0 | u proizvodu: tekst objašnjenja ocjene. Odabran nakon testa v6 (20/20 prolaza), vidi `docs/research/06-gemma-test.md` |
+| Gemma 4 E4B, 12B i 26B-A4B (QAT Q4_0) | Apache-2.0 | samo testovi; 12B je rezerva |
 | llama.cpp | MIT | izvođenje Gemme na Kaggle GPU-u (T4) |
-| Kaggle (bilježnice, Kaggle Models) | — | izvođenje Gemme |
-| Claude Code (Anthropic) | — | razvojni alat: pisanje i pregled koda, analize |
-| Claude Fable | — | neovisne recenzije plana |
-| Claude (Anthropic), ocjenjivanje | — | ocjena jezika Gemma tekstova tijekom razvoja |
+| Kaggle (bilježnice, Kaggle Models, službeni Kaggle MCP server) | Kaggle Terms of Use | izvođenje Gemme i upravljanje bilježnicama iz razvojnog okruženja |
+| Claude Code (Anthropic) | vlasnički; Anthropic uvjeti, prava na izlaze ima korisnik (Consumer Terms, odj. 4) | razvojni alat: pisanje i pregled koda, analize |
+| gstack (skillovi za Claude Code) | MIT | razvojni alat: pregled sučelja u pregledniku bez prozora, recenzije |
+| Claude Fable | vlasnički; Anthropic uvjeti | neovisne recenzije plana |
+| Claude (Anthropic), ocjenjivanje | vlasnički; Anthropic uvjeti | ocjena jezika Gemma tekstova tijekom razvoja |
 
 Za tekstove koji se prikazuju u aplikaciji koristi se samo otvoreni model. Dok batch nije gotov, svjedodžba prikazuje predložak s oznakom. Prompt i provjera brojki su javni: `pipeline/explain.py`, `pipeline/verify.py`.

@@ -11,7 +11,8 @@
   rezultati.csv            one row per unit and year: grade, points, I1-I5, S1-S5, flags
   izvori.json              provenance of every download: URL, time, ETag, sha256, CKAN metadata
   skupovi.json             every dataset the project uses (data/reference/skupovi.csv): publisher,
-                           link, licence, access, role, plus last download and sha256
+                           link, licence with its text and evidence, the publisher's last-change date,
+                           access, role, plus last download and sha256
   openapi.json             OpenAPI 3.1 description of all of the above (pipeline/openapi.py)
 
 The files are generated, not committed: CI builds them before deploying the site.
@@ -24,6 +25,8 @@ import re
 import shutil
 import sys
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+from urllib.parse import urlparse
 
 import pandas as pd
 
@@ -77,7 +80,9 @@ def datasets(rows, log):
     """skupovi.json: the dataset list plus download time and sha256 from the provenance log.
 
     A source fetched in pages (ckan_package_search_00000, _01000, ...) is one dataset:
-    the latest download time, the summed size and one sha256 per page."""
+    the latest download time, the summed size and one sha256 per page.
+    zadnja_izmjena comes from the server's Last-Modified when the log has one (the publisher's
+    own date, newer than what the CSV says); otherwise it stays as typed into the CSV."""
     out = []
     for r in rows:
         rec = {k: (v or None) for k, v in r.items()}
@@ -90,12 +95,25 @@ def datasets(rows, log):
             rec["sha256"] = hits[0]["sha256"] if len(hits) == 1 else [h["sha256"] for h in hits]
             if len(hits) > 1:
                 rec["stranica"] = len(hits)
+            modified = [parsedate_to_datetime(h["last_modified"]) for h in hits if h.get("last_modified")]
+            if modified:
+                rec["zadnja_izmjena"] = max(modified).date().isoformat()
         out.append(rec)
     return out
 
 
-def datasets_markdown(rows):
-    """docs/skupovi-podataka.md: the dataset table for the submission, from the same CSV."""
+SOURCE_STATEMENT = (
+    "Sadrži informacije tijela javne vlasti u skladu s Otvorenom dozvolom (https://data.gov.hr/otvorena-dozvola): "
+    "Ministarstvo financija, Državni zavod za statistiku, Državna geodetska uprava i Portal otvorenih podataka. "
+    "Indeks razvijenosti: Ministarstvo regionalnoga razvoja i fondova Europske unije (razvoj.gov.hr). "
+    "Poveznice na skupove i datumi zadnje izmjene: docs/skupovi-podataka.md. "
+    "Izmjene: podaci su spojeni po jedinici i preračunati u pokazatelje, bodove i ocjene, a granice su "
+    "pojednostavljene (mapshaper). Ocjene su izračun autora, a ne službena ocjena tih tijela."
+)
+
+
+def datasets_markdown(recs):
+    """docs/skupovi-podataka.md: the dataset tables for the submission, from the records of skupovi.json."""
     def cell(s):
         return (s or "").replace("|", "\\|").replace("\n", " ")
 
@@ -108,12 +126,21 @@ def datasets_markdown(rows):
             links = f"[{direct}]({r['url']})"
             if r["portal_url"]:
                 links = f"[stranica skupa]({r['portal_url']}), " + links
-            lines.append("| " + " | ".join(cell(x) for x in (
-                r["naziv"], r["izdavatelj"], links, r["licenca"], r["pristup"], r["uloga"])) + " |")
+            lic = f"[{cell(r['licenca'])}]({r['licenca_url']})" if r.get("licenca_url") else cell(r["licenca"])
+            lines.append("| " + " | ".join([cell(r["naziv"]), cell(r["izdavatelj"]), links, lic,
+                                            cell(r["pristup"]), cell(r["uloga"])]) + " |")
         return "\n".join(lines)
 
-    used = [r for r in rows if r["koristi_se"] == "da"]
-    planned = [r for r in rows if r["koristi_se"] != "da"]
+    def evidence(rs):
+        lines = ["| Skup | Gdje izdavatelj navodi licencu ili uvjete | Zadnja izmjena (prema izdavatelju) |",
+                 "|---|---|---|"]
+        for r in rs:
+            proof = f"[{urlparse(r['licenca_dokaz']).netloc}]({r['licenca_dokaz']})" if r.get("licenca_dokaz") else ""
+            lines.append(f"| {cell(r['naziv'])} | {proof} | {r.get('zadnja_izmjena') or '—'} |")
+        return "\n".join(lines)
+
+    used = [r for r in recs if r["koristi_se"]]
+    planned = [r for r in recs if not r["koristi_se"]]
     parts = [
         "# Korišteni skupovi podataka",
         "",
@@ -128,20 +155,60 @@ def datasets_markdown(rows):
         f"## Korišteno ({len(used)})",
         "",
         table(used),
-        "",
-        "Napomene:",
-        "",
-        "- Otvorena dozvola traži navođenje izvora, datuma preuzimanja i izmjena. Izvor i datum su u "
-        "`izvori.json`. Izmjene: podatke smo spojili po jedinici, preračunali u pokazatelje, a granice "
-        "pojednostavili (mapshaper).",
-        "- Ministarstvo financija ne navodi licencu za ove datoteke i ne objavljuje ih na data.gov.hr. "
-        "Koristimo ih kao javne informacije prema Zakonu o pravu na pristup informacijama (ZPPI; NN 25/13, "
-        "85/15, 69/22), uz navođenje izvora.",
-        "- Upravne jedinice i indeks razvijenosti preuzeti su jednom. Iz njih je složena "
-        "`data/reference/jls_master.csv`, a ETL ih ne preuzima pri svakom pokretanju.",
     ]
     if planned:
         parts += ["", f"## Planirano, još nije u kodu ({len(planned)})", "", table(planned)]
+    parts += [
+        "",
+        "## Licence: dokaz i datum zadnje izmjene",
+        "",
+        "Provjereno 4.11.2026. Datum za datoteke MF-a dolazi automatski iz zaglavlja Last-Modified "
+        "(`izvori.json`). Za ostale je to datum revizije ili metapodataka koji navodi izdavatelj. Katalog "
+        "portala i OSM mijenjaju se stalno, pa za njih vrijedi stanje pri preuzimanju.",
+        "",
+        evidence(recs),
+        "",
+        "## Izjava o izvoru",
+        "",
+        "Otvorena dozvola (t. II. i III.) i Pravilnik NN 67/17 (čl. 5.) traže: naziv tijela, poveznicu na skup, "
+        "datum zadnje izmjene, oznaku i poveznicu na Otvorenu dozvolu te naznaku izmjena. Tijela nisu propisala "
+        "vlastitu izjavu, pa koristimo rečenicu iz dozvole. Ista izjava je u podnožju aplikacije i u "
+        "`LICENSE-DATA.md`:",
+        "",
+        "> " + SOURCE_STATEMENT,
+        "",
+        "## Napomene",
+        "",
+        "- **Ministarstvo financija** ne navodi licencu i ove datoteke ne objavljuje na data.gov.hr. Stranica "
+        "\"Uvjeti korištenja\" na mfin.gov.hr je prazna. Pravna osnova za ponovnu uporabu:",
+        "  - ZPPI (NN 25/13, 85/15, 69/22), čl. 27. st. 1.: svaki korisnik ima pravo na ponovnu uporabu "
+        "informacija u komercijalne ili nekomercijalne svrhe;",
+        "  - ZPPI, čl. 31. st. 1.: tijelo daje podatke za ponovnu uporabu bez ograničenja i za slobodnu uporabu;",
+        "  - Pravilnik o vrstama i sadržaju dozvola (NN 67/17), čl. 4. st. 1.: informacije za ponovnu uporabu "
+        "dostupne su uz Otvorenu dozvolu. Druge uvjete tijelo mora objaviti na svojoj stranici (čl. 6.), a MF "
+        "ih nije objavio. Zato poštujemo uvjete Otvorene dozvole;",
+        "  - objavljena izvješća su službeni tekstovi, koji nakon objave nisu zaštićeni autorskim pravom "
+        "(ZAPSP, NN 111/21, čl. 18. st. 3.).",
+        "- **DZS (WFS):** polje licence u CKAN-u je prazno, ali metapodaci (`access_constraints`) i "
+        "GetCapabilities servisa (`Fees`) navode Otvorenu dozvolu.",
+        "- **Katalog portala:** metapodaci su uvijek pod Otvorenom dozvolom, bez obzira na licencu skupa na koji "
+        "se odnose (Pravilnik NN 67/17, čl. 4. st. 5.; tekst Otvorene dozvole: \"kao i na metapodatke\").",
+        "- **Indeks razvijenosti:** uvjeti korištenja razvoj.gov.hr kažu: \"Sadržaji s ovih stranica mogu se "
+        "prenositi bez posebne dozvole uz navođenje izvora\".",
+        "- **DUR (planirano):** ni revizija.hr ne navodi licencu. Vrijedi ista osnova kao za MF.",
+        "- **OpenStreetMap i OpenFreeMap:**",
+        "  - ODbL traži navođenje \"© OpenStreetMap\" s poveznicom na openstreetmap.org/copyright. "
+        "OpenFreeMap traži \"OpenFreeMap © OpenMapTiles Data from OpenStreetMap\".",
+        "  - MapLibre taj natpis prikazuje u kutu karte. Sažme ga u gumb \"i\" tek kad korisnik pomakne kartu, "
+        "što smjernice OSMF-a dopuštaju.",
+        "  - Na snimkama zaslona i u videu natpis mora biti vidljiv ili dopisan.",
+        "  - OSM podaci nisu u našim rezultatima ni u API-ju. Služe samo kao podloga u sučelju.",
+        "- **Gemma 4:** Apache-2.0 prema kartici modela na Kaggleu (https://ai.google.dev/gemma/docs/gemma_4_license). "
+        "Koristi se varijanta v2. Model ne distribuiramo, nego samo tekstove koje je napisao, a Apache-2.0 ne "
+        "ograničava izlaze.",
+        "- Upravne jedinice i indeks razvijenosti preuzeti su jednom. Iz njih je složena "
+        "`data/reference/jls_master.csv`, a ETL ih ne preuzima pri svakom pokretanju.",
+    ]
     return "\n".join(parts) + "\n"
 
 
@@ -200,8 +267,9 @@ def main():
     out.to_csv(API / "rezultati.csv", index=False, encoding="utf-8", float_format="%.10g")
     shutil.copy(config.SOURCES_LOG, API / "izvori.json")
     rows = read_datasets()
-    write(API / "skupovi.json", datasets(rows, json.loads(config.SOURCES_LOG.read_text(encoding="utf-8"))))
-    DATASETS_DOC.write_text(datasets_markdown(rows), encoding="utf-8", newline="\n")
+    recs = datasets(rows, json.loads(config.SOURCES_LOG.read_text(encoding="utf-8")))
+    write(API / "skupovi.json", recs)
+    DATASETS_DOC.write_text(datasets_markdown(recs), encoding="utf-8", newline="\n")
     write(API / "openapi.json", openapi.spec(generated))
     size = sum(p.stat().st_size for p in API.rglob("*") if p.is_file())
     print(f"Statični API: {API} ({len(index)} jedinica, {size / 1e6:.1f} MB)")

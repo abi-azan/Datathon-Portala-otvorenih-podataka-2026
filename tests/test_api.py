@@ -101,6 +101,9 @@ def test_dataset_list_is_complete_where_it_must_be():
         if r["koristi_se"] == "da":
             assert r["url"].startswith("https://") and r["licenca"].strip(), r["kljuc"]
             assert r["naziv"].strip() and r["izdavatelj"].strip() and r["uloga"].strip(), r["kljuc"]
+            # every licence claim has its text and the place where the publisher states it
+            assert r["licenca_url"].startswith("https://") and r["licenca_dokaz"].startswith("https://"), r["kljuc"]
+        assert re.fullmatch(r"(\d{4}-\d{2}-\d{2})?", r["zadnja_izmjena"]), r["kljuc"]
 
 
 def test_dataset_list_matches_schema_and_csv(spec):

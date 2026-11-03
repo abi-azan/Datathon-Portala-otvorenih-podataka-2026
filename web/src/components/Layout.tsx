@@ -50,9 +50,31 @@ export function Footer({ generated }: { generated?: string }) {
         </div>
         <div>
           <div className="font-medium text-ink">Izvori</div>
+          {/* Source statement required by the Otvorena dozvola (t. II-III): bodies, link to the licence, link to
+              the datasets with their last-change dates, and a note that the data were changed. */}
           <p className="mt-2">
-            Ministarstvo financija (PR-RAS, Bilanca), DZS (Popis 2021., granice, INSPIRE WFS), data.gov.hr (CKAN API).
-            Granice: © DZS / DGU, Otvorena dozvola. Podloga: © OpenStreetMap, OpenFreeMap.
+            Sadrži informacije tijela javne vlasti u skladu s{' '}
+            <a href="https://data.gov.hr/otvorena-dozvola" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+              Otvorenom dozvolom
+            </a>
+            : Ministarstvo financija (PR-RAS, Bilanca), DZS (Popis 2021. i granice, INSPIRE WFS), DGU (upravne jedinice) i
+            data.gov.hr (CKAN API). Indeks razvijenosti: MRRFEU.
+          </p>
+          <p className="mt-2">
+            Podaci su preračunati u pokazatelje i ocjene, a granice pojednostavljene.{' '}
+            <a
+              href="https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026/blob/main/docs/skupovi-podataka.md"
+              className="underline decoration-axis underline-offset-4 hover:decoration-ink"
+            >
+              Skupovi, poveznice i datumi izmjene
+            </a>
+          </p>
+          <p className="mt-2">
+            Podloga karte: ©{' '}
+            <a href="https://www.openstreetmap.org/copyright" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+              OpenStreetMap
+            </a>{' '}
+            suradnici, © OpenMapTiles, OpenFreeMap.
           </p>
         </div>
         <div>
@@ -81,7 +103,10 @@ export function Footer({ generated }: { generated?: string }) {
           <p className="mt-2">
             Ocjena nije službena: neovisni izračun iz javnih podataka.
             <br />
-            Kod: EUPL-1.2 · Podaci: CC BY 4.0
+            Kod: EUPL-1.2 · Podaci: CC BY 4.0 ·{' '}
+            <a href="./licence-trecih-strana.txt" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+              Licence softvera
+            </a>
             {generated && (
               <>
                 <br />
