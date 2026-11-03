@@ -114,6 +114,33 @@ SCHEMAS = {
         "additionalProperties": {"type": "object", "additionalProperties": {
             "type": "object", "additionalProperties": NUM}},
     },
+    "Skup": {
+        "type": "object",
+        "description": "Jedan korišteni (ili planirani) skup podataka. Izvor je data/reference/skupovi.csv.",
+        "required": ["naziv", "izdavatelj", "url", "licenca", "pristup"],
+        "properties": {
+            "kljuc": {"type": "string", "pattern": "^[a-z0-9_]+$",
+                      "description": "Ključ izvora; isti kao u izvori.json kad ETL izvor preuzima sam."},
+            "naziv": {"type": "string", "minLength": 1},
+            "izdavatelj": {"type": "string", "minLength": 1},
+            "url": {"type": "string", "pattern": "^https://", "description": "Datoteka, API ili model."},
+            "portal_url": {"type": ["string", "null"], "description": "Stranica skupa (portal ili izdavatelj)."},
+            "licenca": {"type": "string", "minLength": 1},
+            "pristup": {"type": "string", "enum": ["API (CKAN)", "API (OGC WFS)", "datoteka (XLSX/ZIP)",
+                                                   "datoteka (PDF)", "vektorske pločice", "model"]},
+            "uloga": STR,
+            "koristi_se": {"type": "boolean", "description": "false: planirano, još nije u kodu."},
+            "zadnje_preuzimanje": {"type": "string", "format": "date-time"},
+            "zadnja_provjera": {"type": "string", "format": "date-time",
+                                "description": "Zadnji uvjetni GET (304 znači da se datoteka nije promijenila)."},
+            "bajtova": {"type": "integer"},
+            "sha256": {"anyOf": [{"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                                 {"type": "array", "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}],
+                       "description": "sha256 preuzete datoteke; za izvor u stranicama (CKAN) jedan po stranici."},
+            "stranica": {"type": "integer", "description": "Broj stranica kad se izvor preuzima u dijelovima."},
+        },
+    },
+    "Skupovi": {"type": "array", "minItems": 1, "items": {"$ref": "#/components/schemas/Skup"}},
 }
 
 
@@ -136,7 +163,8 @@ def spec(generated):
             "description": (
                 "Statični API bez ključa i bez poslužitelja (GitHub Pages, CORS otvoren). Svi podaci izračunati su iz "
                 "otvorenih podataka Ministarstva financija (PR-RAS, Bilanca), DZS-a (Popis 2021., INSPIRE WFS) i "
-                "Portala otvorenih podataka (CKAN API). Metodologija: PLAN §3 u repozitoriju. "
+                "Portala otvorenih podataka (CKAN API). Popis svih skupova s licencama je skupovi.json. "
+                "Metodologija: PLAN §3 u repozitoriju. "
                 f"Datoteke su generirane {generated}."),
             "license": {"name": "CC BY 4.0", "identifier": "CC-BY-4.0"},
             "contact": {"name": "Fiskalna karta JLS", "url": REPO},
@@ -164,6 +192,10 @@ def spec(generated):
                                  "Last-Modified, veličina, sha256, izdavatelj, licenca i CKAN metapodaci.",
                                  schema={"type": "object", "additionalProperties": {
                                      "type": "object", "required": ["url", "retrieved", "sha256"]}}),
+            "/skupovi.json": _get("Popis skupova podataka",
+                                  "Svi skupovi podataka koje projekt koristi: naziv, izdavatelj, poveznica, licenca, "
+                                  "način pristupa i uloga. Uz izvore koje ETL preuzima sam stoje vrijeme zadnjeg "
+                                  "preuzimanja i sha256.", "Skupovi"),
             "/geo/jls.topo.json": _get("Granice (TopoJSON)",
                                        "Slojevi jls (556 općina i gradova, svojstva sifra, naziv, slug, oib, zup_id) "
                                        "i zupanije (21). Izvor: DZS INSPIRE WFS, Otvorena dozvola; pojednostavljeno "

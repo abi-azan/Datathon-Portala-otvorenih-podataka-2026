@@ -1,6 +1,7 @@
 """The published static API matches its own OpenAPI 3.1 description. Run after pipeline.publish."""
 import csv
 import json
+import re
 
 import pytest
 from jsonschema import Draft202012Validator
@@ -75,3 +76,39 @@ def test_csv_exports():
 
 def test_spec_module_and_file_agree(spec):
     assert spec["components"]["schemas"] == json.loads(json.dumps(openapi.SCHEMAS))
+
+
+def dataset_rows():
+    with open(config.REFERENCE / "skupovi.csv", encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def test_every_downloaded_source_is_a_listed_and_used_dataset():
+    if not config.SOURCES_LOG.exists():
+        pytest.skip("no data/raw/sources.json")
+    log = json.loads(config.SOURCES_LOG.read_text(encoding="utf-8"))
+    keys = {re.sub(r"^(ckan_package_search)_\d+$", r"\1", k) for k in log}
+    rows = dataset_rows()
+    assert keys <= {r["kljuc"] for r in rows}, keys - {r["kljuc"] for r in rows}
+    assert keys <= {r["kljuc"] for r in rows if r["koristi_se"] == "da"}
+
+
+def test_dataset_list_is_complete_where_it_must_be():
+    rows = dataset_rows()
+    assert len({r["kljuc"] for r in rows}) == len(rows)
+    assert {r["koristi_se"] for r in rows} <= {"da", "ne"}
+    for r in rows:
+        if r["koristi_se"] == "da":
+            assert r["url"].startswith("https://") and r["licenca"].strip(), r["kljuc"]
+            assert r["naziv"].strip() and r["izdavatelj"].strip() and r["uloga"].strip(), r["kljuc"]
+
+
+def test_dataset_list_matches_schema_and_csv(spec):
+    data = load("skupovi.json")
+    v = validator(spec, "Skupovi")
+    assert not list(v.iter_errors(data)), list(v.iter_errors(data))[:3]
+    assert [d["kljuc"] for d in data] == [r["kljuc"] for r in dataset_rows()]
+    ckan = next(d for d in data if d["kljuc"] == "ckan_package_search")
+    assert isinstance(ckan["sha256"], list) and ckan["stranica"] == len(ckan["sha256"]) > 1
+    del data[0]["licenca"]                                  # the check really enforces the required fields
+    assert list(v.iter_errors(data))

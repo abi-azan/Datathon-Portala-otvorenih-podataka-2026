@@ -224,6 +224,8 @@ Stupci master tablice: `jls_code, naziv, tip, zup_id, zupanija, oib, rkp, mf_naz
 
 ## 6. Popis skupova podataka (format za predaju)
 
+> **Zastarjelo (3.11.).** Ovo je nacrt iz istraživanja i ne odgovara kodu. Važeći popis je `data/reference/skupovi.csv`, a tablica za predaju je `docs/skupovi-podataka.md`.
+
 | Naziv skupa | Izdavatelj | Poveznica | Licenca | Način pristupa |
 |---|---|---|---|---|
 | Financijski izvještaji JLP(R)S – PR-RAS i RAS-funkcijski 2019.–2025. (EUR) | Ministarstvo financija | https://mfin.gov.hr/istaknute-teme/lokalna-samouprava/financijski-izvjestaji-jlp-r-s/pr-ras-i-ras-funkc-za-razdoblje-2019-2025-euro/3922 | nije navedena; ponovna uporaba prema ZPPI, uz navođenje izvora | preuzimanje datoteke (ZIP/XLSX), automatizirano |
