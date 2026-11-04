@@ -3,7 +3,7 @@
 Scenarij prema PLAN §10 (vrhunac "Spoji pa vidi"). Pravila traže da video obuhvati 7 elemenata; tablica na dnu provjerava je li svaki pokriven.
 
 - **v2 (4.11. noću):** simulator, Karta reforme i klik na brojku postoje, pa su rezervni kadrovi maknuti.
-- **v3 (5.11. noću):** naracija skraćena s oko 400 na 337 riječi (žiri: govoriti sporije), uz nove kadrove: meko pretapanje boja u animaciji godina, kontekst s oznakom "uživo s API-ja DZS-a", kartica "Fiskalno izravnanje" (Samobor), isticanje spojenih i prekidač "Prikaži samo spojene" na Karti reforme te kadar MCP servera. Ispravljena je rečenica o upravi Paga (jaz od 1,4 mil. € je zbroj obje članice: Pag 1,15 mil. €, Povljana 0,25 mil. €). Sve brojke provjerene su prema API-ju iz online builda od 5.11. (tablica u `docs/noc-5-11.md`, N5).
+- **v3 (5.11. noću):** naracija skraćena s oko 400 na 338 riječi (žiri: govoriti sporije), uz nove kadrove: meko pretapanje boja u animaciji godina, kontekst s oznakom "uživo s API-ja DZS-a", kartica "Fiskalno izravnanje" (Samobor), isticanje spojenih i prekidač "Prikaži samo spojene" na Karti reforme te kadar MCP servera. Ispravljena je rečenica o upravi Paga (jaz od 1,4 mil. € je zbroj obje članice: Pag 1,15 mil. €, Povljana 0,25 mil. €). Sve brojke provjerene su prema API-ju iz online builda od 5.11. (tablica u `docs/noc-5-11.md`, N5).
 
 Uz smirenu brzinu (oko 130 riječi u minuti) govor traje oko 2:35, pa ostaje oko 20 s za stanke i prijelaze. Video mora biti ispod 3:00.
 
