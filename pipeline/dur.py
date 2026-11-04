@@ -14,6 +14,7 @@ uvjetno, nepovoljno, or suzdržavanje od izražavanja mišljenja) and the audite
 the publication year. The result is shown on the profile with a link to the report; a unit
 without a financial audit since 2019 says so.
 """
+import hashlib
 import json
 import re
 import sys
@@ -76,7 +77,9 @@ def list_reports(session, pause=0.5):
     for year, yid in sorted(YEAR_IDS.items()):
         seen, page = set(), 1
         while True:
-            html = session.get(LIST.format(id=yid, page=page), timeout=60).text
+            r = session.get(LIST.format(id=yid, page=page), timeout=60)
+            r.raise_for_status()                 # an error page has no links and would end the year early
+            html = r.text
             new = [p for p in (m.group(0) for m in LINK.finditer(html)) if p not in seen]
             if not new:
                 break
@@ -95,8 +98,12 @@ def url_of(path):
 
 
 def _download(session, year, name, path):
-    """The report PDF, from the cache in data/raw/dur/<year>/ or downloaded once."""
-    dest = RAW / str(year) / (slugify(name) + ".pdf")
+    """The report PDF, from the cache in data/raw/dur/<year>/ or downloaded once. The file name
+    carries a hash of the whole source path, so two reports with the same name never share it."""
+    dest = RAW / str(year) / f"{slugify(name)}-{hashlib.sha1(path.encode('utf-8')).hexdigest()[:8]}.pdf"
+    old = RAW / str(year) / (slugify(name) + ".pdf")          # cache written before the hash was added
+    if not dest.exists() and old.exists():
+        old.rename(dest)
     if not dest.exists():
         dest.parent.mkdir(parents=True, exist_ok=True)
         r = session.get(url_of(path), timeout=120)
@@ -120,6 +127,13 @@ def read_opinion(pdf_path, max_pages=8):
     opinion = min(hits)[1] if hits else None            # the first opinion stated in the report
     year = next((m for rx in AUDITED for m in [rx.search(text)] if m), None)
     return opinion, int(year.group(1)) if year else None
+
+
+def _county_stem(zupanija):
+    """'Vukovarsko-srijemska županija' -> 'vukovarsk', 'Zadarska županija' -> 'zadarsk': the part
+    of the county name that survives every case ending."""
+    first = re.split(r"[-\s]", _fold(zupanija))[0]
+    return re.sub(r"(a|o|e|i|u|om|oj|e)$", "", first)
 
 
 def match(reports, units):
@@ -151,16 +165,22 @@ def main():
     reports = list_reports(session)
     print(f"DUR: {len(reports)} financijskih revizija jedinica na popisima {min(YEAR_IDS)}.-{max(YEAR_IDS)}.")
     best, ambiguous = match(reports, units)
-    # a name two units share (Privlaka in Zadarska and Vukovarsko-srijemska): the county in the report
+    # a name two units share (Privlaka in Zadarska and Vukovarsko-srijemska): the county in the report.
+    # Reports name it in an inflected form ("Vukovarsko-srijemske županije"), so the adjective stem
+    # of its first word is searched ("vukovarsk", "zadarsk").
+    dropped = []
     for (year, kind, name, path), cands in sorted(ambiguous.items()):
         if len(cands) < 2:
+            dropped.append((year, kind, name, "nema jedinice tog naziva"))
             continue
-        text = _fold(_text(_download(session, year, name, path), 3))
-        hit = [u for u in cands if _fold(u.zupanija.replace(" županija", "")) in text]
-        if len(hit) == 1 and (hit[0].oib not in best or year > best[hit[0].oib][0]):
+        text = _fold(_text(_download(session, year, name, path), 8))
+        hit = [u for u in cands if _county_stem(u.zupanija) in text]
+        if len(hit) != 1:
+            dropped.append((year, kind, name, f"županija nije prepoznata ({len(hit)} od {len(cands)})"))
+            continue
+        if hit[0].oib not in best or year > best[hit[0].oib][0]:
             best[hit[0].oib] = (year, name, path)
-    unmatched = sorted({(k, n) for (y, k, n, p), c in ambiguous.items() if len(c) < 2})
-    print(f"  spojeno s {len(best)} jedinica; nespojeno {len(unmatched)}: {unmatched[:12]}")
+    print(f"  spojeno s {len(best)} jedinica; odbačeno izvješća {len(dropped)}: {dropped[:12]}")
     out = {}
     for i, (oib, (year, name, path)) in enumerate(sorted(best.items()), 1):
         dest = _download(session, year, name, path)
@@ -172,15 +192,19 @@ def main():
         out[oib] = {"objavljeno": year, "revidirana_godina": audited, "misljenje": opinion, "url": url_of(path)}
         if i % 25 == 0:
             print(f"  {i}/{len(best)}", flush=True)
-    OUT.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    body = json.dumps(out, ensure_ascii=False, sort_keys=True)
+    # the provenance travels with the committed file: CI never runs this step, so publish.py adds this
+    # entry to izvori.json and skupovi.json from here (one entry for all list pages and PDFs read)
+    meta = {"url": SITE + "izvjesca/10", "file": str(OUT.relative_to(config.ROOT)).replace("\\", "/"),
+            "retrieved": now, "checked": now, "sha256": hashlib.sha256(body.encode("utf-8")).hexdigest(),
+            "bytes": len(body.encode("utf-8")),
+            "izvjesca": len(reports), "pdf": len(out), "odbaceno": [list(d) for d in dropped]}
+    OUT.write_text(json.dumps({"meta": meta, "jedinice": out}, ensure_ascii=False, indent=1), encoding="utf-8")
     counts = pd.Series([v["misljenje"] for v in out.values()]).value_counts(dropna=False).to_dict()
     print(f"DUR -> {OUT}: {len(out)} jedinica, mišljenja {counts}")
-    # one provenance entry for the whole layer (the list pages and the PDFs it read)
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     log = sources._log()
-    log["dur_revizije"] = {"url": SITE + "izvjesca/10", "file": str(OUT.relative_to(config.ROOT)).replace("\\", "/"),
-                           "retrieved": now, "checked": now, "bytes": OUT.stat().st_size,
-                           "sha256": sources._sha256(OUT), "izvjesca": len(reports), "pdf": len(out)}
+    log["dur_revizije"] = meta
     sources._save_log(log)
 
 

@@ -76,8 +76,10 @@ export function Home({ index }: { index: IndexFile }) {
     if (!ctx) return []
     const cuts = quintiles(jls, ctx, year)
     const vals = jls.map((u) => ctx.value(u, year))
-    const lo = Math.min(...vals.filter((v): v is number => v != null && Number.isFinite(v)))
-    const hi = Math.max(...vals.filter((v): v is number => v != null && Number.isFinite(v)))
+    const finite = vals.filter((v): v is number => v != null && Number.isFinite(v))
+    if (!finite.length) return []                  // no values for this year: no classes, no legend rows
+    const lo = Math.min(...finite)
+    const hi = Math.max(...finite)
     const edges = [lo, ...cuts, hi]
     return SEQUENTIAL.map((color, i) => ({
       color,

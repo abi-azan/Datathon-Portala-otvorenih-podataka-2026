@@ -50,12 +50,18 @@ def _dist(path, title, kind="json", download=True):
     return d
 
 
-def catalogue(generated, sources, year_from, year_to):
-    """generated: ISO time of the publish run; sources: rows of skupovi.csv that are used."""
+# rows of skupovi.csv that are tools rather than data the outputs are derived from
+NOT_SOURCES = {"gemma_4", "osm_openfreemap"}
+
+
+def catalogue(generated, sources, year_from, year_to, exists=lambda path: True):
+    """generated: ISO time of the publish run; sources: rows of skupovi.csv that are used;
+    exists(path): whether a published file is there (a distribution that was not published is left
+    out, and a dataset without distributions too)."""
     publisher = {"@type": "foaf:Agent", "foaf:name": _hr("Tim Fiskalna karta JLS (Datathon Portala otvorenih podataka 2026)"),
                  "foaf:homepage": _ref(REPO)}
     contact = {"@type": "vcard:Kind", "vcard:fn": "Fiskalna karta JLS", "vcard:hasURL": _ref(REPO + "/issues")}
-    src = [_ref(r.get("portal_url") or r["url"]) for r in sources]
+    src = [_ref(r.get("portal_url") or r["url"]) for r in sources if r["kljuc"] not in NOT_SOURCES]
     common = {
         "dct:publisher": publisher, "dcat:contactPoint": contact,
         "dct:license": _ref(EU + "licence/CC_BY_4_0"),
@@ -117,7 +123,10 @@ def catalogue(generated, sources, year_from, year_to):
         "dcat:dataset": [
             {"@id": API + "dcat.jsonld#" + key, "@type": "dcat:Dataset", "dct:identifier": key,
              "dct:title": _hr(title), "dct:description": _hr(desc), "dcat:keyword": [_hr(k) for k in kw],
-             "dcat:distribution": dists, **common}
+             "dcat:distribution": kept, **common}
             for key, title, desc, kw, dists in datasets
+            for kept in [[d for d in dists if "dcat:downloadURL" not in d
+                          or exists(d["dcat:downloadURL"]["@id"][len(API):])]]
+            if kept
         ],
     }

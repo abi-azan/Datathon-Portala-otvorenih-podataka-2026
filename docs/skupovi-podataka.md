@@ -42,7 +42,7 @@ Provjereno 4.11.2026. Datum za datoteke MF-a dolazi automatski iz zaglavlja Last
 
 Otvorena dozvola (t. II. i III.) i Pravilnik NN 67/17 (čl. 5.) traže: naziv tijela, poveznicu na skup, datum zadnje izmjene, oznaku i poveznicu na Otvorenu dozvolu te naznaku izmjena. Tijela nisu propisala vlastitu izjavu, pa koristimo rečenicu iz dozvole. Ista izjava je u podnožju aplikacije i u `LICENSE-DATA.md`:
 
-> Sadrži informacije tijela javne vlasti u skladu s Otvorenom dozvolom (https://data.gov.hr/otvorena-dozvola): Ministarstvo financija, Državni zavod za statistiku, Državna geodetska uprava i Portal otvorenih podataka. Indeks razvijenosti: Ministarstvo regionalnoga razvoja i fondova Europske unije (razvoj.gov.hr). Poveznice na skupove i datumi zadnje izmjene: docs/skupovi-podataka.md. Izmjene: podaci su spojeni po jedinici i preračunati u pokazatelje, bodove i ocjene, a granice su pojednostavljene (mapshaper). Ocjene su izračun autora, a ne službena ocjena tih tijela.
+> Sadrži informacije tijela javne vlasti u skladu s Otvorenom dozvolom (https://data.gov.hr/otvorena-dozvola): Ministarstvo financija, Državni zavod za statistiku, Državna geodetska uprava, Portal otvorenih podataka i Državni ured za reviziju (izvješća o financijskim revizijama). Indeks razvijenosti: Ministarstvo regionalnoga razvoja i fondova Europske unije (razvoj.gov.hr). Poveznice na skupove i datumi zadnje izmjene: docs/skupovi-podataka.md. Izmjene: podaci su spojeni po jedinici i preračunati u pokazatelje, bodove i ocjene, a granice su pojednostavljene (mapshaper). Ocjene su izračun autora, a ne službena ocjena tih tijela.
 
 ## Napomene
 

@@ -54,8 +54,9 @@ export function Footer({ generated }: { generated?: string }) {
             <a href="https://data.gov.hr/otvorena-dozvola" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
               Otvorenom dozvolom
             </a>
-            : Ministarstvo financija (PR-RAS, Bilanca), DZS (Popis 2021. i granice, INSPIRE WFS), DGU (upravne jedinice) i
-            data.gov.hr (CKAN API). Indeks razvijenosti: MRRFEU.
+            : Ministarstvo financija (PR-RAS, Bilanca, fiskalno izravnanje), DZS (Popis 2021. i granice, INSPIRE WFS), DGU
+            (upravne jedinice), Državni ured za reviziju (izvješća o reviziji) i data.gov.hr (CKAN API). Indeks razvijenosti:
+            MRRFEU.
           </p>
           <p className="mt-2">
             Podaci su preračunati u pokazatelje i ocjene, a granice pojednostavljene.{' '}

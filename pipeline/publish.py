@@ -139,7 +139,8 @@ def datasets(rows, log):
 
 SOURCE_STATEMENT = (
     "Sadrži informacije tijela javne vlasti u skladu s Otvorenom dozvolom (https://data.gov.hr/otvorena-dozvola): "
-    "Ministarstvo financija, Državni zavod za statistiku, Državna geodetska uprava i Portal otvorenih podataka. "
+    "Ministarstvo financija, Državni zavod za statistiku, Državna geodetska uprava, Portal otvorenih podataka i "
+    "Državni ured za reviziju (izvješća o financijskim revizijama). "
     "Indeks razvijenosti: Ministarstvo regionalnoga razvoja i fondova Europske unije (razvoj.gov.hr). "
     "Poveznice na skupove i datumi zadnje izmjene: docs/skupovi-podataka.md. "
     "Izmjene: podaci su spojeni po jedinici i preračunati u pokazatelje, bodove i ocjene, a granice su "
@@ -282,7 +283,8 @@ def main():
     write(API / "jedinice.json", {"generirano": generated, "zadnja_godina": config.LAST_YEAR, "jedinice": index})
     write(API / "skupine.json", group_medians(res))
 
-    audits = json.loads(AUDITS.read_text(encoding="utf-8")) if AUDITS.exists() else None
+    audit_doc = json.loads(AUDITS.read_text(encoding="utf-8")) if AUDITS.exists() else None
+    audits = audit_doc["jedinice"] if audit_doc else None
     shown_ai = 0
     for u in units.to_dict("records"):
         n = nested[u["oib"]]
@@ -296,9 +298,11 @@ def main():
             "susjedi": neighbours,
             "cinjenice": pack,
             "objasnjenje": explanation(pack, ai_texts.get(u["oib"])),
-            # latest financial audit of the State Audit Office; None: no audit since 2019 (or no layer)
-            "revizija": audits.get(u["oib"]) if audits is not None else None,
         })
+        if audits is not None:
+            # latest financial audit of the State Audit Office; None: none found on its lists 2019-2026.
+            # Without the layer the key is left out, so no profile claims "not audited".
+            detail["revizija"] = audits.get(u["oib"])
         shown_ai += bool(detail["objasnjenje"]) and detail["objasnjenje"]["izvor"] == "ai"
         write(API / "jedinice" / f"{u['slug']}.json", detail)
     # the methodology page reports what is published, not what was imported
@@ -333,13 +337,18 @@ def main():
     out = res[res_cols].rename(columns={"year": "godina"}).sort_values(["oib", "godina"])
     out = out.replace([math.inf, -math.inf], float("nan"))   # I3 is infinite for debt without operating surplus
     out.to_csv(API / "rezultati.csv", index=False, encoding="utf-8", float_format="%.10g")
-    shutil.copy(config.SOURCES_LOG, API / "izvori.json")
+    # provenance log; the audit layer is built by hand, so its entry comes with the committed file
+    log = json.loads(config.SOURCES_LOG.read_text(encoding="utf-8"))
+    if audit_doc and "dur_revizije" not in log:
+        log["dur_revizije"] = audit_doc["meta"]
+    (API / "izvori.json").write_text(json.dumps(log, ensure_ascii=False, indent=1), encoding="utf-8")
     rows = read_datasets()
-    recs = datasets(rows, json.loads(config.SOURCES_LOG.read_text(encoding="utf-8")))
+    recs = datasets(rows, log)
     write(API / "skupovi.json", recs)
     # DCAT-AP catalogue, so a portal can harvest the outputs (PLAN §6 MUST 7)
     (API / "dcat.jsonld").write_text(json.dumps(dcat.catalogue(generated, [r for r in rows if r["koristi_se"] == "da"],
-                                                               config.YEARS[0], config.LAST_YEAR),
+                                                               config.YEARS[0], config.LAST_YEAR,
+                                                               exists=lambda p: (API / p).exists()),
                                                 ensure_ascii=False, indent=1), encoding="utf-8")
     DATASETS_DOC.write_text(datasets_markdown(recs), encoding="utf-8", newline="\n")
     write(API / "openapi.json", openapi.spec(generated))

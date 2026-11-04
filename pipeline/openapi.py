@@ -103,7 +103,8 @@ SCHEMAS = {
                 "facts": {"type": "array", "items": {"$ref": "#/components/schemas/Cinjenica"}}}},
             "revizija": {"type": ["object", "null"],
                          "description": "Zadnja financijska revizija Državnog ureda za reviziju (izvješća objavljena od 2019., "
-                                        "pipeline/dur.py). null: jedinica nije imala financijsku reviziju od 2019.",
+                                        "pipeline/dur.py). null: na popisima DUR-a 2019.-2026. nije pronađena financijska "
+                                        "revizija jedinice. Polja nema kad sloj revizija nije izgrađen.",
                          "required": ["objavljeno", "revidirana_godina", "misljenje", "url"],
                          "properties": {
                              "objavljeno": {"type": "integer", "description": "Godina objave izvješća."},

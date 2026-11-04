@@ -3,6 +3,7 @@ pandas>=2.2
 openpyxl>=3.1
 pyarrow>=15
 requests>=2.31
+pypdf>=5.0
 geopandas>=1.0
 libpysal>=4.10
 spopt>=0.6

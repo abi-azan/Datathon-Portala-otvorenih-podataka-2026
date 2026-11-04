@@ -257,6 +257,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             </dl>
           </Card>
 
+          {unit.revizija !== undefined && (
           <Card>
             <Eyebrow>Revizija Državnog ureda za reviziju</Eyebrow>
             {unit.revizija ? (
@@ -276,9 +277,13 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                 <p className="mt-3 text-xs text-muted">Mišljenje revizije ne ulazi u ocjenu; prikazuje se kao neovisna provjera.</p>
               </>
             ) : (
-              <p className="mt-3 text-sm text-ink-2">Jedinica nije imala financijsku reviziju od 2019. (izvješća objavljena 2019.–2026.).</p>
+              <p className="mt-3 text-sm text-ink-2">
+                Na popisima izvješća Državnog ureda za reviziju (objave 2019.–2026.) nije pronađena financijska revizija ove
+                jedinice.
+              </p>
             )}
           </Card>
+          )}
 
           <Card>
             <Eyebrow>Otvorenost na data.gov.hr</Eyebrow>
@@ -375,7 +380,7 @@ const ISSUES = 'https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-
 function reportHref(u: { naziv: string; oib: string; sifra: string; slug: string }) {
   const body = [
     `Jedinica: ${u.naziv} (OIB ${u.oib}, šifra ${u.sifra})`,
-    `Stranica: ${window.location.origin}${window.location.pathname}#/jedinica/${u.slug}`,
+    `Stranica: ${window.location.origin}${window.location.pathname}${unitHref(u.slug)}`,
     '',
     'Što nije točno (brojka, godina, sastavnica):',
     '',

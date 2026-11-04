@@ -41,6 +41,7 @@ Fiskalna karta JLS gradi se i radi samo uz softver otvorenog koda. Ovdje su izra
 | openpyxl | 3.1.5 | MIT | XLSX Ministarstva financija |
 | pyarrow | 26.0.0 | Apache-2.0 | Parquet |
 | requests | 2.34.2 | Apache-2.0 | CKAN API, WFS, preuzimanja |
+| pypdf | 6.21.4 | BSD-3-Clause | tekst PDF izvješća Državnog ureda za reviziju (mišljenje i revidirana godina) |
 | geopandas | 1.2.0 | BSD-3-Clause | granice |
 | shapely | 2.2.0 | BSD-3-Clause | geometrija (wheel sadrži GEOS 3.14, LGPL-2.1) |
 | libpysal | 4.15.1 | BSD-3-Clause | susjedstvo (Queen) |

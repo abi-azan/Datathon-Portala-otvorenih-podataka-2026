@@ -139,6 +139,11 @@ def test_audit_layer_matches_the_known_cases():
     assert len(audited) >= 300
     pov = load("jedinice/opcina-povljana.json")["revizija"]
     assert pov["misljenje"] == "nepovoljno" and pov["revidirana_godina"] == 2024 and pov["url"].startswith("https://www.revizija.hr/")
+    # two municipalities are called Privlaka; the 2021 report names Vukovarsko-srijemska županija
+    privlaka = {u["zupanija"]: load(f"jedinice/{u['slug']}.json")["revizija"] for u in index if u["naziv"] == "Općina Privlaka"}
+    assert privlaka["Vukovarsko-srijemska županija"]["revidirana_godina"] == 2020
+    assert privlaka["Zadarska županija"] is None
+    assert "Državni ured za reviziju" in (config.ROOT / "docs" / "skupovi-podataka.md").read_text(encoding="utf-8")
 
 
 def test_dcat_catalogue_lists_what_is_published():
