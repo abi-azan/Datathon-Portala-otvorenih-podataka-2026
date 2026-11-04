@@ -253,7 +253,12 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             <Eyebrow>Dodatni pokazatelji</Eyebrow>
             <p className="mt-1 text-xs text-muted">Ne ulaze u ocjenu.</p>
             <dl className="mt-3 space-y-3 text-sm">
-              <Row label="Tekuće pomoći u tekućim prihodima" value={pct(r.udio_tekucih_pomoci)} median={pct(med?.[year]?.udio_tekucih_pomoci)} />
+              <Row
+                label="Pomoći u tekućim prihodima"
+                hint="Pomoći koje nisu namijenjene kapitalnim projektima."
+                value={pct(r.udio_tekucih_pomoci)}
+                median={pct(med?.[year]?.udio_tekucih_pomoci)}
+              />
               <Row label="Trošak opće uprave po stanovniku" value={eur(r.uprava_pc)} median={eur(med?.[year]?.uprava_pc)} />
               <Row label="Tekući prihodi po stanovniku" value={eur(r.tekuci_prihodi_pc)} />
               <Row label="Investicijska stopa" value={pct(r.investicijska_stopa)} />
@@ -354,10 +359,13 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
   )
 }
 
-function Row({ label, value, median }: { label: string; value: string; median?: string }) {
+function Row({ label, value, median, hint }: { label: string; value: string; median?: string; hint?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-hairline pb-2 last:border-0 last:pb-0">
-      <dt className="text-ink-2">{label}</dt>
+      <dt className="text-ink-2">
+        {label}
+        {hint && <span className="mt-0.5 block text-xs text-muted">{hint}</span>}
+      </dt>
       <dd className="tabular shrink-0 text-right">
         <span className="font-medium whitespace-nowrap">{value}</span>
         {median && <div className="text-xs whitespace-nowrap text-muted">medijan usporedne skupine {median}</div>}

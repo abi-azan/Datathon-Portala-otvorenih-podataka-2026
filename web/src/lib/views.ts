@@ -32,8 +32,8 @@ export const CONTEXT_VIEWS: ContextView[] = [
   },
   {
     key: 'udio_tekucih_pomoci',
-    label: 'Udio tekućih pomoći u tekućim prihodima',
-    short: 'Tekuće pomoći',
+    label: 'Pomoći u prihodima',
+    short: 'Pomoći u prihodima',
     value: (u, y) => u.udio_tekucih_pomoci_po_godini?.[y] ?? null,
     format: (v) => pct(v),
     range: (a, b) => `${num(a * 100, 1)} – ${num(b * 100, 1)} %`,
