@@ -26,9 +26,7 @@ export function Header({ current }: { current: Page }) {
         >
           {link('#/', 'Karta', current === 'home')}
           {link('#/simulator', 'Simulator spajanja', current === 'simulator')}
-          <span className="shrink-0 cursor-not-allowed rounded-lg px-3 py-1.5 text-sm whitespace-nowrap text-muted" title="Uskoro">
-            Karta reforme
-          </span>
+          {link('#/reforma', 'Karta reforme', current === 'reform')}
           {link('#/metodologija', 'Metodologija i podaci', current === 'methodology')}
         </nav>
       </div>

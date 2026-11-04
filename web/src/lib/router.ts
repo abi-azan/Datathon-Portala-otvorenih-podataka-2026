@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 
 // Hash routes work on GitHub Pages without a server:
-// #/, #/jedinica/<slug>, #/metodologija, #/simulator?j=<sifra>,<sifra>
+// #/, #/jedinica/<slug>, #/metodologija, #/simulator?j=<sifra>,<sifra>, #/reforma?prag=<N>&s=<skupina>
 export type Route =
   | { page: 'home' }
   | { page: 'unit'; slug: string }
   | { page: 'methodology' }
   | { page: 'simulator'; j: string[] }
+  | { page: 'reform' }
 
 export type Page = Route['page']
 
@@ -23,6 +24,7 @@ function parse(hash: string): Route {
   if (unit) return { page: 'unit', slug: unit[1] }
   if (path.startsWith('/metodologija')) return { page: 'methodology' }
   if (path.startsWith('/simulator')) return { page: 'simulator', j: parseSelection(hash) }
+  if (path.startsWith('/reforma')) return { page: 'reform' }
   return { page: 'home' }
 }
 

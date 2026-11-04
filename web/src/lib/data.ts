@@ -194,5 +194,41 @@ function get<T>(path: string): Promise<T> {
 export const loadIndex = () => get<IndexFile>('jedinice.json')
 export const loadUnit = (slug: string) => get<UnitDetail>(`jedinice/${slug}.json`)
 export const loadGroups = () => get<GroupMedians>('skupine.json')
-export const loadSimulator = (zupId: number) => get<SimulatorFile>(`simulator/zup-${String(zupId).padStart(2, '0')}.json`)
+/** One unit after the Karta reforme scenario: a merged group or a unit that stayed alone. */
+export interface ReformUnit {
+  clanice: string[]
+  naziv: string
+  vrsta: 'grad' | 'opcina'
+  zup_id: number
+  stanovnici: number
+  skupina: string
+  ocjene_prije: Record<string, number | null>
+  ocjena: number | null
+  ocjena_rijec: string | null
+  bodovi: number | null
+  rang: number | null
+  n_skupine: number | null
+  usteda: Savings | null
+  izravnanje: Equalization | null
+}
+
+/** api/v1/reforma/prag-<N>.json (pipeline/reforma.py). */
+export interface ReformFile {
+  prag: number
+  godina: number
+  napomena?: string
+  n_prije: number
+  n_poslije: number
+  stanovnika_u_spojenima: number
+  n_spojenih_skupina: number
+  n_ispod_praga: number
+  usteda_realno_do_zbroj: number
+  strukturni_jaz_zbroj: number
+  izravnanje_promjena_zbroj?: number
+  jedinice: ReformUnit[]
+}
+
+export const REFORM_THRESHOLDS = [2500, 5000, 10000] as const
+export const loadReform = (prag: number) => get<ReformFile>(`reforma/prag-${prag}.json`)
+export const loadSimulator =(zupId: number) => get<SimulatorFile>(`simulator/zup-${String(zupId).padStart(2, '0')}.json`)
 export const topoUrl = () => BASE + 'geo/jls.topo.json'

@@ -5,6 +5,7 @@ import { useRoute } from './lib/router'
 import { Home } from './pages/Home'
 import { Methodology } from './pages/Methodology'
 import { Profile } from './pages/Profile'
+import { Reforma } from './pages/Reforma'
 import { Simulator } from './pages/Simulator'
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
 
   useEffect(() => {
     if (route.page === 'simulator') document.title = 'Simulator spajanja · Fiskalna karta'
+    else if (route.page === 'reform') document.title = 'Karta reforme · Fiskalna karta'
     else if (route.page !== 'unit') document.title = 'Fiskalna karta · financije općina, gradova i županija'
   }, [route])
 
@@ -50,6 +52,7 @@ export default function App() {
         {index && route.page === 'home' && <Home index={index} />}
         {index && route.page === 'unit' && <Profile key={route.slug} slug={route.slug} lastYear={index.zadnja_godina} />}
         {index && route.page === 'simulator' && <Simulator index={index} />}
+        {index && route.page === 'reform' && <Reforma index={index} />}
         {route.page === 'methodology' && <Methodology />}
       </div>
       <Footer generated={index?.generirano} />
