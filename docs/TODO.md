@@ -33,6 +33,8 @@
 - [ ] Kriterij od 10 % na pregledu jedinice: ostaje ili samo rečenica u napomenama.
 - [ ] Zakonski tekst u simulatoru iza "Kako se računa".
 
+- [ ] Prediktori gospodarskog razvoja: istraživanje u noćnoj smjeni 5.11. (`docs/research/13`), odluka RAZVITI ili ODBACITI u četvrtak.
+
 # Kasnije, ako ostane vremena
 
 - [ ] P3 + D3: karta promjene stanovništva i karta dohotka, kao jedan paket.

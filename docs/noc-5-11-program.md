@@ -3,7 +3,9 @@
 Ti si **voditelj** noćne smjene za projekt **Fiskalna karta JLS** (repo `C:\Users\marsi\Documents\FER\datathon`). Korisnik spava i ujutro pregledava. Radiš samostalno, od početka do **9:30**, prema ovom programu.
 - **Ne postavljaj pitanja.** Sve što traži novu odluku zapiši u dnevnik pod "Odluke za korisnika" i nastavi sa sljedećim zadatkom.
 - Pišeš na hrvatskom, u stilu `docs/noc-4-11.md`.
-- Smiješ voditi **najviše 2 subagenta istovremeno**: M (MCP server) i U (vizualni prijedlozi).
+- Smiješ voditi **najviše 2 subagenta istovremeno**. Ima ih tri, u dva utora:
+  - utor 1 je M (MCP server);
+  - utor 2 je najprije R (istraživanje prediktora razvoja), a kad R završi, U (vizualni prijedlozi).
 
 **Cilj noći**, sve na grani `noc-5-11`, testirano i opisano u dnevniku:
 1. **MCP server** radi, ima testove i upute, i spreman je za kadar u videu. To je SHOULD iz PLAN §11, odluka 9; uvjet iz PLAN §6 (Karta reforme i vidljiva provjera brojki) je ispunjen.
@@ -12,6 +14,7 @@ Ti si **voditelj** noćne smjene za projekt **Fiskalna karta JLS** (repo `C:\Use
 4. **Dokumentacija za predaju** postoji u nacrtu (`docs/PREDAJA.md`, README), a **video scenarij v3** ima provjerene brojke.
 5. **Pilot AI teksta** s novim pravilom konteksta (20 jedinica, Gemma 4 31B) je napravljen, ako ga korisnik u promptu nije isključio.
 6. **Vizualni prijedlozi** su na grani, svaki kao zaseban commit, pa korisnik ujutro bira što ostaje.
+7. **Istraživanje prediktora gospodarskog razvoja** (R) je gotovo u `docs/research/13-prediktori-razvoja.md`, s jasnom preporukom RAZVITI ili ODBACITI. Noćas se samo istražuje. Razvoj, ako ga korisnik odobri, ide u četvrtak preko dana.
 
 ## 0. Prvih 20 minuta
 
@@ -36,7 +39,9 @@ Ti si **voditelj** noćne smjene za projekt **Fiskalna karta JLS** (repo `C:\Use
    - napravi dnevnik `docs/noc-5-11.md` s rasporedom i praznim odjeljkom "Primopredaja";
    - provjeri GPU kvotu (Kaggle MCP `get_accelerator_quota`) i memoriju (PowerShell `Get-CimInstance Win32_OperatingSystem`);
    - pokreni `.venv/Scripts/python -m pytest -q tests` i zapiši broj testova u dnevnik.
-4. **Odmah pokreni subagente M i U** u pozadini (briefovi su u §4). Ne ovise ni o čemu.
+4. **Odmah pokreni subagente M i R** u pozadini (briefovi su u §4). Ne ovise ni o čemu.
+   - **U kreće čim R završi**, očekivano oko 4:00.
+   - Ako R u 4:30 još radi, pošalji mu poruku da preda ono što ima, pa pokreni U.
 
 ## 1. Pravila rada (bez iznimke)
 
@@ -61,8 +66,11 @@ Ti si **voditelj** noćne smjene za projekt **Fiskalna karta JLS** (repo `C:\Use
   - Model je **Gemma 4 31B-it QAT Q4_0**: `google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2`.
 - **Memorija i preglednik:**
   - Bez `npm run dev`. Pregled ide kroz `npx vite build --outDir <svoja mapa> --emptyOutDir` i `npx vite preview --outDir <ista mapa> --port <svoj port> --strictPort`, a server se gasi nakon pregleda.
-  - Portovi: voditelj 4185, U 4188. M ne treba preglednik.
-  - **Istovremeno radi samo jedan headless preglednik.** Dok U radi, preglednik koristi samo U. Voditelj ga koristi tek nakon što U završi (N8, N9) ili kad je memorija iznad 2 GB i U ne radi s preglednikom.
+  - Portovi: voditelj 4185, U 4188. M i R ne koriste preglednik.
+  - **Istovremeno radi samo jedan headless preglednik:**
+    - do početka U-a (oko 4:00) koristi ga voditelj (N9a);
+    - dok U radi, koristi ga samo U;
+    - nakon U-a opet voditelj (N8, N9b).
   - Svaki preglednik ima svoj daemon: prefiks `BROWSE_STATE_FILE=$S/browse-<ime>.json` (`$S` je scratchpad iz system prompta), a na kraju `$B stop` s istim prefiksom.
   - Samo gstack headless `$B` (`~/.claude/skills/gstack/browse/dist/browse`). **Nikad `mcp__claude-in-chrome__*`.**
 - **Kriterij gotovosti za svaki zadatak s kodom:**
@@ -79,27 +87,29 @@ Ti si **voditelj** noćne smjene za projekt **Fiskalna karta JLS** (repo `C:\Use
 
 Vremena vrijede uz početak oko 0:30. Ako počneš kasnije, pomakni sve osim dva fiksna roka:
 - **pilot N3 mora krenuti najkasnije u 4:00**;
+- **U staje u 8:00** i predaje ono što ima;
 - **primopredaja je 9:00-9:30.**
 
 | Vrijeme | Voditelj | Subagenti |
 |---|---|---|
-| 0:30-0:50 | §0 priprema | M i U kreću |
-| 0:50-1:50 | **N1** online build i usporedba | M, U |
-| 1:50-3:30 | **N2** code review dnevnih izmjena i ispravci | M, U |
+| 0:30-0:50 | §0 priprema | M i R kreću |
+| 0:50-1:50 | **N1** online build i usporedba | M, R |
+| 1:50-3:00 | **N2** code review dnevnih izmjena i ispravci | M, R |
+| 3:00-3:30 | **N9a** QA prolaz cijele stranice (preglednik je slobodan) | M, R |
 | 3:30 | **Šefovski krug 1** | |
-| 3:30-4:00 | **N3** priprema i pokretanje pilota na Kaggleu (u pozadini) | M, U |
-| 4:00-5:15 | **N4** dokumentacija za predaju | M, U |
-| 5:15-6:00 | **N5** video scenarij v3; preuzimanje i analiza pilota N3 | M, U |
+| 3:30-4:00 | **N3** priprema i pokretanje pilota na Kaggleu (u pozadini) | M; R završava |
+| 4:00-4:30 | **N11** pregled izvještaja R | M; **U kreće** |
+| 4:30-5:30 | **N4** dokumentacija za predaju | M, U |
+| 5:30-6:00 | **N5** video scenarij v3; preuzimanje i analiza pilota N3 | M, U |
 | 6:00 | **Šefovski krug 2** | |
 | 6:00-6:45 | **N6** pregled i uključivanje MCP servera (M) | U |
-| 6:45-7:30 | **N7** pregled prijedloga (U), commit po commit | |
-| 7:30-7:50 | **N8** snimka naslovnice za README | |
-| 7:50-8:15 | **N9** završni QA | |
-| 8:15 | **Šefovski krug 3** | |
-| 8:15-9:00 | rezerva: zaostaci, web nalazi iz N2 | |
+| 6:45-8:00 | rezerva: zaostaci, nalazi iz N2 i N9a (šalju se U-u), nacrt primopredaje | U, do 8:00 |
+| 8:00 | **Šefovski krug 3** | |
+| 8:00-8:30 | **N7** pregled prijedloga (U), commit po commit | |
+| 8:30-9:00 | **N8** snimka naslovnice; **N9b** kratka završna provjera | |
 | 9:00-9:30 | **N10 primopredaja** | |
 
-Za fiksne točke postavi podsjetnike: šefovske krugove, 4:00 pilot i 9:00 primopredaju, npr. alatom CronCreate ako je dostupan. Između zadataka svejedno provjeri sat (`date`). Na Kaggle i na duge naredbe čekaj pozadinskom petljom (Bash `run_in_background`), bez uzastopnog ručnog provjeravanja.
+Za fiksne točke postavi podsjetnike: šefovske krugove, 4:00 pilot i početak U-a, 8:00 kraj U-a i 9:00 primopredaju, npr. alatom CronCreate ako je dostupan. Između zadataka svejedno provjeri sat (`date`). Na Kaggle i na duge naredbe čekaj pozadinskom petljom (Bash `run_in_background`), bez uzastopnog ručnog provjeravanja.
 
 ## 3. Zadaci voditelja
 
@@ -223,8 +233,9 @@ Svrha je provjeriti, prije punog batcha u petak, poštuje li Gemma 4 31B novo pr
 - Na vrh README-a, iznad "Što radi", stavi tu sliku s alt tekstom.
 - U `docs/TODO.md` već piše da se snimka mora ponovno napraviti 8.11. Ostavi to tako.
 
-### N9. Završni QA
+### N9. QA cijele stranice (N9a u 3:00, N9b u 8:30)
 
+**N9a (3:00-3:30, prije U-a), puni prolaz.**
 - Rute na 1280 i 375 px:
   - `#/`;
   - 10 nasumičnih pregleda jedinica, uključujući Povljanu, Pag, Samobor, Grad Zagreb i jednu županiju;
@@ -232,18 +243,39 @@ Svrha je provjeriti, prije punog batcha u petak, poštuje li Gemma 4 31B novo pr
   - `#/reforma` s pragovima 2.500, 5.000 i 10.000;
   - `#/metodologija`.
 - Za svaku zapiši: greške u konzoli (bez WebGL upozorenja headless preglednika), `scrollWidth` i vrijeme učitavanja naslovnice.
-- Sitnice ispravi, a ostalo zapiši.
+- Sitnice u `pipeline/` ispravi odmah. Nalaze u `web/src/` daj U-u kao dodatni zadatak (porukom), ili ih zapiši.
+
+**N9b (8:30-9:00, nakon U-a), kratka provjera:** 5 ruta na 1280 i 375 px, da U-ove izmjene nisu ništa pokvarile:
+- `#/`;
+- Povljana;
+- Samobor;
+- `#/simulator?j=05738,03166`;
+- `#/reforma?prag=5000`.
+
+### N11. Istraživanje prediktora razvoja: pregled (oko 4:00, nakon izvještaja R)
+
+- Pročitaj `docs/research/13-prediktori-razvoja.md`.
+- Provjeri 2-3 ključne tvrdnje:
+  - ponovi jednu brojku empirijske provjere R-ovom skriptom iz `$S/R/`;
+  - otvori jedan izvor.
+- Provjeri da je preporuka (RAZVITI ili ODBACITI) obrazložena i da je trošak u satima realan za četvrtak.
+- **Ne razvijaj ništa.** U primopredaju stavi sažetak:
+  - preporuka;
+  - što bi se gradilo i za koliko sati;
+  - utječe li na pakete činjenica (tada mora biti gotovo do petka u 17 h);
+  - glavni rizici.
 
 ### N10. Primopredaja (9:00-9:30)
 
 Na vrh `docs/noc-5-11.md` ide sažetak, kao u `noc-4-11.md`:
 - grana, broj commitova i autor (provjereno: bez Claudea), broj testova (uz dva poznata AI testa), stanje `tsc`, `oxlint` i builda;
-- tablica "Područje | Što | Commit" za N1-N10, s jasnim "nije napravljeno" gdje treba;
+- tablica "Područje | Što | Commit" za N1-N11, s jasnim "nije napravljeno" gdje treba;
 - **brojke:**
   - online build: izvori koji su se promijenili, promjene ocjena;
   - pilot: X/20 prolazi, a od toga koliko s kontekstom; potrošen GPU i preostala kvota;
   - MCP: alati i testovi;
   - QA: rute;
+- **istraživanje R:** preporuka RAZVITI ili ODBACITI, ključne brojke i prijedlog opsega za četvrtak (iz N11);
 - **prijedlozi U** s preporukom (tablica iz N7);
 - **Odluke za korisnika**, numerirane, svaka s prijedlogom;
 - **kako preuzeti:**
@@ -251,13 +283,13 @@ Na vrh `docs/noc-5-11.md` ide sažetak, kao u `noc-4-11.md`:
   2. `git checkout main && git merge --ff-only noc-5-11`;
   3. **push na `main` tek nakon regeneracije AI tekstova u petak.** CI pokreće testove, a dva AI testa padaju dok tekstovi ne budu novi, pa bi deploy pao i stranica ostala stara;
   4. cron u `deploy.yml` isključiti prije zamrzavanja; treba `gh` token s ovlašću `workflow`;
-- **plan za četvrtak i petak:** odluke iz ove smjene; zadnje promjene koje mijenjaju pakete do petka u 17 h; puni batch (3,5 h); uvoz, push i CI; subota rezerva i zamrzavanje u 20 h.
+- **plan za četvrtak i petak:** odluke iz ove smjene; ako je istraživanje R odobreno, razvoj u četvrtak preko dana; zadnje promjene koje mijenjaju pakete do petka u 17 h; puni batch (3,5 h); uvoz, push i CI; subota rezerva i zamrzavanje u 20 h.
 
 Na kraju zadnji `git push origin noc-5-11`. U 9:30 smjena staje.
 
 ## 4. Briefovi za subagente
 
-Oba su Opus s effortom high. Daj im brief u cijelosti, uz `$S` iz svog system prompta. Oba rade na grani `noc-5-11` i commitaju sami, samo svoje putanje, a ti pushaš.
+Sva tri su Opus s effortom high. Istovremeno rade najviše dva: M cijelo vrijeme, a R pa U jedan za drugim. Daj im brief u cijelosti, uz `$S` iz svog system prompta. Svi rade na grani `noc-5-11` i commitaju sami, samo svoje putanje, a ti pushaš.
 
 ### Subagent M: MCP server (kreće u 0:50)
 
@@ -297,9 +329,78 @@ Oba su Opus s effortom high. Daj im brief u cijelosti, uz `$S` iz svog system pr
 - **Commit:** `git add fiskalna_mcp tests/test_mcp.py requirements.txt docs/mcp.md`, poruka na hrvatskom, bez spominjanja Claudea.
 - **Vraća izvještaj od najviše 250 riječi:** verzija SDK-a i licenca, alati, testovi, naredba za pokretanje i otvorena pitanja.
 
-### Subagent U: vizualni prijedlozi (kreće u 0:50)
+### Subagent R: istraživanje prediktora gospodarskog razvoja (kreće u 0:50, rok 4:00)
+
+- **Pitanje korisnika:**
+  - Postoje li u otvorenim podacima pouzdani **prediktori gospodarskog razvoja** jedinica koje bi Fiskalna karta mogla pokazati?
+  - Vrijedi li to graditi prije zamrzavanja u subotu u 20 h?
+  - Noćas se samo istražuje. Sutra korisnik odlučuje razvija li se ili odbacuje, pa je odgovor "nije vrijedno" ili "nije moguće" jednako dobar kao "da", ako je dobro obrazložen.
+- **Što istražiti:**
+  1. **Što je "razvoj" i kako ga izmjeriti po jedinici** (ciljna varijabla). Kandidati:
+     - promjena indeksa razvijenosti MRRFEU između izdanja (provjeri koja izdanja postoje po JLS i gdje);
+     - rast neto dohotka po stanovniku 2022.-2025. (Porezna uprava, `data/build/porezna_dohodak.parquet`);
+     - promjena broja stanovnika 2021.-2025. (`data/build/dzs.parquet`);
+     - promjena ocjene fiskalne održivosti 2019.-2025. (`data/build/results.parquet`).
+
+     Za svaki: pokrivenost, godine i slabosti.
+  2. **Kandidati za prediktore po JLS**, s izvorom, godinama, licencom i načinom pristupa (API ili datoteka).
+     - Ono što već imamo u `data/build/`:
+       - kapitalna ulaganja, dug, EU sredstva (konto 638), trošak uprave i vlastiti prihodi (`wide.parquet`, `results.parquet`);
+       - dobna struktura iz Popisa 2021. (`st_0_14`, `st_65_plus` u `units.csv`);
+       - migracije, prirodni prirast, dozvole i turizam;
+       - dohodak i udio mirovina;
+       - otvorenost podataka (CKAN), revizije DUR-a, indeks razvijenosti, otok.
+     - Novi izvori; za svaki provjeri da je živ:
+       - nezaposlenost po JLS (HZZ);
+       - novi poslovni subjekti po sjedištu (Sudski registar API traži registraciju; **ne registriraj račun**, samo zapiši);
+       - EU projekti po JLS (MRRFEU popis operacija, `research/09` §2.7);
+       - obrti;
+       - prometna dostupnost.
+     - Ne gradi novi dohvat u `pipeline/`.
+  3. **Literatura**, ukratko i s izvorima, najviše 8-10, primarni gdje je moguće:
+     - što predviđa lokalni gospodarski rast (ljudski kapital, demografija, dostupnost, ulaganja, institucije);
+     - sustavi ranog upozorenja za fiskalne poteškoće općina (npr. SAD, Italija, slovački INEKO, austrijski KDZ);
+     - hrvatski radovi EIZ-a i Instituta za javne financije.
+  4. **Brza empirijska provjera**, samo u `$S/R/`, ne u repou. Na našim podacima izmjeri ima li ijedan kandidat stvarnu prediktivnu moć. Primjer: prediktori iz 2019.-2021. → ishod 2022.-2025. (rast dohotka po stanovniku, promjena stanovništva, pad ocjene).
+     - Jednostavno i pošteno: korelacije, regularizirana ili logistička regresija s unakrsnom provjerom, R² ili AUC izvan uzorka.
+     - **Uvijek usporedi s naivnim modelom**: samo prošli trend, ili samo indeks razvijenosti.
+     - Bez lova na p-vrijednosti; zapiši koliko je modela isprobano.
+  5. **Vrijednost za proizvod i žiri:**
+     - kako bi to izgledalo u sučelju (npr. kartica "Izgledi" na pregledu jedinice, prikaz na karti, rano upozorenje);
+     - što dobiva korisnik (načelnik, novinar, ministarstvo);
+     - koji kriterij bodovanja diže (inovativnost, utjecaj, povezivanje izvora).
+  6. **Rizici:**
+     - etički i komunikacijski: oznaka "jedinica u padu" za konkretnu općinu;
+     - statistički: malo godina, 556 jedinica, šum u malim jedinicama, prenaučenost;
+     - vremenski: rok, zamrzavanje u subotu u 20 h, i paketi činjenica do petka u 17 h ako se išta dodaje u AI tekst.
+- **Izlaz:** `docs/research/13-prediktori-razvoja.md`.
+  - Na hrvatskom, jednostavnim riječima i kratkim rečenicama, bez dugih crtica (—). Svaki pojam objašnjen je primjerom iz naših podataka (npr. Pag, Bogdanovci).
+  - Oznake: [V] provjereno, [P] procjena, [N] nije nađeno.
+  - Struktura:
+    1. sažetak s **preporukom: RAZVITI, s opsegom, ili ODBACITI, s razlogom**;
+    2. ciljna varijabla;
+    3. prediktori (tablica);
+    4. literatura;
+    5. empirijska provjera (metoda, brojke, usporedba s naivnim modelom);
+    6. prijedlog za proizvod: ako RAZVITI, što točno, koje datoteke, trošak u satima za četvrtak i utječe li na pakete činjenica;
+    7. rizici;
+    8. izvori.
+- **Ograničenja:**
+  - read-only u repou, osim izvještaja;
+  - skripte idu u `$S/R/`, a preuzete datoteke odvojeno u `$S/R/raw/`;
+  - ne dira `pipeline/`, `web/`, `data/` ni testove;
+  - **ne koristi preglednik**, nego WebSearch i `curl -sL`;
+  - ne registrira račune i ništa ne šalje van;
+  - PxWeb samo uz pauze od 2-5 s;
+  - Python `.venv/Scripts/python`, uz `sys.stdout.reconfigure(encoding="utf-8")`.
+- **Commit:** `git add docs/research/13-prediktori-razvoja.md`, poruka na hrvatskom, bez spominjanja Claudea. Skripte se ne commitaju; u izvještaju navedi njihova imena u scratchpadu.
+- **Rok je 4:00.** Ako ne stigne sve, predaje ono što ima, s jasnim "nije napravljeno".
+- **Vraća izvještaj od najviše 250 riječi:** preporuka, ključne brojke empirijske provjere, trošak razvoja i put do izvještaja.
+
+### Subagent U: vizualni prijedlozi (kreće kad R završi, oko 4:00; tvrdi kraj u 8:00)
 
 - **Cilj:** dojam sučelja, jer žiri boduje UI/UX i video (`docs/research/10-pogled-zirija.md`).
+- **Zadaci 1-4 su prioritet, a 5-7 samo ako ostane vremena.** U 8:00 staje i predaje izvještaj s onim što je gotovo.
 - Radi zadatke redom. **Svaki zadatak je zaseban commit** koji se može vratiti sam za sebe. Poruka počinje s "Prijedlog:", osim zadatka 1, koji je odobren ako stignemo.
 - Za svaki zadatak napravi snimke prije i poslije na 1280 i 375 px, u `docs/snimke/noc-5-11-u<N>-*.png`, i zadrži ih u commitu.
 
@@ -336,14 +437,14 @@ Oba su Opus s effortom high. Daj im brief u cijelosti, uz `$S` iz svog system pr
 - Voditelj ti može poslati nalaze iz code reviewa za datoteke koje držiš; ispravi ih kao zaseban commit.
 - **Vraća izvještaj od najviše 300 riječi:** commit po commit (hash, jedan redak, snimke), što je preskočeno i zašto, i što je primijetio a nije popravljao.
 
-## 5. Šefovski krugovi (3:30, 6:00, 8:15)
+## 5. Šefovski krugovi (3:30, 6:00, 8:00)
 
 Svaki krug je kratak:
-1. Gdje smo u odnosu na raspored? Stanje subagenata M i U i stanje pilota.
+1. Gdje smo u odnosu na raspored? Stanje subagenata (M, R ili U) i stanje pilota.
 2. Prolaze li testovi na grani? Je li radna kopija čista ili commitana? `git push origin noc-5-11`.
 3. **Prioriteti:**
-   - kad kasnimo, reže se ovim redom: U zadaci 7, 6, 5; N8; drugi pilot iz N3; N9 svodi se na 5 ruta;
-   - N1, N2, N4, N6 i primopredaja se ne režu.
+   - kad kasnimo, reže se ovim redom: U zadaci 7, 6, 5; N8; drugi pilot iz N3; N9a se svodi na 5 ruta;
+   - N1, N2, N4, N6, N11 i primopredaja se ne režu.
 4. Kratki zapis u dnevnik: što je gotovo, gdje je i što je otvoreno.
 
 ## 6. Kad nešto pođe po zlu
@@ -365,5 +466,6 @@ Svaki krug je kratak:
 - Puno generiranje AI tekstova i uvoz u `data/ai/`.
 - Promjene metodologije, pragova konteksta i provjere; promjenu prompta osim jedne iteracije u N3.
 - Posebno pravilo za Belišće i premještanje Z5.
+- Razvoj prediktora razvoja u proizvodu: noćas samo istraživanje i analiza u scratchpadu (R).
 - Slanje e-maila, objavu videa i bilo što izvan repozitorija, osim privatne Kaggle bilježnice za pilot.
 - Brisanje ičega što nije sama napravila, i nadogradnju gstacka.
