@@ -17,7 +17,8 @@ PX14 (county + 1 town / 2 municipality + DGU code, e.g. 01101015; Grad Zagreb is
 5-digit DGU code. Counties take their own row; a county without one would be the sum of its units.
 
 Output (long): data/build/dzs.parquet with oib, sifra, godina, pokazatelj, vrijednost, plus oznaka
-(the DZS status symbol of an empty cell, e.g. "-") and tablica. An empty cell is NaN, never 0.
+(the DZS status symbol of an empty cell, e.g. "-") and tablica. An empty cell is NaN in the file;
+value() and with_symbols() apply the symbol rule (NEMA, TAJNO) for anyone reading it.
 Nothing here enters the score.
 
     python -m pipeline.pxweb             refresh all tables from the API, write the outputs
@@ -50,6 +51,35 @@ LICENSE = "Otvorena dozvola"
 YEAR_VAR = "Godina"
 ZAGREB = "01333"
 ZAGREB_ZUP = 21
+
+# DZS status symbols of an empty cell (decided 4.11.2026; one place, because the rule may change).
+#   "-"  the phenomenon does not exist (no commercial accommodation, no permit issued): counts as 0
+#        in values and in peer medians; the symbol is kept so the UI can say "nema".
+#   "z"  hidden for confidentiality: stays empty (NaN), never 0; the UI says "podatak nije javan".
+NEMA = "-"
+TAJNO = "z"
+NEMA_JE_NULA = True
+
+
+def value(vrijednost, oznaka):
+    """The number to use for one DZS cell under the symbol rule above (NaN when there is none)."""
+    if oznaka == NEMA and NEMA_JE_NULA:
+        return 0.0
+    return vrijednost
+
+
+def with_symbols(df):
+    """dzs.parquet rows with vrijednost filled by value(): "-" as 0, "z" and other gaps stay NaN."""
+    out = df.copy()
+    if NEMA_JE_NULA:
+        out.loc[out.oznaka == NEMA, "vrijednost"] = 0.0
+    return out
+
+
+def have_raw(tables=None):
+    """True when every raw file of the tables is in data/raw/pxweb: the copy a build falls back
+    on when DZS does not answer (in CI, the cached data/raw of the previous run)."""
+    return all(_raw(t).exists() and _raw(t, ".meta").exists() for t in tables or TABLES)
 
 # value texts (not codes) of every variable that is not the unit or the year.
 # "fixed": one value kept; "split": value text -> indicator; "indicator": the single indicator otherwise.

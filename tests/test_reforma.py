@@ -197,3 +197,35 @@ def test_karta_reforme_payout_moves_money_but_saves_nothing(docs):
         merged = [j for j in d["jedinice"] if len(j["clanice"]) > 1 and j.get("izravnanje")]
         assert abs(sum(j["izravnanje"]["isplata_promjena"] for j in merged) - d["izravnanje_isplata_spojene_promjena"]) < 1.0
         assert all(j["izravnanje"]["omjer_poslije"] == d["izravnanje_omjer_poslije"] for j in merged)
+
+
+needs_dzs = pytest.mark.skipif(not merge.DZS_PARQUET.exists(), reason="run pipeline.pxweb first (dzs.parquet)")
+
+
+@needs_build
+@needs_dzs
+def test_demography_of_units_and_header(data, docs):
+    """Each unit carries merge.demography of its members (also a unit that stays alone); the header
+    sums the first and last year over the merged groups and over the others."""
+    d = docs[5000]
+    by_code = {s: j for j in d["jedinice"] for s in j["clanice"]}
+    pag = by_code["03166"]                                   # Pag + Nin + Vrsi + Kolan + Povljana at 5.000
+    assert len(pag["clanice"]) > 1
+    assert pag["demografija"] == merge._compact(merge.demography(data, [data.oib_of[s] for s in pag["clanice"]]))
+    vukovar = by_code["05185"]
+    assert vukovar["clanice"] == ["05185"] and vukovar["demografija"]["promjena"] == -0.017   # Vukovar −1,7 %
+    for p, doc in docs.items():
+        h = doc["demografija"]
+        for part, js in (("spojene", [j for j in doc["jedinice"] if len(j["clanice"]) > 1]),
+                         ("ostale", [j for j in doc["jedinice"] if len(j["clanice"]) == 1])):
+            assert h[part]["stanovnici_od"] == sum(j["demografija"]["stanovnici"][0] for j in js), (p, part)
+            assert h[part]["stanovnici_do"] == sum(j["demografija"]["stanovnici"][-1] for j in js), (p, part)
+            assert h[part]["promjena"] == round(h[part]["stanovnici_do"] / h[part]["stanovnici_od"] - 1, 3)
+
+
+@needs_build
+def test_demography_missing_is_none(data, res, monkeypatch):
+    monkeypatch.setattr(data, "demo", None)
+    doc = reforma.reforma(data, 2500, res)
+    assert doc["demografija"] is None
+    assert all(j["demografija"] is None for j in doc["jedinice"])

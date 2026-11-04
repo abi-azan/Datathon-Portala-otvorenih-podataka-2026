@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { REFORM_THRESHOLDS, canMerge, loadReform, type IndexFile, type ReformFile, type ReformUnit } from '../lib/data'
-import { GRADES, VRSTA, eur, num } from '../lib/format'
+import { GRADES, VRSTA, eur, num, pct } from '../lib/format'
 import { simulatorHref, unitHref } from '../lib/router'
 
 const ReformMap = lazy(() =>
@@ -23,6 +23,12 @@ function MapBox({ children }: { children: ReactNode }) {
 const keyOf = (u: ReformUnit) => u.clanice.join('-')
 const short = (naziv: string) => naziv.replace(/^(Općina|Grad) /, '')
 const mil = (x: number) => `${num(x / 1e6, 1)} mil. €`
+const sign = (x: number) => (x > 0 ? '+' : x < 0 ? '−' : '')
+/** A change as a signed share: +6,2 %, −1,7 % (no line break before the % sign). */
+const signedPct = (x: number | null | undefined) => (x == null ? '–' : `${sign(x)}${pct(Math.abs(x)).replace(' ', '\u00a0')}`)
+/** A yearly count with its rate per 1.000 inhabitants of Popis 2021 (the base of every per-capita figure). */
+const withRate = (x: number | null | undefined, popis: number) =>
+  x == null ? '–' : `${sign(x)}${num(Math.abs(x))} (${sign(x)}${num(Math.abs(x / popis) * 1000, 1)} na 1.000)`
 
 // where each threshold comes from in Croatian rules (docs/research/08 §7.3); there is no official minimum size
 const THRESHOLD_SOURCE: Record<number, string> = {
@@ -242,6 +248,18 @@ export function Reforma({ index }: { index: IndexFile }) {
               <dd className="tabular text-right">{num(file.n_spojenih_skupina)}</dd>
               <dt className="text-ink-2">Stanovnika u spojenim jedinicama</dt>
               <dd className="tabular text-right">{num(file.stanovnika_u_spojenima)}</dd>
+              {file.demografija?.spojene && (
+                <>
+                  <dt className="text-ink-2">
+                    Stanovništvo spojenih jedinica, {file.demografija.od}. → {file.demografija.do}.
+                    <div className="text-xs text-muted">
+                      {file.demografija.ostale && `ostale jedinice ${signedPct(file.demografija.ostale.promjena)}; `}ne ulazi
+                      u ocjenu
+                    </div>
+                  </dt>
+                  <dd className="tabular text-right">{signedPct(file.demografija.spojene.promjena)}</dd>
+                </>
+              )}
               <dt className="text-ink-2">
                 Ušteda na općoj upravi
                 <div className="text-xs text-muted">
@@ -394,6 +412,25 @@ function Selected({
   const members = u.clanice.map((s) => bySifra.get(s)).filter((m): m is NonNullable<typeof m> => !!m)
   members.sort((a, b) => b.stanovnici - a.stanovnici)
   const e = u.izravnanje
+  const d = u.demografija
+  const demoRows = d && (
+    <>
+      <dt className="text-ink-2">
+        Stanovništvo, {d.od}. → {d.do}.
+      </dt>
+      <dd className="tabular text-right">{signedPct(d.promjena)}</dd>
+      <dt className="text-ink-2">Rođeni manje umrli, {d.do}.</dt>
+      <dd className="tabular text-right">{withRate(d.prirodna, u.stanovnici)}</dd>
+      <dt className="text-ink-2">Doseljeni manje odseljeni, {d.do}.</dt>
+      <dd className="tabular text-right">{withRate(d.migracije, u.stanovnici)}</dd>
+    </>
+  )
+  const demoNote = d && (
+    <p className="mt-2 text-xs text-muted">
+      Kretanje stanovništva ne ulazi u ocjenu; na 1.000 stanovnika prema Popisu 2021. Izvor: Državni zavod za statistiku,
+      stanovništvo sredinom godine, rođeni, umrli i migracije.
+    </p>
+  )
   return (
     <Card>
       <div className="flex items-start justify-between gap-4">
@@ -430,7 +467,10 @@ function Selected({
                   <a href={unitHref(m.slug)} className="block truncate underline decoration-axis underline-offset-4 hover:decoration-ink">
                     {m.naziv}
                   </a>
-                  <div className="tabular text-xs text-muted">{num(m.stanovnici)} stanovnika</div>
+                  <div className="tabular text-xs text-muted">
+                    {num(m.stanovnici)} stanovnika
+                    {d && ` · ${signedPct(d.clanice[u.clanice.indexOf(m.sifra)])} od ${d.od}.`}
+                  </div>
                 </div>
                 <GradeChip g={u.ocjene_prije[m.sifra] ?? m.ocjena[year]} />
               </li>
@@ -453,7 +493,9 @@ function Selected({
                 </dd>
               </>
             )}
+            {demoRows}
           </dl>
+          {demoNote}
           {u.usteda?.iznad_10000 && (
             <p className="mt-2 text-xs text-muted">Iznad 10.000 stanovnika dodatna ušteda od veličine se ne očekuje.</p>
           )}
@@ -462,6 +504,12 @@ function Selected({
               Otvori u simulatoru spajanja <ArrowRight className="h-4 w-4" aria-hidden />
             </a>
           )}
+        </>
+      )}
+      {u.clanice.length === 1 && d && (
+        <>
+          <dl className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 border-t border-hairline pt-3 text-sm">{demoRows}</dl>
+          {demoNote}
         </>
       )}
       {u.clanice.length === 1 && members[0] && (

@@ -76,4 +76,10 @@ export const QUALITY: Record<string, string> = {
   kredit_iskazan_kao_dospio:
     'U Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.',
   funkcije_ne_odgovaraju_rashodima: 'Zbroj rashoda po funkcijama ne odgovara ukupnim rashodima.',
+  izravnanje_na_drugom_kontu:
+    'Fiskalno izravnanje nije knjiženo na kontu 6353, nego na drugom kontu pomoći. Zakonska osnovica uzima iznos iz odluke Ministarstva financija.',
+  izravnanje_nije_medu_pomocima:
+    'Dio fiskalnog izravnanja iz odluke Ministarstva financija nije knjižen među pomoćima (vjerojatno među porezima), pa se u zakonsku osnovicu ne dodaje dvaput.',
+  konto_6353_vise_od_odluke:
+    'Na kontu 6353 knjiženo je više od fiskalnog izravnanja iz odluke Ministarstva financija; razlika se računa kao ostala pomoć.',
 }

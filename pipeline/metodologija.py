@@ -6,7 +6,7 @@ from the computation. publish.py writes it to api/v1/metodologija.json.
 """
 import json
 
-from . import config, explain, facts, merge, methodology, provenance
+from . import config, explain, facts, izravnanje, kontekst, merge, methodology, provenance, pxweb
 
 REPO = "https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026"
 
@@ -19,6 +19,44 @@ def _pc(share):
 def _int(n):
     """10000 -> "10.000"."""
     return f"{n:,}".replace(",", ".")
+
+
+def _population_economy():
+    """Card "Stanovništvo i gospodarstvo" (pipeline/kontekst.py); the symbol rule is read from pxweb."""
+    nema = ("broji se kao 0, i u medijanu" if pxweb.NEMA_JE_NULA else "ostaje prazno")
+    return ("Kretanje broja stanovnika od 2021. računa se iz procjena "
+            "Državnog zavoda za statistiku (stanje 31.12.); preglednik niz pri otvaranju stranice traži i izravno "
+            "s API-ja DZS-a. Prirodni prirast (živorođeni − umrli), neto migracija (doseljeni − odseljeni) i "
+            "građevinske dozvole (broj zgrada) iskazuju se na 1.000 stanovnika, a noćenja turista u komercijalnom "
+            "smještaju i neto dohodak stanovnika (Porezna uprava, po prebivalištu) po stanovniku. Nazivnik je "
+            "uvijek Popis 2021., kao u ocjeni. Udio mirovina je neto dohodak umirovljenika u ukupnom neto dohotku. "
+            f"Oznaka DZS-a \"{pxweb.NEMA}\" znači da pojave nema (nema smještaja, nema dozvola) i {nema}; oznaka "
+            f"\"{pxweb.TAJNO}\" znači da je podatak tajan, pa ostaje prazan i ne ulazi u medijan. Uz svaku brojku je "
+            "medijan usporedne skupine iz ocjene; županije se uspoređuju sa županijama, a Grad Zagreb nema skupinu.")
+
+
+def _dec(x):
+    """2.0 -> "2", 1.6 -> "1,6"."""
+    return f"{x:g}".replace(".", ",")
+
+
+def _equalization_unit():
+    """Card "Fiskalno izravnanje" (pipeline/kontekst.py), amounts read from pipeline/izravnanje.py."""
+    return ("Po čl. 8. i 9. Zakona o financiranju JLP(R)S jedinica ima pravo na izravnanje kad joj "
+            "je kapacitet poreznih prihoda po stanovniku ispod referentne vrijednosti za njezinu vrstu (općine, gradovi, "
+            "županije; Grad Zagreb mjeri se s gradovima). Kapacitet i referentne vrijednosti su iz tablice Ministarstva "
+            f"financija za {config.MF_FI_YEAR}. Prikazuje se procjena godišnje isplate: udio jedinice u zbroju punih iznosa "
+            "svih jedinica puta iznos u državnom proračunu "
+            f"({_int(round(izravnanje.ISPLATA_2026))} € za {kontekst.PRORACUN_GODINA}.; za {config.MF_FI_YEAR}. još nije "
+            "utvrđen, pa se uzima isti), kao u simulatoru spajanja. Kapacitet se računa uz najvišu dopuštenu stopu poreza "
+            "na dohodak, pa porez koji jedinica s nižom stopom sama ne naplati izravnanje ne nadoknađuje; stope su iz "
+            "odluka jedinica koje objavljuje Porezna uprava. Za jedinice s nižom stopom procjenjuje se koliko bi proračun "
+            "godišnje imao više uz najviše stope: porez stanovnika samo na plaće, mirovine, obrt i drugi dohodak (kapital, "
+            "najam i prodaja nekretnina te paušalisti plaćaju fiksnu stopu), podijeljen na niži i viši razred prema broju "
+            f"obveznika iznad granice (Pareto, α {_dec(kontekst.PARETO_ALFA)}), puta razlika do najviše stope, puta udio "
+            "jedinice u porezu (konto 611 / porez stanovnika iste godine). Raspon: od najmanje procjene uz druge "
+            f"pretpostavke o višem razredu umanjene za {_pc(1 - kontekst.PONASANJE)} (ljudi uz višu stopu prijave nešto "
+            "manje dohotka) do najveće. Procjena ne ulazi u ocjenu, kartu ni usporedbu sa skupinom.")
 
 
 def doc(ai_texts_path=None, shown_ai=None, n_units=None):
@@ -119,8 +157,17 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
                           "pa spajanje državi ne štedi: što spojena jedinica izgubi, dobivaju ostale jedinice.",
             "reforma": "Unutar županije najmanja jedinica ispod praga spaja se s najmanjim susjedom dok sve "
                        "ne dosegnu prag (2.500, 5.000 ili 10.000 stanovnika). Scenarij, ne prijedlog granica.",
+            "demografija": "Kretanje stanovništva prikazuje se uz rezultat, ali ne ulazi u ocjenu: ocjena i iznosi po "
+                           "stanovniku i dalje koriste Popis 2021. Za spojenu jedinicu zbraja se broj stanovnika članica "
+                           "sredinom svake godine prema Državnom zavodu za statistiku, a promjena se računa od 2021. do "
+                           "zadnje godine; za svaku članicu prikazuje se njezina promjena. Prirodna promjena (živorođeni "
+                           "manje umrli) i migracijski saldo (doseljeni manje odseljeni) zbrajaju se za zadnju godinu i "
+                           "prikazuju i na 1.000 stanovnika prema Popisu 2021. Oznaka DZS-a \"-\" (pojave nema) broji "
+                           "se kao 0, a skriveni podatak (\"z\") znači da zbroj nije poznat.",
         },
-        "revizija": "Na svjedodžbi je zadnje mišljenje financijske revizije Državnog ureda za reviziju (izvješća "
+        "stanovnistvo_gospodarstvo": _population_economy(),
+        "izravnanje_jedinice": _equalization_unit(),
+        "revizija": "U pregledu jedinice je zadnje mišljenje financijske revizije Državnog ureda za reviziju (izvješća "
                     "objavljena od 2019.), pročitano iz teksta izvješća, s revidiranom godinom i poveznicom. Mišljenje "
                     "ne ulazi u ocjenu.",
         "ogranicenja": [

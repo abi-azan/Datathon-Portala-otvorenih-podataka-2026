@@ -6,7 +6,8 @@ For each unit, jedinice/<slug>/izvor.json (written by publish.py) holds, for the
   window, with its formula;
 - every input amount: account, year, amount and where it sits in the Ministry of Finance files
   (PR-RAS: workbook in the ZIP, sheet and Excel row; Bilanca: workbook, sheet (year), row and
-  column).
+  column; fiscal equalization: the MF table of the year's decision, sheet, row and column of the
+  unit's share, with the budget amount it multiplies; pipeline/izravnanje_isplate.py).
 
 The page shows the formula and the table of inputs behind each component, not a single cell
 (plan-srijeda, W11). tests/test_provenance.py recomputes I1-I5 from these inputs alone and
@@ -19,7 +20,7 @@ from urllib.parse import unquote
 import openpyxl
 import pandas as pd
 
-from . import config, methodology
+from . import config, izravnanje_isplate, methodology
 
 YEARS = [config.LAST_YEAR - k for k in range(len(methodology.WINDOW_WEIGHTS))]   # t, t-1, t-2, t-3
 WEIGHTS = dict(zip(YEARS, methodology.WINDOW_WEIGHTS))
@@ -36,11 +37,14 @@ QUANTITIES = {
     "glavnica": "54 (otplata glavnice); kod refinanciranja 54 − 84",
     "ND": "max(0, 26 + 25 − 11) na kraju godine (neto dug, Bilanca)",
     "SD": "341 + 342 + glavnica (servis duga)",
-    "ZO": "6 + 7 − 63 + 6353 − 663 − dio 611 (zakonska osnovica, približno)",
+    "ZO": "6 + 7 − 63 + FI − 663 − dio 611 (zakonska osnovica, približno)",
+    "FI": "fiskalno izravnanje iz odluke MF-a (udio × iznos u državnom proračunu), najviše 6331 + 6352 + 6353 "
+          "(6331 = 633 − 6332); bez odluke 6353",
     "DO": "23 D + 24 D + 26 D, bez kredita iskazanog kao dospio (pravilo 1)",
 }
 # result column of each quantity in results.parquet
 COLUMN = {"KP": "KP", "PO": "PO", "OS": "OS", "glavnica": "glavnica_adj", "ND": "ND", "SD": "SD", "ZO": "ZO", "DO": "DO"}
+FI_KONTO = "FI odluka"           # the input key of the decision amount
 INDICATORS = {
     "I1": ("Operativni saldo", "Σ w·OS / Σ w·PO", ["OS", "PO"]),
     "I2": ("Slobodni saldo", "(Σ w·OS − Σ w·glavnica) / Σ w·PO", ["OS", "glavnica", "PO"]),
@@ -52,8 +56,11 @@ INDICATORS = {
 PRRAS_USE = {
     "6": ["PO", "ZO"], "3": ["OS", "I5"], **{c: ["KP"] for c in config.CAPITAL_GRANTS},
     "54": ["glavnica"], "84": ["glavnica"], "341": ["SD"], "342": ["SD"],
-    "7": ["ZO"], "63": ["ZO"], "6353": ["ZO"], "663": ["ZO"], "dio611": ["ZO"],
+    "7": ["ZO"], "63": ["ZO"], "663": ["ZO"], "dio611": ["ZO"],
 }
+# the accounts that cap the equalization add-back (methodology.FI_ROOM) feed ZO through FI
+for _k in methodology.FI_ROOM:
+    PRRAS_USE[_k[2:]] = PRRAS_USE.get(_k[2:], []) + ["FI"]
 BILANCA_USE = {"11": ["ND"], "25": ["ND"], "26": ["ND"], "23_D": ["DO"], "24_D": ["DO"], "26_D": ["DO"]}
 BILANCA_NAMES = {
     "11": "Novac u banci i blagajni",
@@ -103,10 +110,12 @@ def _num(v):
     return None if v is None or (isinstance(v, float) and (math.isnan(v) or math.isinf(v))) else float(v)
 
 
-def build(units, prras, wide, res, bilanca_path=config.RAW / "mf" / "bilanca.xlsx"):
+def build(units, prras, wide, res, bilanca_path=config.RAW / "mf" / "bilanca.xlsx", fi=None):
     """{oib: izvor dict} for every unit. units: units.csv; prras: prras_long; wide: wide.parquet;
-    res: results.parquet."""
+    res: results.parquet; fi: the decision rows of izravnanje_isplate (default: read from data/build)."""
     cells = bilanca_cells(bilanca_path)
+    fi = izravnanje_isplate.ucitaj() if fi is None else fi
+    fi_by = {(r["oib"], int(r["year"])): r for r in fi[fi.year.isin(ALL_YEARS)].to_dict("records")}
     pr = prras[prras.code.isin(PRRAS_USE) & prras.year.isin(ALL_YEARS)]
     pr = pr.merge(units[["oib", "zup_id", "naziv_mf"]], left_on=["zup_id", "sheet"], right_on=["zup_id", "naziv_mf"])
     pr_by = {o: g for o, g in pr.groupby("oib")}
@@ -136,9 +145,27 @@ def build(units, prras, wide, res, bilanca_path=config.RAW / "mf" / "bilanca.xls
             if v:
                 row, letter = pos.get(code, (None, None))
                 ulazi.append({"konto": k, "godina": config.LAST_YEAR, "iznos": round(v, 2), "redak": row, "stupac": letter})
+        # fiscal equalization: the decision amount (share x budget amount), cell of the share
+        fi_izvor = {}
+        for y in ALL_YEARS:
+            d = fi_by.get((o, y))
+            fi_izvor[str(y)] = "odluka" if d is not None else izravnanje_isplate.izvor_godine(y)
+            if d is None:
+                continue
+            konta.setdefault(FI_KONTO, {"naziv": "Fiskalno izravnanje prema odluci MF-a (udio × iznos u državnom proračunu)",
+                                        "izvor": "Odluka MF-a", "za": ["FI"]})
+            v = _num(d["FI_odluka"])
+            if v:
+                ulazi.append({"konto": FI_KONTO, "godina": y, "iznos": round(v, 2), "redak": int(d["redak"]),
+                              "stupac": d["stupac"], "datoteka": unquote(d["url"].rsplit("/", 1)[-1]), "list": d["list"],
+                              "udio": float(d["udio"]), "proracun": round(float(d["proracun_eur"]), 2)})
         velicine = {}
         for q, formula in QUANTITIES.items():
-            years = [config.LAST_YEAR] if q in ("ND", "DO") else ALL_YEARS if q in ("ZO", "KP", "PO") else YEARS
+            years = [config.LAST_YEAR] if q in ("ND", "DO") else ALL_YEARS if q in ("ZO", "KP", "PO", "FI") else YEARS
+            if q == "FI":                      # not a results column: the wide-table input p_FI
+                velicine[q] = {"formula": formula, "izvor": fi_izvor,
+                               "godine": {str(y): _num(wd[(o, y)].get("p_FI")) for y in years if (o, y) in wd}}
+                continue
             velicine[q] = {"formula": formula,
                            "godine": {str(y): _num(rs[(o, y)][COLUMN[q]]) for y in years if (o, y) in rs}}
         velicine["glavnica"]["refinanciranje"] = {str(y): bool(rs[(o, y)]["refinanciranje"]) for y in YEARS if (o, y) in rs}
@@ -151,7 +178,10 @@ def build(units, prras, wide, res, bilanca_path=config.RAW / "mf" / "bilanca.xls
                   "prozor": {"godine": [y for y in YEARS if (o, y) in rs], "ponderi": [WEIGHTS[y] for y in YEARS if (o, y) in rs]},
                   "pokazatelji": pokazatelji, "velicine": velicine,
                   "izvori": {"PR-RAS": sheet,
-                             "Bilanca": {"datoteka": BILANCA_FILE, "list": str(config.LAST_YEAR)}},
+                             "Bilanca": {"datoteka": BILANCA_FILE, "list": str(config.LAST_YEAR)},
+                             "Odluka MF-a": {"datoteka": "Tablica udjela po JLP(R)S za fiskalno izravnanje u <godina>, "
+                                                         "po jedna za svaku godinu (datoteka je uz svaki ulaz)",
+                                             "list": "naveden uz svaki ulaz"}},
                   "konta": konta, "ulazi": ulazi,
                   "napomena": "Iznosi su u eurima, iz izvještaja jedinica kako ih objavljuje Ministarstvo financija "
                               "(PR-RAS i Bilanca, razina 22). Konta s iznosom 0 nisu navedena. Formule su u "

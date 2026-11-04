@@ -12,23 +12,23 @@ import { topoUrl, type UnitIndex } from '../lib/data'
 import { grade, num } from '../lib/format'
 import { go, unitHref } from '../lib/router'
 import { GradeChip } from './Grade'
-import { BASEMAP, BLANK, CROATIA, gradeFill, quietBasemap } from './mapStyle'
-import { SEQUENTIAL, classOf, contextView, quintiles, type ViewKey } from '../lib/views'
+import { BASEMAP, BLANK, CROATIA, SEQUENTIAL_CLASS, classFill, quietBasemap, reducedMotion } from './mapStyle'
+import { classOf, contextView, quintiles, type ViewKey } from '../lib/views'
 
 maplibregl.setWorkerUrl(workerUrl)
-
-const fillColor = gradeFill(['feature-state', 'g'])
 
 /** What the fill encodes: the grade, or one of the two context views (lib/views.ts). */
 export type MapColorBy = ViewKey
 
-// The context views colour their quintile class 1-5 (feature-state `g`) on the sequential ramp.
-const sequentialFill = [
-  'match',
-  ['coalesce', ['feature-state', 'g'], 0],
-  ...SEQUENTIAL.flatMap((c, i) => [i + 1, c]),
-  '#ffffff',
-] as unknown as maplibregl.ExpressionSpecification
+// Colour changes (year, view) cross-fade between two fill layers. MapLibre does not transition a
+// data-driven fill-color, nor a fill-opacity that reads feature-state, but it does transition a
+// constant fill-opacity. So the bottom layer 'jls-fill' (feature-state `ga`) is always shown, the
+// top layer 'jls-fill-next' (feature-state `gb`) fades in over it with the new colours, and the next
+// change fades it out again over new colours in the bottom layer. Both read feature-state, so a
+// change of colours needs no tile re-layout and starts on the next frame.
+const FILL = 0.94
+const DIM = 0.22
+const FADE_MS = 650
 
 interface Props {
   units: UnitIndex[]
@@ -73,6 +73,10 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
   }, [selectable, onSelect])
   const outlined = useRef(new Set<string>())
   const faded = useRef(new Set<string>())
+  // colours on the two fill layers (feature-state ga, gb), and whether the top one is shown
+  const classes = useRef({ ga: new Map<string, number>(), gb: new Map<string, number>() })
+  const topShown = useRef(false)
+  const painted = useRef(false)
   const geo = useRef<FeatureCollection | null>(null)
 
   useEffect(() => {
@@ -93,6 +97,9 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
     map.current = m
     outlined.current = new Set()
     faded.current = new Set()
+    classes.current = { ga: new Map(), gb: new Map() }
+    topShown.current = false
+    painted.current = false
     let removed = false
     let styleOk = false
     m.on('style.load', () => {
@@ -125,14 +132,27 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
       const firstLabel = m.getStyle().layers.find((l: maplibregl.LayerSpecification) => l.type === 'symbol')?.id
       m.addSource('jls', { type: 'geojson', data: jls, promoteId: 'sifra' })
       m.addSource('zup', { type: 'geojson', data: zup })
+      // hover and click read the bottom layer, which is always drawn
+      m.addLayer({ id: 'jls-fill', type: 'fill', source: 'jls', paint: { 'fill-color': classFill('ga'), 'fill-opacity': FILL } }, firstLabel)
       m.addLayer(
         {
-          id: 'jls-fill',
+          id: 'jls-fill-next',
+          type: 'fill',
+          source: 'jls',
+          paint: { 'fill-color': classFill('gb'), 'fill-opacity': 0, 'fill-opacity-transition': { duration: 0, delay: 0 } },
+        },
+        firstLabel,
+      )
+      // dimmed units: the background colour over both fills, so the unit shows as if filled at DIM
+      m.addLayer(
+        {
+          id: 'jls-dim',
           type: 'fill',
           source: 'jls',
           paint: {
-            'fill-color': fillColor,
-            'fill-opacity': ['case', ['boolean', ['feature-state', 'dim'], false], 0.22, 0.94],
+            'fill-color': '#fdfdfc',
+            'fill-antialias': false,
+            'fill-opacity': ['case', ['boolean', ['feature-state', 'dim'], false], 1 - DIM / FILL, 0],
           },
         },
         firstLabel,
@@ -201,18 +221,31 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
     }
   }, [])
 
-  // recolour when the year or the colouring changes
+  // recolour when the year or the colouring changes, cross-fading from the colours on screen
   useEffect(() => {
     const m = map.current
     if (!ready || !m) return
     const view = contextView(colorBy)
     const cuts = view ? quintiles(units, view, year) : []
-    m.setPaintProperty('jls-fill', 'fill-color', view ? sequentialFill : fillColor)
+    const fade = painted.current && !reducedMotion()
+    painted.current = true
+    // into the hidden top layer, which then fades in; or under the shown top layer, which fades out
+    const key = fade && !topShown.current ? 'gb' : 'ga'
+    const had = classes.current[key]
     for (const u of units) {
       if (u.vrsta === 'zupanija') continue
       const g = view ? classOf(view.value(u, year), cuts) : (u.ocjena[year] ?? 0)
-      m.setFeatureState({ source: 'jls', id: u.sifra }, { g })
+      const c = view && g ? SEQUENTIAL_CLASS + g : g
+      // only the units whose colour changes: each changed state re-fills the unit's vertices in every layer
+      if (had.get(u.sifra) === c) continue
+      had.set(u.sifra, c)
+      // the first paint fills both layers, so the first fade also changes only what differs
+      if (!fade) classes.current.gb.set(u.sifra, c)
+      m.setFeatureState({ source: 'jls', id: u.sifra }, fade ? { [key]: c } : { ga: c, gb: c })
     }
+    topShown.current = key === 'gb'
+    m.setPaintProperty('jls-fill-next', 'fill-opacity-transition', { duration: fade ? FADE_MS : 0, delay: 0 })
+    m.setPaintProperty('jls-fill-next', 'fill-opacity', topShown.current ? FILL : 0)
   }, [ready, units, year, colorBy])
 
   // outline the selected units; only the difference to the last call touches the map

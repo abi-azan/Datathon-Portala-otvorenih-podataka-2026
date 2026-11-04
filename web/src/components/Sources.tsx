@@ -3,7 +3,7 @@ import type { Fact, SourceFile } from '../lib/data'
 import { eur, normalizeGradeLabels, num, pct } from '../lib/format'
 
 // Quantities each indicator needs, and what each quantity is built from (PLAN §3.1).
-const DEPS: Record<string, string[]> = { OS: ['PO'], PO: ['KP'], SD: ['glavnica'] }
+const DEPS: Record<string, string[]> = { OS: ['PO'], PO: ['KP'], SD: ['glavnica'], ZO: ['FI'] }
 const QUANTITY_NAMES: Record<string, string> = {
   KP: 'Kapitalne pomoći (KP)',
   PO: 'Tekući prihodi (PO)',
@@ -12,6 +12,7 @@ const QUANTITY_NAMES: Record<string, string> = {
   ND: 'Neto dug (ND)',
   SD: 'Servis duga (SD)',
   ZO: 'Zakonska osnovica (ZO)',
+  FI: 'Fiskalno izravnanje (FI)',
   DO: 'Dospjele obveze (DO)',
 }
 
@@ -36,7 +37,7 @@ const indicatorValue = (key: string, v: number | null) =>
 function usedYears(src: SourceFile, k: string, q: string): number[] {
   const win = src.prozor.godine
   if (q === 'ND' || q === 'DO') return [src.godina]
-  if (k === 'I4' && q === 'ZO') return win.map((y) => y - 1)
+  if (k === 'I4' && (q === 'ZO' || q === 'FI')) return win.map((y) => y - 1)
   return win
 }
 
@@ -132,7 +133,10 @@ export function SourcePanel({ src, k }: { src: SourceFile; k: string }) {
                   <td className="tabular py-1.5 whitespace-nowrap text-ink-2">
                     {c?.izvor === 'Bilanca'
                       ? `Bilanca${u.stupac && u.redak ? `, ćelija ${u.stupac}${u.redak}` : ''}`
-                      : `PR-RAS${u.redak ? `, redak ${u.redak}` : ''}`}
+                      : c?.izvor === 'Odluka MF-a'
+                        ? `${u.datoteka ?? 'Odluka MF-a'}, list „${u.list ?? ''}”, ćelija ${u.stupac ?? ''}${u.redak ?? ''}` +
+                          (u.udio != null && u.proracun != null ? ` (udio ${num(u.udio, 6)} × ${eur(u.proracun)})` : '')
+                        : `PR-RAS${u.redak ? `, redak ${u.redak}` : ''}`}
                   </td>
                 </tr>
               )

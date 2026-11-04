@@ -9,7 +9,7 @@ import type { Feature, FeatureCollection } from 'geojson'
 import { ZAGREB_SIFRA as ZAGREB, topoUrl, type ReformUnit } from '../lib/data'
 import { num } from '../lib/format'
 import { GradeChip } from './Grade'
-import { BASEMAP, BLANK, CROATIA, gradeFill, quietBasemap } from './mapStyle'
+import { BASEMAP, BLANK, CROATIA, gradeFill, quietBasemap, reducedMotion } from './mapStyle'
 
 maplibregl.setWorkerUrl(workerUrl)
 
@@ -35,12 +35,31 @@ const TOOLTIP_W = 260
 const TOOLTIP_H = 120
 const FULL = 0.94
 const FADED = 0.45
-
-const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+// "only merged": the units that stay alone under the background colour, so they show as if filled at 0.15
+const ALONE_VEIL = 0.84
+// the units that changed with the threshold light up, then fade to their grade colour
+const FLASH = '#ffc21a'
+const FLASH_FILL = 0.5
+const FLASH_IN_MS = 250
+const FLASH_HOLD_MS = 450
+const FLASH_OUT_MS = 1300
+// a merged unit's outline, thicker when zoomed in
+const MERGED_LINE = '#1d1c1a'
+const mergedWidth = ['interpolate', ['linear'], ['zoom'], 5.5, 1, 7, 1.4, 9, 2.2, 11, 3] as maplibregl.ExpressionSpecification
 
 function fillOpacity(m: maplibregl.Map, value: number, duration: number) {
   m.setPaintProperty('reform-fill', 'fill-opacity-transition', { duration, delay: 0 })
   m.setPaintProperty('reform-fill', 'fill-opacity', value)
+}
+
+function flash(m: maplibregl.Map, on: boolean, duration: number) {
+  for (const [id, prop, value] of [
+    ['reform-flash-fill', 'fill-opacity', FLASH_FILL],
+    ['reform-flash-line', 'line-opacity', 1],
+  ] as const) {
+    m.setPaintProperty(id, `${prop}-transition`, { duration, delay: 0 })
+    m.setPaintProperty(id, prop, on ? value : 0)
+  }
 }
 
 /** Karta reforme: the units after the scenario, members' polygons dissolved into one per group
@@ -53,6 +72,7 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
   const [hover, setHover] = useState<Hover | null>(null)
+  const [onlyMerged, setOnlyMerged] = useState(false)
   const byKey = useMemo(() => new Map(units.map((u) => [reformKey(u), u])), [units])
   const onSelectRef = useRef(onSelect)
   useEffect(() => {
@@ -113,11 +133,46 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
       m.addSource('reform', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, promoteId: 'key' })
       m.addSource('jls', { type: 'geojson', data: feature(t, t.objects.jls) as FeatureCollection })
       m.addSource('zup', { type: 'geojson', data: feature(t, t.objects.zupanije) as FeatureCollection })
+      const none = ['==', ['get', 'key'], ''] as maplibregl.FilterSpecification
       m.addLayer({ id: 'reform-fill', type: 'fill', source: 'reform', paint: { 'fill-color': gradeFill(['get', 'g']), 'fill-opacity': FULL } }, firstLabel)
+      m.addLayer(
+        {
+          id: 'reform-alone',
+          type: 'fill',
+          source: 'reform',
+          filter: ['==', ['get', 'n'], 1],
+          paint: { 'fill-color': '#fdfdfc', 'fill-antialias': false, 'fill-opacity': 0 },
+        },
+        firstLabel,
+      )
+      m.addLayer({ id: 'reform-flash-fill', type: 'fill', source: 'reform', filter: none, paint: { 'fill-color': FLASH, 'fill-opacity': 0 } }, firstLabel)
       // the old borders inside a merged unit, faint, so the members stay visible
-      m.addLayer({ id: 'jls-line', type: 'line', source: 'jls', paint: { 'line-color': '#ffffff', 'line-width': 0.4, 'line-opacity': 0.45 } }, firstLabel)
-      m.addLayer({ id: 'reform-line', type: 'line', source: 'reform', paint: { 'line-color': '#ffffff', 'line-width': 1.4 } }, firstLabel)
+      m.addLayer({ id: 'jls-line', type: 'line', source: 'jls', paint: { 'line-color': '#ffffff', 'line-width': 0.3, 'line-opacity': 0.5 } }, firstLabel)
+      m.addLayer({ id: 'reform-line', type: 'line', source: 'reform', paint: { 'line-color': '#ffffff', 'line-width': 0.8 } }, firstLabel)
       m.addLayer({ id: 'zup-line', type: 'line', source: 'zup', paint: { 'line-color': '#52514e', 'line-width': 1, 'line-opacity': 0.7 } }, firstLabel)
+      // the new borders: a dark outline around each merged unit, over the county lines
+      m.addLayer(
+        {
+          id: 'reform-merged-line',
+          type: 'line',
+          source: 'reform',
+          filter: ['>', ['get', 'n'], 1],
+          layout: { 'line-join': 'round' },
+          paint: { 'line-color': MERGED_LINE, 'line-width': mergedWidth, 'line-opacity': 0.9 },
+        },
+        firstLabel,
+      )
+      m.addLayer(
+        {
+          id: 'reform-flash-line',
+          type: 'line',
+          source: 'reform',
+          filter: none,
+          layout: { 'line-join': 'round' },
+          paint: { 'line-color': FLASH, 'line-width': 3, 'line-opacity': 0 },
+        },
+        firstLabel,
+      )
       m.addLayer({
         id: 'reform-hover',
         type: 'line',
@@ -189,6 +244,7 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
 
   // dissolve each group's members into one shape whenever the threshold changes
   const drawn = useRef(false)
+  const shownKeys = useRef(new Set<string>())
   useEffect(() => {
     const m = map.current
     const t = topo.current
@@ -199,23 +255,36 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
     for (const u of units) {
       const parts = u.clanice.map((s) => bySifra.get(s)).filter((g): g is Polygon | MultiPolygon => !!g)
       if (!parts.length) continue
-      features.push({ type: 'Feature', properties: { key: reformKey(u), g: u.ocjena ?? 0 }, geometry: merge(t, parts) })
+      features.push({ type: 'Feature', properties: { key: reformKey(u), g: u.ocjena ?? 0, n: u.clanice.length }, geometry: merge(t, parts) })
     }
     const zg = bySifra.get(ZAGREB)
-    if (zg) features.push({ type: 'Feature', properties: { key: ZAGREB, g: 0 }, geometry: merge(t, [zg]) })
+    if (zg) features.push({ type: 'Feature', properties: { key: ZAGREB, g: 0, n: 1 }, geometry: merge(t, [zg]) })
     // a new threshold: drop the old colours to faded at once, then fade the new ones in once drawn
     const fade = drawn.current && !reducedMotion()
+    // the units that did not exist at the previous threshold (new mergers, and members that split off)
+    const keysNow = features.map((f) => f.properties!.key as string)
+    const fresh = fade ? keysNow.filter((k) => k !== ZAGREB && !shownKeys.current.has(k)) : []
+    shownKeys.current = new Set(keysNow)
     drawn.current = true
     if (fade) fillOpacity(m, FADED, 0)
+    flash(m, false, 0)
+    const freshFilter = ['in', ['get', 'key'], ['literal', fresh]] as maplibregl.FilterSpecification
+    m.setFilter('reform-flash-fill', freshFilter)
+    m.setFilter('reform-flash-line', freshFilter)
     let done = false
     let fadedIn = false
     let retry: ReturnType<typeof setTimeout> | undefined
+    let flashOut: ReturnType<typeof setTimeout> | undefined
     const giveUp = Date.now() + 5000 // slow machines take seconds to redraw the tiles
     const settle = () => {
       if (done) return
       if (fade && !fadedIn) {
         fadedIn = true
         fillOpacity(m, dimRef.current ? FADED : FULL, 450)
+        if (fresh.length) {
+          flash(m, true, FLASH_IN_MS)
+          flashOut = setTimeout(() => flash(m, false, FLASH_OUT_MS), FLASH_IN_MS + FLASH_HOLD_MS)
+        }
       }
       clearTimeout(retry)
       // until the new groups are drawn under the pointer, the tooltip waits (a stale key shows none)
@@ -237,8 +306,17 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
       m.off('idle', settle)
       clearTimeout(timer)
       clearTimeout(retry)
+      clearTimeout(flashOut)
     }
   }, [ready, units])
+
+  // "only merged": veil the units that stay alone
+  useEffect(() => {
+    const m = map.current
+    if (!ready || !m) return
+    m.setPaintProperty('reform-alone', 'fill-opacity-transition', { duration: reducedMotion() ? 0 : 300, delay: 0 })
+    m.setPaintProperty('reform-alone', 'fill-opacity', onlyMerged ? ALONE_VEIL : 0)
+  }, [ready, onlyMerged])
 
   useEffect(() => {
     const m = map.current
@@ -254,7 +332,25 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
       <div ref={box} className="h-full w-full" aria-label={`Karta reforme za prag od ${num(prag)} stanovnika`} role="region" />
       <div className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur">
         <div className="text-sm font-semibold">Ocjena poslije reforme, prag {num(prag)} stanovnika</div>
-        <div className="text-xs text-muted">bijele crte su stare granice · klikni za pojedinosti</div>
+        <div className="text-xs text-muted">tamni obrub: spojena jedinica · klikni za pojedinosti</div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={onlyMerged}
+          disabled={!ready}
+          onClick={() => setOnlyMerged((v) => !v)}
+          className="pointer-events-auto mt-1.5 -ml-1 flex items-center gap-2 rounded-md px-1 py-0.5 text-xs font-medium text-ink-2 hover:text-ink disabled:opacity-50"
+        >
+          <span
+            aria-hidden
+            className={`relative h-3.5 w-6 shrink-0 rounded-full transition-colors motion-reduce:transition-none ${onlyMerged ? 'bg-ink' : 'bg-axis'}`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 h-2.5 w-2.5 rounded-full bg-card shadow-sm transition-transform motion-reduce:transition-none ${onlyMerged ? 'translate-x-2.5' : ''}`}
+            />
+          </span>
+          Prikaži samo spojene
+        </button>
         {notice && (
           <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-ink-2">
             {notice.loading && <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden />}

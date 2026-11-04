@@ -235,3 +235,93 @@ def test_equalization_payout_is_a_share_of_a_fixed_budget(data):
     assert abs((others_after - others_before) + jv["isplata_promjena"]) < 1e-6
     bt = merge.merge(data, [by_name(data, "Općina Barilović"), by_name(data, "Općina Tounj")])["izravnanje"]
     assert abs(bt["isplata_promjena"]) < 0.01                       # linear case: nothing moves
+
+
+needs_dzs = pytest.mark.skipif(not merge.DZS_PARQUET.exists(), reason="run pipeline.pxweb first (dzs.parquet)")
+
+
+def test_dzs_symbols():
+    """'-' (the phenomenon does not exist) counts as 0; any other empty cell, e.g. 'z' (hidden), is None."""
+    assert merge.dzs_value(12.0, None) == 12.0
+    assert merge.dzs_value(float("nan"), "-") == 0.0
+    assert merge.dzs_value(float("nan"), "z") is None
+    assert merge.dzs_value(None, None) is None
+
+
+@needs_dzs
+def test_demography_pag_povljana(data):
+    """#/simulator?j=05738,03166: estimates summed per year, change 2021 -> 2024, births - deaths and
+    in - out migration for 2024 summed; each member keeps only its own change (Pag 3.156 -> 3.352)."""
+    m = merge.merge(data, [by_name(data, "Općina Povljana"), by_name(data, "Grad Pag")])
+    d = merge.summary(m)["demografija"]
+    assert m["clanice"] == ["03166", "05738"]
+    assert (d["od"], d["do"]) == (2021, 2024)
+    assert d["stanovnici"] == [3156 + 674, 3176 + 661, 3238 + 666, 3352 + 690]
+    assert d["promjena"] == round(4042 / 3830 - 1, 3) == 0.055
+    assert d["prirodna"] == (23 + 5) - (49 + 15)
+    assert d["migracije"] == (255 + 47) - (115 + 13)
+    assert d["clanice"] == [round(3352 / 3156 - 1, 3), round(690 / 674 - 1, 3)]
+    assert "oznake" not in d
+    assert m["stanovnici"] == 669 + 3175                     # the score still uses Popis 2021
+
+
+@needs_dzs
+def test_demography_matches_the_long_table(data):
+    """Vukovar + Bogdanovci recomputed straight from dzs.parquet."""
+    df = pd.read_parquet(merge.DZS_PARQUET)
+    oibs = [by_name(data, "Grad Vukovar"), by_name(data, "Općina Bogdanovci")]
+    d = merge.merge(data, oibs)["demografija"]
+    x = df[df.oib.isin(oibs)].groupby(["pokazatelj", "godina"]).vrijednost.sum()
+    assert d["stanovnici"] == [int(x[("stanovnici_procjena", y)]) for y in range(2021, 2025)]
+    assert d["prirodna"] == x[("zivorodeni", 2024)] - x[("umrli", 2024)]
+    assert d["migracije"] == x[("doseljeni", 2024)] - x[("odseljeni", 2024)]
+    bogdanovci = data.units[oibs[1]]["sifra"]
+    i = merge.merge(data, oibs)["clanice"].index(bogdanovci)
+    assert d["clanice"][i] == -0.083                          # Bogdanovci −8,3 %
+
+
+@needs_dzs
+def test_demography_dash_counts_as_zero_and_is_kept(data):
+    """Sućuraj reports '-' live births in 2024: 0 in the sum, the symbol listed in oznake."""
+    sucuraj, jelsa = by_name(data, "Općina Sućuraj"), by_name(data, "Općina Jelsa")
+    d = merge.merge(data, [sucuraj, jelsa])["demografija"]
+    cells = data.demo["celije"]
+    assert cells[(sucuraj, "zivorodeni", 2024)] == (0.0, "-")
+    want = cells[(jelsa, "zivorodeni", 2024)][0] - cells[(jelsa, "umrli", 2024)][0] - cells[(sucuraj, "umrli", 2024)][0]
+    assert d["prirodna"] == want
+    assert d["oznake"] == ["04235:zivorodeni:2024:-"]
+
+
+@needs_dzs
+def test_demography_hidden_value_makes_the_sum_null(data, monkeypatch):
+    """A member with a hidden ('z') estimate: its change and the merged change are null, the other
+    member's change and the sums that do not use that cell stay."""
+    pag, povljana = by_name(data, "Grad Pag"), by_name(data, "Općina Povljana")
+    cells = dict(data.demo["celije"])
+    cells[(povljana, "stanovnici_procjena", 2024)] = (merge.dzs_value(float("nan"), "z"), "z")
+    monkeypatch.setattr(data, "demo", {**data.demo, "celije": cells})
+    d = merge.merge(data, [pag, povljana])["demografija"]
+    assert d["stanovnici"][-1] is None and d["promjena"] is None
+    assert d["clanice"] == [0.062, None]
+    assert d["prirodna"] == -36 and "05738:stanovnici_procjena:2024:z" in d["oznake"]
+
+
+def test_demography_missing_is_none(data, monkeypatch):
+    """Without dzs.parquet the block is None and nothing else changes."""
+    assert merge.load_demography(config.BUILD / "nema.parquet") is None
+    oibs = [by_name(data, "Općina Povljana"), by_name(data, "Grad Pag")]
+    with_demo = merge.summary(merge.merge(data, oibs))
+    monkeypatch.setattr(data, "demo", None)
+    m = merge.merge(data, oibs)
+    assert m["demografija"] is None
+    s = merge.summary(m)
+    assert s["demografija"] is None
+    assert {k: v for k, v in s.items() if k != "demografija"} == {k: v for k, v in with_demo.items() if k != "demografija"}
+
+
+@needs_dzs
+def test_precomputed_files_carry_the_demography():
+    for f in sorted((config.BUILD / "simulator").glob("zup-*.json")):
+        for k, v in json.loads(f.read_text(encoding="utf-8"))["skupine"].items():
+            d = v["demografija"]
+            assert len(d["clanice"]) == len(v["clanice"]) and len(d["stanovnici"]) == d["do"] - d["od"] + 1, k

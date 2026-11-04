@@ -8,9 +8,13 @@ and sea links (data.adj from geo/susjedi.json), only inside the county and only 
 It stops when every group is at the threshold or above, or when a group below it has no
 neighbour left in the county (then it is skipped and the others go on).
 
-The rule works with inhabitants only. Each final group of 2 or more units is then computed once
-with merge.merge(max_members=None): the same sums, methodology and savings block as the merger
+The rule works with inhabitants only (Popis 2021). Each final group of 2 or more units is then
+computed once with merge.merge(max_members=None): the same sums, methodology and savings block as the merger
 simulator. It is a scenario, not a proposal for new borders.
+
+Every unit, merged or not, also carries the population trend of merge.demography (DZS, 2021-2024),
+and the header sums it for the merged groups and for the units that stay alone (demography_all).
+It never enters the grade.
 
     .venv/Scripts/python -m pipeline.reforma   # rewrite data/build/reforma from a finished build
 """
@@ -110,7 +114,7 @@ def reforma(data, prag, res=None):
                 "stanovnici": int(u["stanovnici_2021"]), "skupina": u["skupina"], "ocjene_prije": prije,
                 "ocjena": _int(r["ocjena"]), "ocjena_rijec": r["ocjena_rijec"], "bodovi": _float(r["bodovi"]),
                 "rang": _int(r["rang"]), "n_skupine": _int(r["n_skupine"]), "usteda": None, "izravnanje": None,
-                "poticaj": None})
+                "poticaj": None, "demografija": merge.demography(data, oibs)})
             continue
         m = merge.merge(data, oibs, max_members=None)
         last = m["godine"].get(year, {})
@@ -121,7 +125,7 @@ def reforma(data, prag, res=None):
             "ocjene_prije": prije, "ocjena": _int(last.get("ocjena")), "ocjena_rijec": last.get("ocjena_rijec"),
             "bodovi": _float(last.get("bodovi")), "rang": _int(last.get("rang")),
             "n_skupine": _int(last.get("n_skupine")), "usteda": m["usteda"], "izravnanje": m.get("izravnanje"),
-            "poticaj": m.get("poticaj")})
+            "poticaj": m.get("poticaj"), "demografija": m.get("demografija")})
     jedinice.sort(key=lambda j: (j["zup_id"], j["clanice"][0]))
     merged = [j for j in jedinice if len(j["clanice"]) > 1]
     blocks = [j["usteda"] for j in merged if j["usteda"]]
@@ -139,8 +143,30 @@ def reforma(data, prag, res=None):
         "poticaj_godisnje_zbroj": sum((j["poticaj"] or {}).get("godisnje") or 0.0 for j in merged),
         "izravnanje_promjena_zbroj": sum(j["izravnanje"]["promjena"] for j in merged if j.get("izravnanje")),
         **fi,
+        "demografija": demography_all(jedinice),
         "jedinice": jedinice,
     })
+
+
+def demography_all(jedinice):
+    """Population change from the first to the last DZS year for all merged groups together and for
+    the units that stay alone (merge.demography), or None without dzs.parquet. A part is None when
+    one of its units has no estimate for either year. Nothing of it enters the score."""
+    blocks = [j["demografija"] for j in jedinice]
+    if not blocks or any(b is None for b in blocks):
+        return None
+
+    def part(js):
+        firsts = [j["demografija"]["stanovnici"][0] for j in js]
+        lasts = [j["demografija"]["stanovnici"][-1] for j in js]
+        if not js or None in firsts or None in lasts:
+            return None
+        a, b = sum(firsts), sum(lasts)
+        return {"stanovnici_od": a, "stanovnici_do": b, "promjena": round(b / a - 1, 3) if a > 0 else None}
+
+    return {"od": blocks[0]["od"], "do": blocks[0]["do"],
+            "spojene": part([j for j in jedinice if len(j["clanice"]) > 1]),
+            "ostale": part([j for j in jedinice if len(j["clanice"]) == 1])}
 
 
 def payout_all(data, merged):
@@ -188,7 +214,16 @@ def report(headers):
               f"spojenih skupina, {_hr(h['stanovnika_u_spojenima'])} stanovnika u spojenima, ušteda 0 do "
               f"{_hr(h['usteda_realno_do_zbroj'] / 1e6, 1)} mil. € (razmjer {_hr(h['razmjer_zbroj'] / 1e6, 1)} mil. €, "
               f"jaz bez spajanja {_hr(h['jaz_bez_spajanja_zbroj'] / 1e6, 1)} mil. €), poticaj NN 88/2022 "
-              f"{_hr(h['poticaj_godisnje_zbroj'] / 1e6, 1)} mil. € godišnje, ispod praga {h['n_ispod_praga']}")
+              f"{_hr(h['poticaj_godisnje_zbroj'] / 1e6, 1)} mil. € godišnje, ispod praga {h['n_ispod_praga']}"
+              + _demo_line(h.get("demografija")))
+
+
+def _demo_line(d):
+    if not d or not d["spojene"] or not d["ostale"]:
+        return ""
+    pc = lambda p: "?" if p is None else f"{'+' if p > 0 else ''}{_hr(p * 100, 1)} %"
+    return (f", stanovnici {d['od']}.->{d['do']}.: spojene {pc(d['spojene']['promjena'])}, "
+            f"ostale {pc(d['ostale']['promjena'])}")
 
 
 def main():

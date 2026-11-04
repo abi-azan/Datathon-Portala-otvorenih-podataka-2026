@@ -13,7 +13,7 @@ Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datat
 ## Što radi
 
 - **Karta** svih 556 općina i gradova obojena po ocjeni, za godine 2019.-2025. Pretraga "Pronađi svoju općinu" radi i bez dijakritika.
-- **Svjedodžba jedinice:**
+- **Pregled jedinice:**
   - ocjena s riječju i bodovi 0-100;
   - mjesto u usporednoj skupini;
   - stabilnost ocjene u četiri scenarija pondera;
@@ -25,7 +25,7 @@ Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datat
 - **Vidljiva provjera brojki.** Svaka brojka u objašnjenju pokazuje činjenicu iz koje dolazi. Ispod svake sastavnice je "Kako je izračunato": formula, pomoćne veličine po godinama i ulazni iznosi s kontom, listom i retkom u datotekama Ministarstva financija. Test iz samih tih ulaza ponovno dobiva objavljene pokazatelje za svih 576 jedinica.
 - **Simulator spajanja** (`#/simulator`): odabir 2-4 susjedne općine ili grada iste županije na karti ili pretragom. Prikazuje ocjenu spojene jedinice i rang u skupini, iznose prije i poslije (dospjele obveze, uprava), raspon uštede na općoj upravi i promjenu fiskalnog izravnanja po zakonskoj formuli. Svih 13.353 dopuštenih skupina izračunato je unaprijed.
 - **Karta reforme** (`#/reforma`): scenarij u kojem se unutar županije najmanja jedinica ispod praga spaja s najmanjim susjedom, za pragove od 2.500, 5.000 i 10.000 stanovnika (555 → 370, 239 ili 147 jedinica). Scenarij, ne prijedlog granica.
-- **Revizija Državnog ureda za reviziju** na svjedodžbi: zadnje mišljenje financijske revizije (bezuvjetno, uvjetno, nepovoljno ili suzdržano), revidirana godina i poveznica na izvješće, ili "nije imala financijsku reviziju od 2019.". Ne ulazi u ocjenu.
+- **Revizija Državnog ureda za reviziju** u pregledu jedinice: zadnje mišljenje financijske revizije (bezuvjetno, uvjetno, nepovoljno ili suzdržano), revidirana godina i poveznica na izvješće, ili "nije imala financijsku reviziju od 2019.". Ne ulazi u ocjenu.
 - **Metodologija i podaci** (`#/metodologija`): formule, pragovi, ponderi, pravila i AI prompt čitaju se iz koda (`metodologija.json`), uz popis svih skupova podataka.
 - **Otvoreni API**: statične datoteke bez ključa, opisane u OpenAPI 3.1. Sadrži sve rezultate, šifrarnik (OIB ↔ RKP ↔ šifra DGU/DZS ↔ naziv), granice, simulator, Kartu reforme, izvor svake brojke i zapis provenijencije svakog preuzimanja.
 
@@ -107,7 +107,7 @@ Osnovna adresa je `<stranica>/api/v1/`, a opis je u `openapi.json`.
 | Datoteka | Sadržaj |
 |---|---|
 | `jedinice.json` | sve jedinice, ocjena i bodovi po godini |
-| `jedinice/<slug>.json` | svjedodžba jedne jedinice, s objašnjenjem i oznakom AI ili predložak |
+| `jedinice/<slug>.json` | pregled jedne jedinice, s objašnjenjem i oznakom AI ili predložak |
 | `jedinice/<slug>/izvor.json` | formula pokazatelja, pomoćne veličine i ulazni iznosi s listom i retkom u datotekama MF-a |
 | `simulator/zup-<id>.json` | simulator: svaka skupina od 2-4 susjedne jedinice županije, s uštedom i izravnanjem |
 | `reforma/prag-<N>.json` | Karta reforme za prag od 2.500, 5.000 ili 10.000 stanovnika |

@@ -106,6 +106,94 @@ export interface UnitDetail {
     model?: string | null
     provjera?: { ok: boolean; n_brojki: number; nepoznate: string[]; sadrzaj?: string[] }
   } | null
+  /** Population and economy (pipeline/kontekst.py; DZS PxWeb, Porezna uprava). Not in the score. */
+  stanovnistvo_gospodarstvo?: PopulationEconomy
+  /** Fiscal equalization of the unit (pipeline/kontekst.py, MF table). */
+  izravnanje?: UnitEqualization | null
+  /** Local tax rates by year (Porezna uprava); null for counties. */
+  porezne_stope?: Record<string, TaxRates> | null
+}
+
+/** One context indicator with its peer-group median. oznaka: DZS symbol, "-" none (counted as 0), "z" confidential (null). */
+export interface ContextIndicator {
+  godina: number
+  od_godine?: number
+  vrijednost: number | null
+  oznaka: '-' | 'z' | null
+  broj: number | null
+  medijan: number | null
+  n_medijan: number
+}
+
+export type ContextKey =
+  | 'promjena_stanovnistva'
+  | 'prirodni_prirast'
+  | 'neto_migracija'
+  | 'nocenja_po_stanovniku'
+  | 'dozvole_na_1000'
+  | 'neto_dohodak_pc'
+  | 'udio_mirovina'
+
+/** The PxWeb request the browser sends to DZS for the population series (POST, json-stat2). */
+export interface LiveQuery {
+  tablica: string
+  kod: string
+  url: string
+  upit: { query: unknown[]; response: { format: string } }
+}
+
+export interface PopulationEconomy {
+  skupina: string | null
+  pokazatelji: Record<ContextKey, ContextIndicator>
+  /** Population estimate at 31.12. by year (SP31_2): only for the trend. */
+  procjene: Record<string, number | null>
+  uzivo: LiveQuery | null
+  izvori: { izdavatelj: string; naziv: string | null; tablica: string | null; url: string; azurirano: string | null; preuzeto?: string | null }[]
+}
+
+export interface UnitEqualization {
+  godina: number
+  proracun_godina: number
+  iznos_proracuna: number
+  vrsta_reference: 'opcina' | 'grad' | 'zupanija'
+  kapacitet_pc: number
+  referentna_pc: number
+  /** Full amount by the formula; the UI shows only the payout. */
+  puni_iznos: number
+  udio: number
+  isplata: number
+  stopa: {
+    godina: number
+    niza: number | null
+    visa?: number | null
+    niza_max: number | null
+    visa_max?: number | null
+    ispod_maksimuma: boolean | null
+  } | null
+  /** Decision S1: what the unit's own budget would collect more a year at the highest rates; only below the maximum. */
+  uz_najvise_stope?: {
+    godina_stopa: number
+    godina_poreza: number
+    procjena: number
+    od: number
+    do: number
+    niza: number
+    visa: number
+    niza_max: number
+    visa_max: number
+  } | null
+}
+
+export interface TaxRates {
+  niza: number | null
+  visa: number | null
+  niza_max: number | null
+  ispod_maksimuma: boolean | null
+  potrosnja_min: number | null
+  potrosnja_max: number | null
+  nekretnine_min: number | null
+  nekretnine_max: number | null
+  nekretnine_naplata: string | null
 }
 
 /** jedinice/<slug>/izvor.json (pipeline/provenance.py): formula and inputs behind I1-I5. */
@@ -122,11 +210,24 @@ export interface SourceFile {
       pravilo1_iskljuceno?: number | null
       refinanciranje?: Record<string, boolean>
       prag_refinanciranja?: number
+      /** FI only: odluka | konto_6353 | porez_na_dohodak, per year */
+      izvor?: Record<string, string>
     }
   >
   izvori: Record<string, { datoteka: string | null; list: string | null }>
-  konta: Record<string, { naziv: string | null; izvor: 'PR-RAS' | 'Bilanca'; za: string[] }>
-  ulazi: { konto: string; godina: number; iznos: number; redak: number | null; stupac?: string | null }[]
+  konta: Record<string, { naziv: string | null; izvor: 'PR-RAS' | 'Bilanca' | 'Odluka MF-a'; za: string[] }>
+  /** datoteka, list, udio and proracun: the fiscal equalization input (izvor 'Odluka MF-a') */
+  ulazi: {
+    konto: string
+    godina: number
+    iznos: number
+    redak: number | null
+    stupac?: string | null
+    datoteka?: string
+    list?: string
+    udio?: number
+    proracun?: number
+  }[]
   napomena?: string
 }
 
@@ -177,6 +278,22 @@ export interface Equalization {
   [k: string]: unknown
 }
 
+/** Population trend of a merged group or a unit, pipeline/merge.py demography() (decision P4).
+ * Shown next to the result, never part of the grade, which uses Popis 2021. */
+export interface GroupDemography {
+  od: number
+  do: number
+  /** Summed yearly estimates, od..do; only for the trend, never shown next to Popis 2021. */
+  stanovnici: (number | null)[]
+  promjena: number | null
+  /** Live births − deaths and in − out migration in the year `do`, summed over the members. */
+  prirodna: number | null
+  migracije: number | null
+  /** Each member's population change, in the order of `clanice`. */
+  clanice: (number | null)[]
+  oznake?: string[]
+}
+
 /** One precomputed group of the merger simulator (api/v1/simulator/zup-<id>.json). */
 export interface MergeSummary {
   clanice: string[]
@@ -216,6 +333,7 @@ export interface MergeSummary {
   usteda: Savings | null
   izravnanje?: Equalization | null
   poticaj?: Incentive | null
+  demografija?: GroupDemography | null
 }
 
 export interface SimulatorFile {
@@ -286,6 +404,9 @@ export interface MethodologyDoc {
   simulator: Record<string, string>
   kriterij_10?: string
   revizija?: string
+  /** Profile cards that do not enter the score (pipeline/metodologija.py). */
+  stanovnistvo_gospodarstvo?: string
+  izravnanje_jedinice?: string
   ogranicenja: string[]
 }
 
@@ -331,6 +452,7 @@ export interface ReformUnit {
   usteda: Savings | null
   izravnanje: Equalization | null
   poticaj?: Incentive | null
+  demografija?: GroupDemography | null
 }
 
 /** api/v1/reforma/prag-<N>.json (pipeline/reforma.py). */
@@ -350,6 +472,13 @@ export interface ReformFile {
   izravnanje_promjena_zbroj?: number
   izravnanje_isplata_spojene_promjena?: number
   izravnanje_isplata_ostale_promjena?: number
+  /** Population change od→do for all merged groups and for the units that stay alone (reforma.demography_all). */
+  demografija?: {
+    od: number
+    do: number
+    spojene: { stanovnici_od: number; stanovnici_do: number; promjena: number | null } | null
+    ostale: { stanovnici_od: number; stanovnici_do: number; promjena: number | null } | null
+  } | null
   jedinice: ReformUnit[]
 }
 

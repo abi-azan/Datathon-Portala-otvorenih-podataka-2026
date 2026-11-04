@@ -40,6 +40,16 @@ statutory formula for the members and for the merged unit (izravnanje.za_spajanj
 capacities and reference values of the MF table. It is shown because the formula reproduces
 MF's full amounts for all 576 units. The block is null when the table is not downloaded.
 
+Demographic trend (decision P4, 4.11.; data/build/dzs.parquet from pipeline/pxweb.py): the members'
+population estimates are summed per year and the change is taken from the first year to the last
+(2021 -> 2024); natural change (live births - deaths) and net migration (in - out) are summed for
+the last year. Rates per 1,000 inhabitants use Popis 2021 (the group's stanovnici) as the base; the
+pages divide the two published numbers, which keeps the 13,353 precomputed groups small. Shares are
+rounded to 3 decimals (0.1 %, the precision shown). Nothing of it enters the score: grades and
+per-capita measures keep using Popis 2021. A DZS cell "-" (the phenomenon does not exist) counts
+as 0, any other empty cell ("z", hidden) is None and makes the sum None (dzs_value).
+The block is None when dzs.parquet has not been built.
+
 precompute() writes every allowed group of 2-4 units, one JSON file per county, for the
 static site (decision 4.11.: computed ahead in Python, no TypeScript copy of the method).
 
@@ -67,6 +77,13 @@ INCENTIVE_GROUPS = range(1, 6)
 INCENTIVE_FACTOR = 2            # x the annexed unit's fiscal equalization, every year
 INCENTIVE_YEARS = 5
 INCENTIVE_CAPITAL = 995_421.0   # 7.5 mil. kn at 7.53450 kn/€, for capital projects
+
+# Demographic series of dzs.parquet (pipeline/pxweb.py) used for the trend; never for the score.
+DZS_PARQUET = config.BUILD / "dzs.parquet"
+POPULATION = "stanovnici_procjena"
+DEMO_KEYS = (POPULATION, "zivorodeni", "umrli", "doseljeni", "odseljeni")
+NO_EVENT = "-"                  # DZS symbol: the phenomenon does not exist
+_LOAD = object()                # Data(demo=...) default: read DZS_PARQUET when it exists
 
 # Every p_/b_ value the methodology reads: the literals in methodology.py plus the capital
 # grants it builds with f-strings. Summing only these keeps precompute fast.
@@ -100,12 +117,39 @@ def load_equalization(units_csv=config.BUILD / "units.csv"):
             "puni_ukupno": float(df["P4"].sum())}
 
 
+def dzs_value(vrijednost, oznaka):
+    """One DZS cell as a number: the value; 0 for "-" (the phenomenon does not exist); None for any
+    other empty cell ("z" hidden, ".." not available), so that a sum containing it is None as well."""
+    if not _missing(vrijednost):
+        return float(vrijednost)
+    return 0.0 if oznaka == NO_EVENT else None
+
+
+def load_demography(path=DZS_PARQUET):
+    """{"godine", "od", "do", "celije": {(oib, pokazatelj, godina): (number or None, symbol or None)}}
+    for DEMO_KEYS, or None when dzs.parquet has not been built (then demography() is None too)."""
+    if not path.exists():
+        return None
+    df = pd.read_parquet(path, columns=["oib", "godina", "pokazatelj", "vrijednost", "oznaka"])
+    df = df[df["pokazatelj"].isin(DEMO_KEYS) & df["oib"].notna()]
+    years = sorted(int(y) for y in df.loc[df["pokazatelj"] == POPULATION, "godina"].unique())
+    if len(years) < 2:
+        return None
+    cells = {}
+    for r in df.to_dict("records"):
+        mark = r["oznaka"] if isinstance(r["oznaka"], str) else None
+        cells[(r["oib"], r["pokazatelj"], int(r["godina"]))] = (dzs_value(r["vrijednost"], mark), mark)
+    return {"godine": years, "od": years[0], "do": years[-1], "celije": cells}
+
+
 class Data:
     """Inputs of the simulator: unit-year rows, the register, peer-group points, neighbours and,
-    when available, the members' fiscal equalization inputs (load_equalization)."""
+    when available, the members' fiscal equalization inputs (load_equalization) and the DZS
+    demographic series (load_demography; read from the build unless demo is given, None = none)."""
 
-    def __init__(self, reg, wide, res, susjedi, fi=None):
+    def __init__(self, reg, wide, res, susjedi, fi=None, demo=_LOAD):
         self.fi = fi
+        self.demo = load_demography() if demo is _LOAD else demo
         self.units = {u["oib"]: u for u in reg.to_dict("records")}
         self.oib_of = {u["sifra"]: o for o, u in self.units.items()}
         cols = ["oib", "year"] + [k for k in KEYS if k in wide.columns]
@@ -269,9 +313,44 @@ def equalization(data, oibs, vrsta):
     return {k: out[k] for k in FI_KEYS}
 
 
+def demography(data, oibs):
+    """Demographic trend of a group of units (module docstring), or None without dzs.parquet.
+    oibs in the order of clanice. The population series is kept for the group only; each member
+    keeps just its change. oznake ("sifra:pokazatelj:godina:symbol") lists the DZS symbols of the
+    cells used and is left out when there are none."""
+    d = data.demo
+    if not d:
+        return None
+    first, last = d["od"], d["do"]
+
+    def cell(o, key, year):                          # (number or None, symbol or None)
+        return d["celije"].get((o, key, year), (None, None))
+
+    def total(key, year):
+        vals = [cell(o, key, year)[0] for o in oibs]
+        return None if any(v is None for v in vals) else sum(vals)
+
+    def change(a, b):
+        return None if a is None or b is None or a <= 0 else round(b / a - 1, 3)
+
+    def diff(a, b):
+        return None if a is None or b is None else int(round(a - b))
+
+    series = [total(POPULATION, y) for y in d["godine"]]
+    used = [(POPULATION, y) for y in d["godine"]] + [(k, last) for k in DEMO_KEYS[1:]]
+    marks = sorted(f"{data.units[o]['sifra']}:{k}:{y}:{m}" for o in oibs for k, y in used if (m := cell(o, k, y)[1]))
+    return {"od": first, "do": last,
+            "stanovnici": [None if v is None else int(round(v)) for v in series],
+            "promjena": change(series[0], series[-1]),
+            "prirodna": diff(total("zivorodeni", last), total("umrli", last)),
+            "migracije": diff(total("doseljeni", last), total("odseljeni", last)),
+            "clanice": [change(cell(o, POPULATION, first)[0], cell(o, POPULATION, last)[0]) for o in oibs],
+            **({"oznake": marks} if marks else {})}
+
+
 def merge(data, oibs, max_members=MAX_MEMBERS):
     """Profile of the merged unit: type, peer group, population, a result per year and the
-    savings block for the last year. max_members=None: no size limit (Karta reforme)."""
+    savings, equalization, incentive and demography blocks. max_members=None: no size limit (Karta reforme)."""
     check(data, oibs, max_members)
     oibs = sorted(oibs, key=lambda o: data.units[o]["sifra"])   # same sums whatever the click order
     members = [data.units[o] for o in oibs]
@@ -288,7 +367,8 @@ def merge(data, oibs, max_members=MAX_MEMBERS):
             "stanovnici": pop, "zup_id": int(members[0]["zup_id"]), "godine": godine,
             "usteda": savings(data, oibs, godine[last]["uprava_pc"], vrsta, skupina, pop, last)
                       if last is not None else None,
-            "izravnanje": fi, "poticaj": incentive(data, oibs, fi)}
+            "izravnanje": fi, "poticaj": incentive(data, oibs, fi),
+            "demografija": demography(data, oibs)}
 
 
 def groups(data, max_members=MAX_MEMBERS):
@@ -339,7 +419,8 @@ def summary(result):
                      "zadnja": {k: last.get(k) for k in LAST_KEYS},
                      "usteda": result.get("usteda"),
                      "izravnanje": result.get("izravnanje"),
-                     "poticaj": result.get("poticaj")})
+                     "poticaj": result.get("poticaj"),
+                     "demografija": result.get("demografija")})
 
 
 def precompute(data, out_dir):

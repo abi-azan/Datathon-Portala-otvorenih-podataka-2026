@@ -60,6 +60,21 @@ RULE1_EXCLUDED = "pravilo1_iskljuceno"
 Z5_SHARE = 0.10
 EU_REVENUE = ["638", "6324"]
 
+# Fiscal equalization in ZO (pipeline/izravnanje_isplate.py, decided 4.11.): ZO adds back p_FI, the
+# amount of the MF decision (share x budget amount, p_FI_odluka) capped at the current-grant accounts
+# that can hold it, FI_ROOM = 6331 (633 - 6332) + 6352 + 6353. Without p_FI (no decision for the
+# year) it is 6353 as booked. Quality notes when the decision amount and the books disagree by more
+# than FI_NOTE_SHARE of the decision amount and more than FI_NOTE_MIN euros:
+# - izravnanje_nije_medu_pomocima: the decision amount exceeds FI_ROOM (booked under taxes, 611);
+#   ZO adds back only FI_ROOM;
+# - from FI_6353_FROM (the first year 6353 is in general use; in 2021-2024 nobody books it, so a
+#   note would mark every unit): izravnanje_na_drugom_kontu (6353 below the decision amount: booked
+#   on 6331 or 6352) and konto_6353_vise_od_odluke (6353 above it: other grants on 6353 as well).
+FI_ROOM = {"p_633": 1, "p_6332": -1, "p_6352": 1, "p_6353": 1}
+FI_NOTE_SHARE = 0.10
+FI_NOTE_MIN = 1_000.0
+FI_6353_FROM = 2025
+
 # Peer groups (PLAN §3.5): type and size class; each group has at least 15 units.
 SIZE_CLASSES = [(0, 2000, "do 2.000"), (2000, 5000, "2.000-5.000"), (5000, 10000, "5.000-10.000"),
                 (10000, 35000, "10.000-35.000"), (35000, 10**9, "35.000+")]
@@ -138,6 +153,43 @@ def grade(total):
     return 1, "ozbiljan pritisak"
 
 
+def equalization(r):
+    """Fiscal equalization that ZO adds back (FI_ROOM above): p_FI when the build gives it, else
+    account 6353 as booked."""
+    v = r.get("p_FI")
+    if v is None or (isinstance(v, float) and math.isnan(v)):
+        return _num(r, "p_6353")
+    return float(v)
+
+
+def equalization_paid(r):
+    """Equalization the unit received (context measure udio_fiskalnog_izravnanja): the decision
+    amount p_FI_odluka, uncapped, else account 6353 as booked."""
+    v = r.get("p_FI_odluka")
+    if v is None or (isinstance(v, float) and math.isnan(v)):
+        return _num(r, "p_6353")
+    return float(v)
+
+
+def equalization_notes(r, year=None):
+    """Quality notes on the equalization booking of one unit-year (FI_ROOM above)."""
+    decided = r.get("p_FI_odluka")
+    if decided is None or (isinstance(decided, float) and math.isnan(decided)):
+        return []
+    decided = float(decided)
+    tol = max(FI_NOTE_MIN, FI_NOTE_SHARE * decided)
+    room = max(0.0, sum(sign * _num(r, k) for k, sign in FI_ROOM.items()))
+    booked = _num(r, "p_6353")
+    if decided - room > tol:
+        return ["izravnanje_nije_medu_pomocima"]
+    if year is not None and year >= FI_6353_FROM:
+        if decided - booked > tol:
+            return ["izravnanje_na_drugom_kontu"]
+        if booked - decided > tol:
+            return ["konto_6353_vise_od_odluke"]
+    return []
+
+
 def aux(r, prev=None):
     """Per-year auxiliary quantities (PLAN §3.1) from one unit-year dict (prev: year t-1)."""
     g = lambda k: r.get(k) or 0.0
@@ -147,7 +199,7 @@ def aux(r, prev=None):
     principal = g("p_54")
     refinancing = principal > REFINANCING_SHARE * po and g("p_84") > 0 and po > 0
     principal_adj = max(0.0, principal - g("p_84")) if refinancing else principal
-    zo = g("p_6") + g("p_7") - g("p_63") + g("p_6353") - g("p_663") - g("p_dio611")
+    zo = g("p_6") + g("p_7") - g("p_63") + equalization(r) - g("p_663") - g("p_dio611")
     do_reported = _num(r, "b_23_D") + _num(r, "b_24_D") + _num(r, "b_26_D")
     excluded = rule1_excluded(r, prev)
     return {
@@ -261,7 +313,7 @@ def context(r, a, pop):
     return {
         **criterion_10(r),
         "udio_tekucih_pomoci": div(g("p_63") - kp63, a["PO"]),
-        "udio_fiskalnog_izravnanja": div(g("p_6353"), a["PO"]),
+        "udio_fiskalnog_izravnanja": div(equalization_paid(r), a["PO"]),
         "udio_pomoci": div(g("p_63"), g("p_6")),
         "udio_eu": div(g("p_638"), g("p_6")),
         "investicijska_stopa": div(g("p_4"), g("p_3") + g("p_4")),
@@ -311,7 +363,8 @@ def evaluate_unit(rows, pop):
             "zastavice": flags(series, t, r),
             "oznake": (["eu_projekt"] if (r.get("p_638") or 0) > 0.10 * (r.get("p_6") or 0) else [])
                       + (["refinanciranje"] if a["refinanciranje"] else []),
-            "kvaliteta": quality(r) + (["kredit_iskazan_kao_dospio"] if a["kredit_iskazan_dospio"] else []),
+            "kvaliteta": quality(r) + (["kredit_iskazan_kao_dospio"] if a["kredit_iskazan_dospio"] else [])
+                         + equalization_notes(r, t),
             **context(r, a, pop),
         }
     return out

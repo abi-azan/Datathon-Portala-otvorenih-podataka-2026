@@ -49,13 +49,13 @@ Uzorak (list `2025 EUR`):
 
 **Provjera povezivanja s PR-RAS-om [V/P].** Usporedio sam konto 611 u PR-RAS-u 2025. (porez na dohodak koji jedinica knjiži) sa stupcem "Porez" za stanovnike te jedinice. Spojilo se svih 556 jedinica.
 - Omjer je u medijanu 0,643 (p10 0,546, p90 0,706). Pag ima 0,713, a Bedenica 0,633.
-- Zagreb ima 0,942. To odgovara zbroju gradskog i županijskog udjela u porezu na dohodak (74 % + 20 %) [N: udjele potvrditi u čl. 5. Zakona o financiranju JLP(R)S].
+- Zagreb ima 0,942. Zagreb dobiva 100 % poreza na dohodak, pa je to 100 % umanjeno za povrate, a ne 74 % + 20 % (ispravak iz `docs/research/11` §4.3).
 - Moguće objašnjenje nižeg omjera kod ostalih jedinica su povrati iz godišnjeg obračuna [P].
 - Dva izvora dakle govore istu priču, a podatak Porezne uprave je ono što jedinica "ima na raspolaganju" prije podjele.
 
 **Što omogućuje [P]:**
 - **Profil:** neto dohodak po stanovniku. U Pagu je 9.574 €, a medijan jedinica 7.814 €. Raspon ide od 3.195 € (Ervenik) do 16.113 € (Funtana), uz nazivnik iz Popisa 2021. Prikazuje se i udio mirovina u dohotku.
-- **Turizam u kućanstvima:** redak "povremeni rad - imovina" po našem čitanju je paušal od iznajmljivanja turistima [N]. U Pagu ga plaća 1.087 osoba.
+- **Turizam u kućanstvima:** redak "povremeni rad - imovina" nije turistički paušal, nego porez s osnove najma i zakupa te otuđenja nekretnina, prema napomeni Porezne uprave na listu (ispravak iz `docs/research/11` §2.2). U Pagu ga plaća 1.087 osoba.
 - **Simulator:** zbroj dohotka članica daje dohodak po stanovniku spojene jedinice, a dohodak se može staviti uz kapacitet iz tablice izravnanja.
 - **Karta reforme:** sloj dohotka po stanovniku.
 - **AI:** nova činjenica u paketu (verifikator je provjerava kao i ostale brojke).

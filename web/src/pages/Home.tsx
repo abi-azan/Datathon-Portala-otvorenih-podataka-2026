@@ -50,7 +50,7 @@ export function Home({ index }: { index: IndexFile }) {
         }
         return YEARS[i + 1]
       })
-    }, 1100)
+    }, 1300) // the map cross-fades in 650 ms (GradeMap), then each year holds as long again
     return () => clearInterval(t)
   }, [playing])
 

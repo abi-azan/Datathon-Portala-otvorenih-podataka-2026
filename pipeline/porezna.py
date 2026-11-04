@@ -30,8 +30,12 @@ B. "Usporedba poreznih stopa prema odlukama JLS" (package PKG_STOPE), as decided
    not assumed from the unit's status. That table gives the cap for the unit's current
    status, so the same cap is used for 2025 and 2026.
 
+C. "Dohodak po JLS i razredima" (package PKG_DOHODAK): taxpayers below and above the threshold of
+   the higher bracket per unit, 2023 and 2024 (parse_razredi). Used only for the estimate of tax at
+   the highest rates (pipeline/kontekst.py highest_rates, docs/research/11 §2.3).
+
 The portal's download URLs send an ETag but answer 200 to If-None-Match and
-If-Modified-Since (checked 4.11.2026), so every online run downloads the five files again
+If-Modified-Since (checked 4.11.2026), so every online run downloads the six files again
 (about 1.8 MB together).
 
 Nothing here enters the score. Outputs:
@@ -40,6 +44,7 @@ Nothing here enters the score. Outputs:
   data/build/porezna_stope.parquet    oib, sifra, godina, niza, visa, niza_max,
       ispod_maksimuma, potrosnja_min, potrosnja_max, nekretnine_min, nekretnine_max,
       nekretnine_naplata (556 units x 2026 and 2025)
+  data/build/porezna_razredi.parquet  oib, sifra, godina, granica, ispod, iznad, red (556 x 2023, 2024)
 
 CLI:
   python -m pipeline.porezna [--offline]
@@ -60,6 +65,7 @@ PKG_STOPE = "https-porezna-uprava-gov-hr-hr-odluke-jls-4009"
 RAW_DIR = config.RAW / "porezna"
 OUT_DOHODAK = config.BUILD / "porezna_dohodak.parquet"
 OUT_STOPE = config.BUILD / "porezna_stope.parquet"
+OUT_RAZREDI = config.BUILD / "porezna_razredi.parquet"
 
 HRK_EUR = 7.53450   # fixed conversion rate (NN 85/22)
 
@@ -74,6 +80,7 @@ RESURSI = {
                                 "stope_dohodak_usporedba.xlsx"),
     "porezna_potrosnja": (PKG_STOPE, r"porez\w*-na-potro\w*.*?(\d{4})", "porez_potrosnja.xlsx"),
     "porezna_nekretnine": (PKG_STOPE, r"porez\w*-na-nekretnine.*?(\d{2,4})\D(\d{2,4})", "porez_nekretnine.xlsx"),
+    "porezna_dohodak_razredi": (PKG_DOHODAK, r"dohodak-po-jls-i-razredima-?(\d{4})\D(\d{4})", "dohodak_razredi.xlsx"),
 }
 
 # Kinds of income as labelled in column "Grupacija" -> code in the output
@@ -593,8 +600,49 @@ def omjer_611(doh, wide_path=config.BUILD / "wide.parquet", godina=2025):
     return m
 
 
+# ---------------------------------------------------------------- C. taxpayers by bracket
+
+COLS_RAZREDI = ["oib", "sifra", "godina", "granica", "ispod", "iznad", "red"]
+
+
+def _granica(v):
+    """'DO 50.400,00 EUR' -> 50400.0"""
+    m = re.search(r"(\d{1,3}(?:\.\d{3})+|\d+),(\d{2})", _s(v))
+    if not m:
+        raise ValueError(f"bracket header without an amount: {v!r}")
+    return float(m.group(1).replace(".", "") + "." + m.group(2))
+
+
+def parse_razredi(path, units):
+    """"Dohodak po JLS i razredima": taxpayers below and above the upper bracket's threshold, per
+    town or municipality and year (the annual assessment). Header rows give the years ("2023.",
+    "2024.") and the thresholds ("DO 50.400,00 EUR"); the key is county + name, matched with
+    spoji_nazive. An empty "above" cell is a small count the publisher does not show: kept as NaN.
+    Columns: COLS_RAZREDI."""
+    _, rows = _rows(path)
+    head, _ = _header(rows, "naziv jedinice")
+    years = {j: int(re.match(r"(\d{4})", _s(v)).group(1)) for j, v in enumerate(rows[head]) if re.match(r"^\d{4}\.?$", _s(v))}
+    limits = rows[head + 2]
+    recs, zup = [], None
+    for i, r in enumerate(rows[head + 3:], start=head + 4):
+        if r and re.match(r"^\d{2} - ", _s(r[0])):
+            zup = int(_s(r[0])[:2])
+        name = _s(r[1]) if len(r) > 1 else ""
+        if not name or zup is None:
+            continue
+        for j, y in years.items():
+            recs.append({"zup_id": zup, "naziv_pu": name, "godina": y, "granica": _granica(limits[j]),
+                         "ispod": _num(r[j]), "iznad": _num(r[j + 1]), "red": i})
+    raw = pd.DataFrame(recs)
+    m = spoji_nazive(list(raw[["zup_id", "naziv_pu"]].drop_duplicates().itertuples(index=False, name=None)), units)
+    if m.oib.isna().any() or m.oib.duplicated().any():
+        raise ValueError(f"bracket rows without a unique unit: {m[m.oib.isna() | m.oib.duplicated(keep=False)].values.tolist()}")
+    out = raw.merge(m[["zup_id", "naziv_pu", "oib", "sifra"]], on=["zup_id", "naziv_pu"], how="left")
+    return out[COLS_RAZREDI].sort_values(["godina", "sifra"]).reset_index(drop=True)
+
+
 def build(units, offline=False, fi=None, out_dir=config.BUILD):
-    """Fetch, parse, match and write both tables. Returns (dohodak, stope) with attrs.
+    """Fetch, parse, match and write the three tables. Returns (dohodak, stope) with attrs.
 
     units: data/build/units.csv. fi: izravnanje.ucitaj() (read here when not given)."""
     from . import izravnanje
@@ -602,8 +650,10 @@ def build(units, offline=False, fi=None, out_dir=config.BUILD):
     paths = dohvati(offline)
     doh = dohodak(paths["porezna_neto_dohodak"], units)
     st = stope(paths, units, izravnanje.ucitaj() if fi is None else fi)
+    rz = parse_razredi(paths["porezna_dohodak_razredi"], units)
     out_dir.mkdir(parents=True, exist_ok=True)
-    for df, cols, name in ((doh, COLS_DOHODAK, OUT_DOHODAK.name), (st, COLS_STOPE, OUT_STOPE.name)):
+    for df, cols, name in ((doh, COLS_DOHODAK, OUT_DOHODAK.name), (st, COLS_STOPE, OUT_STOPE.name),
+                           (rz, COLS_RAZREDI, OUT_RAZREDI.name)):
         out = df[cols].copy()
         out.attrs = {}                      # attrs hold DataFrames, which parquet cannot store
         out.to_parquet(out_dir / name, index=False)

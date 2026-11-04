@@ -78,12 +78,12 @@ def catalogue(generated, sources, year_from, year_to, exists=lambda path: True):
     datasets = [
         ("ocjene", "Ocjena financijske stabilnosti općina, gradova i županija",
          f"Ocjena 1-5 i bodovi 0-100 za svih 576 JLP(R)S po godini {year_from}.-{year_to}., pokazatelji I1-I5, "
-         "zastavice, rang u usporednoj skupini i svjedodžba svake jedinice s objašnjenjem.",
+         "zastavice, rang u usporednoj skupini i pregled svake jedinice s objašnjenjem.",
          ["financijska stabilnost", "proračun", "općine", "gradovi", "županije", "lokalna samouprava"],
          [_dist("rezultati.csv", "Svi rezultati, jedan red po jedinici i godini", "csv"),
           _dist("jedinice.json", "Indeks jedinica s ocjenama i bodovima po godini"),
           _dist("skupine.json", "Medijani usporednih skupina"),
-          _dist("jedinice/{slug}.json", "Svjedodžba jedne jedinice (slug iz jedinice.json)", download=False)]),
+          _dist("jedinice/{slug}.json", "Pregled jedne jedinice (slug iz jedinice.json)", download=False)]),
         ("sifrarnik", "Šifrarnik JLP(R)S",
          "Veza OIB, RKP, šifre DGU/DZS, naziva, vrste i županije za 576 jedinica lokalne i područne (regionalne) samouprave.",
          ["šifrarnik", "OIB", "RKP", "jedinice lokalne samouprave"],

@@ -108,7 +108,8 @@ def test_every_downloaded_source_is_a_listed_and_used_dataset():
     if not config.SOURCES_LOG.exists():
         pytest.skip("no data/raw/sources.json")
     log = json.loads(config.SOURCES_LOG.read_text(encoding="utf-8"))
-    keys = {re.sub(r"^(ckan_package_search)_\d+$", r"\1", k) for k in log}
+    # a source fetched in pages is one dataset; the metadata call of a PxWeb table belongs to its table
+    keys = {re.sub(r"_meta$", "", re.sub(r"^(ckan_package_search)_\d+$", r"\1", k)) for k in log}
     rows = dataset_rows()
     assert keys <= {r["kljuc"] for r in rows}, keys - {r["kljuc"] for r in rows}
     assert keys <= {r["kljuc"] for r in rows if r["koristi_se"] == "da"}

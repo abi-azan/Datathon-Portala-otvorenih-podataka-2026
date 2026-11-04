@@ -1,5 +1,6 @@
 import * as maplibregl from 'maplibre-gl'
 import { GRADES } from '../lib/format'
+import { SEQUENTIAL } from '../lib/views'
 
 // OpenFreeMap: free vector tiles from OpenStreetMap data, no key (openfreemap.org).
 export const BASEMAP = 'https://tiles.openfreemap.org/styles/positron'
@@ -15,6 +16,23 @@ export const BLANK: maplibregl.StyleSpecification = {
 /** Fill colour of a grade read from an expression (feature-state or property); white when missing. */
 export const gradeFill = (value: maplibregl.ExpressionSpecification) =>
   ['match', ['coalesce', value, 0], ...GRADES.flatMap((g) => [g.value, g.color]), '#ffffff'] as unknown as maplibregl.ExpressionSpecification
+
+/** Class of a context view's quintile 1-5 in `classFill`, kept apart from the grades 1-5. */
+export const SEQUENTIAL_CLASS = 10
+
+/** Fill colour of a class read from feature-state `key`: a grade 1-5, a quintile 11-15 on the
+ *  sequential ramp, white when missing. One expression for all views, so a switch of view is a
+ *  feature-state change like a change of year. */
+export const classFill = (key: string) =>
+  [
+    'match',
+    ['coalesce', ['feature-state', key], 0],
+    ...GRADES.flatMap((g) => [g.value, g.color]),
+    ...SEQUENTIAL.flatMap((c, i) => [SEQUENTIAL_CLASS + i + 1, c]),
+    '#ffffff',
+  ] as unknown as maplibregl.ExpressionSpecification
+
+export const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
 /** Make the basemap recede: white land, pale sea, Croatian place names where OSM has them,
  *  and no land-use fills that could be mistaken for the neutral grade colour. */

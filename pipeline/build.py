@@ -10,19 +10,61 @@ Outputs in data/build/:
   results.json       the same, nested per unit
   geo/jls.topo.json  simplified boundaries (layers jls, zupanije) for the map
   geo/susjedi.json   land neighbours and sea links per unit (merger simulator, Karta reforme)
+  dzs.parquet, dzs_kodovi.json   DZS PxWeb tables by unit (pipeline/pxweb.py; profile context)
+  porezna_dohodak.parquet, porezna_stope.parquet   Porezna uprava (pipeline/porezna.py; profile context)
   simulator/         merger simulator, every group of 2-4 neighbours (pipeline/merge.py)
   reforma/           Karta reforme, one file per threshold (pipeline/reforma.py)
 """
 import argparse
 import json
 import math
+import os
 import sys
 
 import pandas as pd
+import requests
 
-from . import config, geo, izravnanje, merge, methodology, mf, openness, population, reforma, sources, units
+from . import (config, geo, izravnanje, merge, methodology, mf, openness, population, porezna, pxweb, reforma,
+               sources, units)
 
 sys.stdout.reconfigure(encoding="utf-8")
+
+
+def _warn(msg):
+    """A warning that stays visible: on the console and, in GitHub Actions, as an annotation."""
+    print(f"UPOZORENJE: {msg}")
+    if os.environ.get("GITHUB_ACTIONS"):
+        print(f"::warning::{msg}")
+
+
+def context_layers(reg, offline):
+    """DZS PxWeb and Porezna uprava (profile context, not the score): data/build/dzs.parquet,
+    dzs_kodovi.json, porezna_dohodak.parquet, porezna_stope.parquet. Needs units.csv on disk.
+
+    When a server does not answer (after the retries in sources.py), the build falls back on the
+    last downloaded copy in data/raw (in CI: the cached data/raw of the previous run) and warns.
+    The source log keeps that copy's download time, so the published dates stay true. Without a
+    copy the build fails: profiles are never published without these layers."""
+    print("DZS PxWeb (procjene stanovništva, migracije, rođeni, umrli, turizam, dozvole) ...")
+    if not offline:
+        try:
+            pxweb.refresh()
+        except requests.RequestException as e:
+            if not pxweb.have_raw():
+                raise
+            _warn(f"DZS PxWeb nije odgovorio ({e}); koristim zadnju preuzetu kopiju iz data/raw/pxweb")
+    _, report = pxweb.build(reg)
+    pxweb.print_report(report)
+    print("Porezna uprava (neto dohodak, lokalne porezne stope; data.gov.hr) ...")
+    if not offline:
+        try:
+            porezna.dohvati(offline=False)
+        except requests.RequestException as e:
+            porezna.dohvati(offline=True)          # raises when there is no earlier copy
+            _warn(f"Porezna uprava (data.gov.hr) nije odgovorila ({e}); koristim zadnju preuzetu kopiju iz data/raw/porezna")
+    doh, st = porezna.build(reg, offline=True)     # files are in data/raw/porezna now
+    print(f"  dohodak: {doh.oib.nunique()} jedinica, godine {sorted(doh.godina.unique().tolist())};"
+          f" stope: {st.oib.nunique()} jedinica")
 
 def fetch_all(offline):
     mf_dir = config.RAW / "mf"
@@ -116,6 +158,8 @@ def main():
     wide.columns = [f"p_{c}" for c in wide.columns]
     bcols = [c for c in bil.columns if c.startswith("b_")]
     wide = wide.join(bil.set_index(["oib", "year"])[bcols], how="left").reset_index()
+    from . import izravnanje_isplate      # fiscal equalization from the MF decisions: ZO adds back p_FI
+    wide["p_FI"], wide["p_FI_odluka"] = izravnanje_isplate.za_build(wide, reg, offline=a.offline)
 
     rows = []
     results = {}
@@ -146,6 +190,9 @@ def main():
     for u in reg.to_dict("records"):
         nested.append({**u, "godine": {str(y): r for y, r in results[u["oib"]].items()}})
     (config.BUILD / "results.json").write_text(json.dumps(clean(nested), ensure_ascii=False), encoding="utf-8")
+
+    # before the simulator: merge.py reads data/build/dzs.parquet
+    context_layers(reg, a.offline)
 
     print("Simulator spajanja: sve skupine od 2-4 susjedne jedinice iste županije ...")
     susjedi = json.loads((config.BUILD / "geo" / "susjedi.json").read_text(encoding="utf-8"))

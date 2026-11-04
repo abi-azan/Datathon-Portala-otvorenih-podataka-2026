@@ -147,7 +147,30 @@ Promjena je −658.422 € (−9,2 %). Otprilike 88.000 € pada zato što Ivank
 
 - **Puni iznos, ne isplata.** Jedinica dobiva udio u stavci proračuna (čl. 9. st. 7.). Dok proračun za 2027. ne bude poznat, isplata se može procijeniti samo omjerom iz tablice gore, oko 55-70 % punog iznosa. Spajanje smanjuje zbroj punih iznosa, pa bi uz isti proračun udjeli svih ostalih jedinica malo porasli. To simulator ne prikazuje.
 - **Referentne vrijednosti se ne mijenjaju.** Spajanje mijenja prosjeke svih općina i gradova, ali malo. Kad Povljana prijeđe iz općina u gradove, referentna vrijednost za općine pada s 699,84 na 699,39 €, a za gradove raste s 686,33 na 686,42 €. Kod Ivankova je pomak veći: 701,50 i 685,02 €.
-- **Klase stopa** za spojenu jedinicu očitane su iz MF tablice. Zakon o porezu na dohodak nismo provjerili u službenom tekstu, a pročišćeni tekst na fiskai.hr navodi drukčije granice, pa se na njega ne oslanjamo. Za spajanje bez promjene vrste i bez prijelaza praga od 30.000 ili 35.000 stanovnika ovo ne igra ulogu.
+- **Klase stopa** za spojenu jedinicu provjerene su 5.11.2026. u službenom tekstu: Zakon o porezu na dohodak čl. 19.a st. 2. (NN 152/24) i Zakon o lokalnim porezima čl. 21. st. 1. (NN 115/16). MF-ova tablica i `stope_spojene` primjenjuju ista pravila (`docs/research/11` §3.1-3.3).
 - **Zakon ne uređuje spojenu jedinicu.** Pretpostavljamo da bi MF njezin kapacitet računao iz zbroja poreza na području svih članica, kao što ga računa za postojeće jedinice. Prijelazne odredbe nekog budućeg zakona o spajanju mogle bi to urediti drukčije.
 - **Godina.** Tablica za 2027. koristi porez 2021.-2025. i stanovnike iz Popisa 2021. Procjena vrijedi za tu godinu; za 2028. treba novu tablicu (ista funkcija, druga datoteka u `config.MF_FI_XLSX`).
 - Županije i Grad Zagreb nisu u simulatoru (pravilo 2), pa `za_spajanje` za njih javlja grešku.
+
+## Izravnanje u zakonskoj osnovici (ZO), od 4.11.2026.
+
+Zakonska osnovica (ZO, nazivnik pokazatelja I4 i zastavice Z2) oduzima sve pomoći (63) i vraća fiskalno izravnanje, jer se ono od 2021. ne smatra pomoći za potrebe zaduživanja (čl. 8.a st. 3., uveden NN 138/20). Do 4.11. vraćao se konto 6353, a on nije pouzdan: u 2021.-2023. ga nitko ne koristi, u 2024. samo jedna jedinica, a u 2025. 107 od 445 jedinica s pravom knjiži izravnanje drugdje (6331, Belišće na 6352). Odluka korisnika (opcija a): iznos se uzima iz godišnjih odluka MF-a. Kod je u `pipeline/izravnanje_isplate.py`, provjera se pokreće s `python -m pipeline.izravnanje_isplate --offline`.
+
+- **Izvori:** tablice udjela 2021.-2025. (list "Udjeli" su udjeli iz odluke; ključevi `mf_fi_tablica_<godina>`) i odluke 2021.-2025. (PDF-ovi su skenovi, pa je iznos iz točke II. prepisan u `PRORACUN`; ključevi `mf_fi_odluka_<godina>`). Proračun: 2.000.000.000 kn za 2021. i 2022. (265.445.616,83 € po tečaju 7,5345), 265.445.617 € za 2023. i 2024., 280.445.617 € za 2025.
+- **2019. i 2020.** izravnanje nije bilo pomoć nego udio od 17 % poreza na dohodak (NN 127/17 čl. 5. st. 2. t. 4.), isplaćen kroz raspodjelu poreza i knjižen u 611. Zbroj 6331 svih jedinica je 102 i 189 mil. € u 2019. i 2020., a u 2021. skoči na 396 mil. €. Za te godine ZO ostaje kako je bio.
+- **Iznos u ZO:** `p_FI = min(udio × proračun, 6331 + 6352 + 6353)`, gdje je 6331 = 633 − 6332. Gornja granica sprječava dvostruko brojanje kod jedinica koje izravnanje knjiže među porezima (Sveti Juraj na Bregu 2022.: 389.000 € izravnanja, 2.927 € na 6331). Granica djeluje kod 32, 44, 35, 22 i 12 jedinica u 2021.-2025.
+- **Udio izravnanja** u kontekstu (`udio_fiskalnog_izravnanja`) koristi iznos iz odluke bez granice.
+
+| Godina | Spareno | Udjeli odluke = tablica | Σ odluka | s pravom | provjera u PR-RAS-u |
+|---|---|---|---|---|---|
+| 2021. | 576/576 | 575/576 (jedan naziv bez para; razlika 0) | 265.445.617 € | 451 | 6331 = odluka (±1 %) kod 30 |
+| 2022. | 576/576 | 576/576 | 265.445.617 € | 455 | 6331 = odluka kod 75 (najčešći omjer 6331/udio je 265,4 mil.) |
+| 2023. | 576/576 | 576/576 | 265.445.617 € | 470 | 6331 = odluka kod 22 |
+| 2024. | 576/576 | 576/576 do 1,8·10⁻⁶ (list Udjeli ima 15 znamenki) | 265.445.617 € | 447 | 6331 = odluka kod 16 |
+| 2025. | 576/576 | 576/576 | 280.445.617 € | 445 | 6353 = odluka kod 270 od 338 koje knjiže na 6353; 64 više, 4 manje, 107 nula |
+
+Godina isplate je godina knjiženja: podudaranja s odlukom iste godine su češća nego s odlukom prethodne (2022.: 75 prema 29; 2025.: 0 s prethodnom).
+
+Oznake kvalitete (prag: više od 10 % iznosa iz odluke i više od 1.000 €): `izravnanje_nije_medu_pomocima` (odluka veća od 6331 + 6352 + 6353; 10 jedinica u 2025.), od 2025. `izravnanje_na_drugom_kontu` (6353 ispod odluke; 100) i `konto_6353_vise_od_odluke` (64).
+
+Učinak na 2025.: I4 se mijenja kod 430 jedinica, bodovi kod 330, ocjena kod 18 (sve naviše), Z2 se gasi kod 33 i ne pali nigdje. Povljana se ne mijenja (nema pravo na izravnanje).

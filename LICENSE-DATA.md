@@ -16,7 +16,7 @@ Tko dalje koristi naše podatke, navodi nas i **zadržava izjavu o izvornim poda
 1. Naše navođenje: "Fiskalna karta JLS, https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026, CC BY 4.0".
 2. Izjava o izvoru:
 
-> Sadrži informacije tijela javne vlasti u skladu s Otvorenom dozvolom (https://data.gov.hr/otvorena-dozvola): Ministarstvo financija, Državni zavod za statistiku, Državna geodetska uprava i Portal otvorenih podataka. Indeks razvijenosti: Ministarstvo regionalnoga razvoja i fondova Europske unije (razvoj.gov.hr). Poveznice na skupove i datumi zadnje izmjene: docs/skupovi-podataka.md. Izmjene: podaci su spojeni po jedinici i preračunati u pokazatelje, bodove i ocjene, a granice su pojednostavljene (mapshaper). Ocjene su izračun autora, a ne službena ocjena tih tijela.
+> Sadrži informacije tijela javne vlasti u skladu s Otvorenom dozvolom (https://data.gov.hr/otvorena-dozvola): Ministarstvo financija, Porezna uprava, Državni zavod za statistiku, Državna geodetska uprava, Portal otvorenih podataka i Državni ured za reviziju (izvješća o financijskim revizijama). Indeks razvijenosti: Ministarstvo regionalnoga razvoja i fondova Europske unije (razvoj.gov.hr). Poveznice na skupove i datumi zadnje izmjene: docs/skupovi-podataka.md. Izmjene: podaci su spojeni po jedinici i preračunati u pokazatelje, bodove i ocjene, a granice su pojednostavljene (mapshaper). Ocjene su izračun autora, a ne službena ocjena tih tijela.
 
 Ako i sami mijenjate podatke, naznačite i svoje izmjene. Ne predstavljajte rezultat kao službeni stav tijela javne vlasti, jer Otvorena dozvola to izričito ne dopušta.
 
@@ -26,7 +26,7 @@ Izvorni skupovi ostaju pod svojim uvjetima. Popis s poveznicama, dokazom licence
 
 | Izvor | Uvjeti |
 |---|---|
-| DZS (Popis 2021., granice), DGU (Upravne jedinice), katalog data.gov.hr | Otvorena dozvola |
+| DZS (Popis 2021., granice, PxWeb: stanovništvo, turizam, građevinske dozvole), Porezna uprava (dohodak, porezne stope), DGU (Upravne jedinice), katalog data.gov.hr | Otvorena dozvola |
 | Ministarstvo financija (PR-RAS, RAS-funkcijski, Bilanca) | licenca nije navedena; ponovna uporaba prema ZPPI (čl. 27. i 31.) uz uvjete Otvorene dozvole (Pravilnik NN 67/17, čl. 4.) |
 | MRRFEU (indeks razvijenosti) | uvjeti korištenja razvoj.gov.hr: prenošenje uz navođenje izvora |
 

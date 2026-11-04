@@ -2,9 +2,12 @@ import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, ExternalLink, Info,
 import { useEffect, useState } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
+import { PopulationEconomyCard } from '../components/PopulationEconomy'
+import { StatRow as Row } from '../components/StatRow'
 import { TrendChart } from '../components/TrendChart'
 import { CheckedText, SourcePanel } from '../components/Sources'
-import { HttpError, canMerge, loadGroups, loadSource, loadUnit, type GroupMedians, type SourceFile, type UnitDetail } from '../lib/data'
+import { UnitEqualizationCard } from '../components/UnitEqualization'
+import { HttpError, ZAGREB_SIFRA, canMerge, loadGroups, loadSource, loadUnit, type GroupMedians, type SourceFile, type UnitDetail } from '../lib/data'
 import { COMPONENTS, FLAGS, QUALITY, VRSTA, criterion10, eur, normalizeGradeLabels, num, pct } from '../lib/format'
 import { simulatorHref, unitHref } from '../lib/router'
 
@@ -226,6 +229,10 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
               />
             </div>
           </Card>
+
+          {/* context that does not enter the score (pipeline/kontekst.py) */}
+          {unit.stanovnistvo_gospodarstvo && <PopulationEconomyCard data={unit.stanovnistvo_gospodarstvo} />}
+          {unit.izravnanje && <UnitEqualizationCard e={unit.izravnanje} zagreb={unit.sifra === ZAGREB_SIFRA} />}
         </div>
 
         <aside className="flex flex-col gap-6">
@@ -356,7 +363,8 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           )}
 
           <p className="text-xs leading-relaxed text-muted">
-            Izvor: Ministarstvo financija, PR-RAS i Bilanca razine 22, {YEARS[0]}.–{year}.; DZS, Popis 2021. Šifra jedinice{' '}
+            Izvor: Ministarstvo financija, PR-RAS i Bilanca razine 22, {YEARS[0]}.–{year}.; DZS, Popis 2021. Kontekst uz ocjenu:
+            DZS (PxWeb), Porezna uprava i tablica fiskalnog izravnanja Ministarstva financija. Šifra jedinice{' '}
             {unit.sifra}, OIB {unit.oib}.{' '}
             <a href={reportHref(unit)} className="underline underline-offset-2 hover:text-ink">
               Prijavi grešku u podacima
@@ -365,21 +373,6 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
         </aside>
       </div>
     </main>
-  )
-}
-
-function Row({ label, value, median, hint }: { label: string; value: string; median?: string; hint?: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-hairline pb-2 last:border-0 last:pb-0">
-      <dt className="text-ink-2">
-        {label}
-        {hint && <span className="mt-0.5 block text-xs text-muted">{hint}</span>}
-      </dt>
-      <dd className="tabular shrink-0 text-right">
-        <span className="font-medium whitespace-nowrap">{value}</span>
-        {median && <div className="text-xs whitespace-nowrap text-muted">medijan usporedne skupine {median}</div>}
-      </dd>
-    </div>
   )
 }
 

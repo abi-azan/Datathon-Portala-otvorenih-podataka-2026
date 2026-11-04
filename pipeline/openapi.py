@@ -83,9 +83,9 @@ SCHEMAS = {
                   "properties": {"label": {"type": "string"}, "value": {"type": "string"}}},
     "Jedinica": {
         "type": "object",
-        "description": "Svjedodžba jedinice: šifre, struktura, sve godine, paket činjenica i objašnjenje.",
+        "description": "Pregled jedinice: šifre, struktura, sve godine, paket činjenica i objašnjenje.",
         "required": ["oib", "sifra", "slug", "naziv", "vrsta", "zupanija", "skupina", "stanovnici_2021", "godine",
-                     "susjedi"],
+                     "susjedi", "stanovnistvo_gospodarstvo", "izravnanje", "porezne_stope"],
         "properties": {
             "oib": {"type": "string", "pattern": "^[0-9]{11}$"},
             "rkp": {"type": "string", "description": "Broj u Registru proračunskih korisnika (Ministarstvo financija)."},
@@ -129,6 +129,120 @@ SCHEMAS = {
                     "nepoznate": {"type": "array", "items": {"type": "string"}},
                     "sadrzaj": {"type": "array", "items": {"type": "string"},
                                 "description": "Neslaganja sa činjenicama: najslabija sastavnica, jake strane, ograničenje ocjene."}}}}},
+            "stanovnistvo_gospodarstvo": {"$ref": "#/components/schemas/StanovnistvoGospodarstvo"},
+            "izravnanje": {"$ref": "#/components/schemas/IzravnanjeJedinice"},
+            "porezne_stope": {
+                "type": ["object", "null"],
+                "description": "Lokalne porezne stope prema odlukama jedinica (Porezna uprava), po godini. null za županije, "
+                               "koje te stope ne određuju.",
+                "additionalProperties": {"$ref": "#/components/schemas/PorezneStope"}},
+        },
+    },
+    "KontekstPokazatelj": {
+        "type": "object",
+        "required": ["godina", "vrijednost", "oznaka", "broj", "medijan", "n_medijan"],
+        "properties": {
+            "godina": {"type": "integer"},
+            "od_godine": {"type": "integer", "description": "Samo za promjenu stanovništva: prva godina niza."},
+            "vrijednost": {**NUM, "description": "null kad podatka nema ili je tajan (oznaka z)."},
+            "oznaka": {"enum": ["-", "z", None],
+                       "description": "Simbol DZS-a: \"-\" pojava ne postoji (broji se kao 0), \"z\" tajnost (vrijednost je null)."},
+            "broj": {**NUM, "description": "Iznos prije dijeljenja: razlika stanovnika, broj rođenih minus umrlih, "
+                                           "doseljenih minus odseljenih, noćenja, zgrada s dozvolom, neto dohodak ili mirovine (€)."},
+            "medijan": {**NUM, "description": "Medijan usporedne skupine; null za Grad Zagreb, koji skupinu nema."},
+            "n_medijan": {"type": "integer", "minimum": 0, "description": "Broj jedinica skupine s vrijednošću."},
+        },
+    },
+    "StanovnistvoGospodarstvo": {
+        "type": "object",
+        "description": "Stanovništvo i gospodarstvo (pipeline/kontekst.py; DZS PxWeb i Porezna uprava). Ne ulazi u ocjenu. "
+                       "Procjene stanovništva služe samo za kretanje; iznosi po stanovniku računaju se s Popisom 2021.",
+        "required": ["skupina", "pokazatelji", "procjene", "uzivo", "izvori"],
+        "properties": {
+            "skupina": {**STR, "description": "Usporedna skupina medijana; null za Grad Zagreb."},
+            "pokazatelji": {
+                "type": "object",
+                "required": ["promjena_stanovnistva", "prirodni_prirast", "neto_migracija", "nocenja_po_stanovniku",
+                             "dozvole_na_1000", "neto_dohodak_pc", "udio_mirovina"],
+                "description": "promjena_stanovnistva: procjena zadnje godine / procjena 2021. − 1 (SP31_2); prirodni_prirast i "
+                               "neto_migracija: (živorođeni − umrli) i (doseljeni − odseljeni) na 1.000 stanovnika (SV131, "
+                               "SV331, SM31); nocenja_po_stanovniku: noćenja u komercijalnom smještaju (BS_TU19); "
+                               "dozvole_na_1000: zgrade s izdanom građevinskom dozvolom (PX14); neto_dohodak_pc: neto dohodak "
+                               "stanovnika (Porezna uprava); udio_mirovina: udio mirovina u njemu.",
+                "additionalProperties": {"$ref": "#/components/schemas/KontekstPokazatelj"}},
+            "procjene": {"type": "object", "description": "Procjena stanovništva 31.12. po godini (SP31_2), od 2021.",
+                         "additionalProperties": NUM},
+            "uzivo": {"type": ["object", "null"],
+                      "description": "Upit koji preglednik šalje DZS-u za niz procjena (POST na url, tijelo je upit, "
+                                     "Content-Type text/plain; odgovor json-stat2).",
+                      "required": ["tablica", "kod", "url", "upit"],
+                      "properties": {"tablica": {"type": "string"}, "kod": {"type": "string"},
+                                     "url": {"type": "string", "pattern": "^https://web\\.dzs\\.hr/"},
+                                     "upit": {"type": "object", "required": ["query", "response"]}}},
+            "izvori": {"type": "array", "items": {
+                "type": "object", "required": ["izdavatelj", "naziv", "url", "azurirano"],
+                "properties": {"izdavatelj": {"type": "string"}, "naziv": STR, "tablica": STR,
+                               "url": {"type": "string", "pattern": "^https://"},
+                               "azurirano": {**STR, "description": "Datum ažuriranja prema izdavatelju (PxWeb ili Last-Modified)."},
+                               "preuzeto": STR}}},
+        },
+    },
+    "IzravnanjeJedinice": {
+        "type": ["object", "null"],
+        "description": "Fiskalno izravnanje jedinice (Zakon o financiranju JLP(R)S, čl. 8. i 9.; pipeline/kontekst.py) iz "
+                       "tablice Ministarstva financija za godinu godina. Isplata = puni iznos / zbroj punih iznosa svih "
+                       "jedinica × iznos u državnom proračunu (za proracun_godina; za godinu tablice još nije utvrđen).",
+        "required": ["godina", "proracun_godina", "iznos_proracuna", "vrsta_reference", "kapacitet_pc", "referentna_pc",
+                     "puni_iznos", "udio", "isplata", "stopa", "uz_najvise_stope"],
+        "properties": {
+            "godina": {"type": "integer", "description": "Godina tablice MF-a."},
+            "proracun_godina": {"type": "integer"},
+            "iznos_proracuna": {"type": "number", "description": "Iznos za izravnanje u državnom proračunu, €."},
+            "vrsta_reference": {"enum": ["opcina", "grad", "zupanija"],
+                                "description": "Čija referentna vrijednost vrijedi; Grad Zagreb se mjeri s gradovima."},
+            "kapacitet_pc": {"type": "number", "description": "Kapacitet poreznih prihoda po stanovniku, € (uz najvišu dopuštenu stopu)."},
+            "referentna_pc": {"type": "number", "description": "Referentna vrijednost po stanovniku, €."},
+            "puni_iznos": {"type": "number", "minimum": 0, "description": "Puni iznos po formuli, €; nije iznos koji jedinica prima."},
+            "udio": {"type": "number", "minimum": 0, "maximum": 1},
+            "isplata": {"type": "number", "minimum": 0, "description": "Procjena godišnje isplate, €."},
+            "stopa": {"type": ["object", "null"], "required": ["godina", "niza", "niza_max", "ispod_maksimuma"],
+                      "description": "Niža stopa poreza na dohodak i najviša koju jedinica smije odrediti; null za županije.",
+                      "properties": {"godina": {"type": "integer"}, "niza": NUM, "visa": NUM, "niza_max": NUM,
+                                     "visa_max": {**NUM, "description": "niza_max + 10 postotnih bodova (čl. 19.a st. 2. "
+                                                                       "Zakona o porezu na dohodak)."},
+                                     "ispod_maksimuma": {"type": ["boolean", "null"]}}},
+            "uz_najvise_stope": {
+                "type": ["object", "null"],
+                "description": "Procjena koliko bi proračun jedinice godišnje imao više uz najviše dopuštene stope poreza na "
+                               "dohodak (docs/research/11 §2.5). Samo za jedinice kojima je niža stopa ispod najviše; inače "
+                               "null. Ne ulazi u ocjenu. Porez stanovnika (Porezna uprava) samo na plaće, mirovine, obrt i "
+                               "drugi dohodak, koji plaćaju lokalnu stopu; dio višeg razreda iz broja obveznika iznad granice "
+                               "(Pareto, α 2); udio jedinice: konto 611 / porez stanovnika iste godine.",
+                "required": ["godina_stopa", "godina_poreza", "procjena", "od", "do", "niza", "visa", "niza_max", "visa_max"],
+                "properties": {
+                    "godina_stopa": {"type": "integer"}, "godina_poreza": {"type": "integer"},
+                    "procjena": {"type": "number", "minimum": 0, "description": "€ godišnje, proračun jedinice."},
+                    "od": {"type": "number", "minimum": 0,
+                           "description": "Donja granica: najmanja procjena (bez višeg razreda; Pareto α 3, 2, 1,6) umanjena za 15 %."},
+                    "do": {"type": "number", "minimum": 0, "description": "Gornja granica: najveća od tih procjena."},
+                    "niza": {"type": "number"}, "visa": {"type": "number"},
+                    "niza_max": {"type": "number"}, "visa_max": {"type": "number"},
+                    "porez_lokalne_vrste": {"type": "number", "description": "Porez stanovnika na plaće, mirovine, obrt i drugi dohodak, €."},
+                    "udio_u_proracunu": {"type": "number", "description": "Konto 611 jedinice / porez stanovnika."},
+                    "udio_visi_razred": {"type": "number", "description": "Udio obveznika iznad granice višeg razreda (zadnja godina tablice razreda)."},
+                }},
+        },
+    },
+    "PorezneStope": {
+        "type": "object",
+        "properties": {
+            "niza": NUM, "visa": NUM,
+            "niza_max": {**NUM, "description": "Najviša niža stopa koju jedinica smije odrediti (tablica izravnanja MF-a)."},
+            "ispod_maksimuma": {"type": ["boolean", "null"]},
+            "potrosnja_min": NUM, "potrosnja_max": NUM,
+            "nekretnine_min": {**NUM, "description": "Porez na nekretnine, €/m²; min i max kad odluka daje raspon."},
+            "nekretnine_max": NUM,
+            "nekretnine_naplata": {**STR, "description": "Tko naplaćuje porez na nekretnine: JLS ili PU (Porezna uprava)."},
         },
     },
     "Skupine": {
@@ -154,11 +268,11 @@ SCHEMAS = {
             "licenca_dokaz": {"type": ["string", "null"], "pattern": "^https://",
                               "description": "Gdje izdavatelj navodi licencu ili uvjete (metapodaci, uvjeti korištenja)."},
             "zadnja_izmjena": {"type": ["string", "null"], "format": "date",
-                               "description": "Datum zadnje izmjene kako ga navodi izdavatelj: HTTP Last-Modified "
-                                              "datoteke ili datum revizije u metapodacima. Otvorena dozvola traži da se "
+                               "description": "Datum zadnje izmjene kako ga navodi izdavatelj: datum ažuriranja tablice u "
+                                              "PxWeb-u DZS-a, HTTP Last-Modified datoteke ili datum revizije u metapodacima. Otvorena dozvola traži da se "
                                               "navede. Prazno za izvore koji se stalno mijenjaju (katalog portala, OSM): "
                                               "vrijedi stanje pri preuzimanju."},
-            "pristup": {"type": "string", "enum": ["API (CKAN)", "API (OGC WFS)", "datoteka (XLSX/ZIP)",
+            "pristup": {"type": "string", "enum": ["API (CKAN)", "API (OGC WFS)", "API (PxWeb)", "datoteka (XLSX/ZIP)",
                                                    "datoteka (PDF)", "vektorske pločice", "model"]},
             "uloga": STR,
             "koristi_se": {"type": "boolean", "description": "false: planirano, još nije u kodu."},
@@ -179,7 +293,7 @@ SCHEMAS = {
                        "Tokovi i stanja zbrajaju se po godini, a ocjena se računa istom metodologijom kao za "
                        "postojeće jedinice. Pravilo 1 primjenjuje se po članici prije zbrajanja.",
         "required": ["clanice", "vrsta", "skupina", "stanovnici", "godina", "ocjene", "bodovi", "zadnja", "usteda",
-                     "izravnanje", "poticaj"],
+                     "izravnanje", "poticaj", "demografija"],
         "properties": {
             "clanice": {"type": "array", "minItems": 2, "maxItems": 4,
                         "items": {"type": "string", "pattern": "^[0-9]{5}$"},
@@ -257,6 +371,33 @@ SCHEMAS = {
                     "omjer_isplate": {**NUM, "description": "Stavka proračuna za 2026. / zbroj punih iznosa u tablici MF-a."},
                 },
             },
+            "demografija": {
+                "type": ["object", "null"],
+                "description": "Kretanje stanovništva (pipeline/merge.py demography, odluka P4): procjene stanovništva DZS-a "
+                               "članica zbrojene po godini, prirodna promjena i migracijski saldo za zadnju godinu. Ne ulazi "
+                               "u ocjenu: ocjena i iznosi po stanovniku koriste Popis 2021. Simbol DZS-a \"-\" (pojave "
+                               "nema) broji se kao 0; drugi prazni podatak (npr. \"z\", tajno) daje null, pa je null i "
+                               "zbroj. Stopa na 1.000 stanovnika je prirodna (ili migracije) / stanovnici (Popis 2021.) "
+                               "× 1000. null kad dzs.parquet nije izgrađen.",
+                "required": ["od", "do", "stanovnici", "promjena", "prirodna", "migracije", "clanice"],
+                "properties": {
+                    "od": {"type": "integer", "description": "Prva godina niza (2021.)."},
+                    "do": {"type": "integer", "description": "Zadnja godina niza; godina prirodne promjene i migracija."},
+                    "stanovnici": {"type": "array", "minItems": 2, "items": {"type": ["integer", "null"], "minimum": 0},
+                                   "description": "Zbroj procjena stanovništva članica sredinom godine, za svaku godinu od "
+                                                  "od do do."},
+                    "promjena": {**NUM, "description": "stanovnici[zadnja] / stanovnici[prva] − 1, udio, na 3 decimale."},
+                    "prirodna": {**INT, "description": "Živorođeni − umrli u godini do, zbroj članica."},
+                    "migracije": {**INT, "description": "Doseljeni − odseljeni u godini do, zbroj članica (unutarnje i "
+                                                        "vanjske migracije)."},
+                    "clanice": {"type": "array", "items": NUM,
+                                "description": "Promjena stanovništva svake članice od od do do, udio, istim redom kao "
+                                               "clanice."},
+                    "oznake": {"type": "array", "items": {"type": "string", "pattern": "^[0-9]{5}:[a-z_]+:[0-9]{4}:.+$"},
+                               "description": "Simboli DZS-a u korištenim ćelijama, \"sifra:pokazatelj:godina:simbol\" "
+                                              "(npr. \"04235:zivorodeni:2024:-\"); izostaje kad ih nema."},
+                },
+            },
         },
     },
     "Izravnanje": {
@@ -300,12 +441,18 @@ SCHEMAS = {
                        "formulom, ponderom i pragovima, granice ocjena, scenariji pondera, pravila, zastavice, usporedne "
                        "skupine, AI prompt i opis provjere, simulator i ograničenja.",
         "required": ["godina", "prozor", "velicine", "pokazatelji", "ocjene", "scenariji", "pravila", "zastavice", "ai",
-                     "simulator", "ogranicenja"],
+                     "simulator", "ogranicenja", "stanovnistvo_gospodarstvo", "izravnanje_jedinice"],
         "properties": {
             "godina": {"type": "integer"},
             "pokazatelji": {"type": "array", "items": {"type": "object", "required": ["oznaka", "formula", "ponder", "pragovi"]}},
             "ai": {"type": "object", "required": ["opis", "sustav", "pravila", "primjer", "prompt_sha256"]},
             "kriterij_10": {"type": "string", "description": "Opis kriterija od 10 % (Z5) i kako se računa."},
+            "stanovnistvo_gospodarstvo": {"type": "string",
+                                          "description": "Kartica Stanovništvo i gospodarstvo u pregledu jedinice: pokazatelji, "
+                                                         "izvori, simboli DZS-a i medijani. Ne ulazi u ocjenu."},
+            "izravnanje_jedinice": {"type": "string",
+                                    "description": "Kartica Fiskalno izravnanje u pregledu jedinice: kapacitet, referentna "
+                                                   "vrijednost, isplata i stopa poreza na dohodak."},
             "simulator": {"type": "object", "required": ["usteda", "poticaj", "izravnanje", "reforma"]},
         },
     },
@@ -314,7 +461,8 @@ SCHEMAS = {
         "description": "Vidljiva provjera brojki (PLAN §5, pipeline/provenance.py): za zadnju godinu formula svakog "
                        "pokazatelja I1-I5, pomoćne veličine po godinama i svi ulazni iznosi s mjestom u datotekama "
                        "Ministarstva financija (PR-RAS: radna knjiga u ZIP-u, list i redak; Bilanca: list i redak i "
-                       "stupac). Iz samih ulaza dobivaju se objavljeni pokazatelji (tests/test_provenance.py).",
+                       "stupac; fiskalno izravnanje: tablica odluke MF-a za tu godinu, list, redak i stupac udjela, uz "
+                       "iznos u proračunu). Iz samih ulaza dobivaju se objavljeni pokazatelji (tests/test_provenance.py).",
         "required": ["godina", "prozor", "pokazatelji", "velicine", "izvori", "konta", "ulazi"],
         "properties": {
             "godina": {"type": "integer"},
@@ -328,16 +476,26 @@ SCHEMAS = {
                                                                     "velicine": {"type": "array", "items": {"type": "string"}}}}},
             "velicine": {"type": "object", "additionalProperties": {
                 "type": "object", "required": ["formula", "godine"],
-                "properties": {"formula": {"type": "string"}, "godine": {"type": "object", "additionalProperties": NUM}}}},
+                "properties": {"formula": {"type": "string"}, "godine": {"type": "object", "additionalProperties": NUM},
+                               "izvor": {"type": "object", "additionalProperties": {
+                                   "enum": ["odluka", "konto_6353", "porez_na_dohodak"]},
+                                   "description": "Samo FI: odakle je iznos u godini. odluka = udio iz odluke MF-a × iznos "
+                                                  "u proračunu (najviše 6331 + 6352 + 6353); konto_6353 = nema odluke, "
+                                                  "konto 6353 kako je knjižen; porez_na_dohodak = do 2020. izravnanje je "
+                                                  "bilo udio u porezu na dohodak (611), pa se ne dodaje."}}}},
             "izvori": {"type": "object", "additionalProperties": {"type": "object", "properties": {
                 "datoteka": STR, "list": STR}}},
             "konta": {"type": "object", "additionalProperties": {"type": "object", "required": ["izvor", "za"], "properties": {
-                "naziv": STR, "izvor": {"enum": ["PR-RAS", "Bilanca"]},
+                "naziv": STR, "izvor": {"enum": ["PR-RAS", "Bilanca", "Odluka MF-a"]},
                 "za": {"type": "array", "items": {"type": "string"}, "description": "Veličine i pokazatelji koji koriste konto."}}}},
             "ulazi": {"type": "array", "items": {"type": "object", "required": ["konto", "godina", "iznos", "redak"], "properties": {
                 "konto": {"type": "string"}, "godina": {"type": "integer"}, "iznos": {"type": "number"},
                 "redak": {"type": ["integer", "null"], "description": "Redak u Excelu."},
-                "stupac": {"type": ["string", "null"], "description": "Stupac u Excelu (Bilanca)."}}},
+                "stupac": {"type": ["string", "null"], "description": "Stupac u Excelu (Bilanca, Odluka MF-a)."},
+                "datoteka": {"type": "string", "description": "Odluka MF-a: tablica udjela za tu godinu (XLSX s mfin.gov.hr)."},
+                "list": {"type": "string", "description": "Odluka MF-a: list tablice (Udjeli ili Izračun)."},
+                "udio": {"type": "number", "description": "Odluka MF-a: udio jedinice u sredstvima izravnanja."},
+                "proracun": {"type": "number", "description": "Odluka MF-a: iznos u državnom proračunu za tu godinu, €."}}},
                       "description": "Ulazni iznosi u eurima; konta s iznosom 0 nisu navedena."},
             "napomena": {"type": "string"},
         },
@@ -363,7 +521,7 @@ SCHEMAS = {
                        "Rezultat spojene skupine računa se istom funkcijom kao u simulatoru spajanja (pipeline/merge.py), "
                        "bez gornje granice broja članica.",
         "required": ["clanice", "naziv", "vrsta", "zup_id", "stanovnici", "skupina", "ocjene_prije", "ocjena",
-                     "ocjena_rijec", "bodovi", "rang", "n_skupine", "usteda", "izravnanje", "poticaj"],
+                     "ocjena_rijec", "bodovi", "rang", "n_skupine", "usteda", "izravnanje", "poticaj", "demografija"],
         "properties": {
             "clanice": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[0-9]{5}$"},
                         "description": "Šifre DGU članica, poredane; jedna šifra za jedinicu koja se nije spajala."},
@@ -388,6 +546,8 @@ SCHEMAS = {
                            "description": "Fiskalno izravnanje kao u simulatoru; null za jedinicu koja se nije spajala."},
             "poticaj": {"$ref": "#/components/schemas/Spajanje/properties/poticaj",
                         "description": "Poticaj po NN 88/2022 kao u simulatoru; null za jedinicu koja se nije spajala."},
+            "demografija": {"$ref": "#/components/schemas/Spajanje/properties/demografija",
+                            "description": "Kretanje stanovništva kao u simulatoru, i za jedinicu koja se nije spajala."},
         },
     },
     "Reforma": {
@@ -399,7 +559,7 @@ SCHEMAS = {
                        "ispod praga nema više susjeda u županiji.",
         "required": ["prag", "godina", "n_prije", "n_poslije", "stanovnika_u_spojenima", "n_spojenih_skupina",
                      "n_ispod_praga", "usteda_realno_do_zbroj", "razmjer_zbroj", "jaz_bez_spajanja_zbroj",
-                     "poticaj_godisnje_zbroj", "jedinice"],
+                     "poticaj_godisnje_zbroj", "demografija", "jedinice"],
         "properties": {
             "prag": {"type": "integer", "enum": [2500, 5000, 10000], "description": "Prag stanovnika (Popis 2021.)."},
             "godina": {"type": "integer", "description": "Godina ocjena i uštede."},
@@ -429,6 +589,23 @@ SCHEMAS = {
             "izravnanje_isplata_ostale_promjena": {"type": "number",
                                                    "description": "Promjena isplate jedinica koje se nisu spajale, €: "
                                                                   "uvijek suprotna prethodnoj, jer je iznos u proračunu fiksan."},
+            "demografija": {
+                "type": ["object", "null"],
+                "description": "Promjena stanovništva (procjene DZS-a, zbroj) od od do do za sve spojene skupine zajedno "
+                               "i za jedinice koje se nisu spajale. Ne ulazi u ocjenu. null bez dzs.parquet.",
+                "required": ["od", "do", "spojene", "ostale"],
+                "properties": {
+                    "od": {"type": "integer"}, "do": {"type": "integer"},
+                    "spojene": {"type": ["object", "null"], "required": ["stanovnici_od", "stanovnici_do", "promjena"],
+                          "properties": {"stanovnici_od": {"type": "integer"}, "stanovnici_do": {"type": "integer"},
+                                         "promjena": NUM},
+                                "description": "Spojene skupine (2 ili više članica)."},
+                    "ostale": {"type": ["object", "null"], "required": ["stanovnici_od", "stanovnici_do", "promjena"],
+                          "properties": {"stanovnici_od": {"type": "integer"}, "stanovnici_do": {"type": "integer"},
+                                         "promjena": NUM},
+                               "description": "Jedinice koje se nisu spajale."},
+                },
+            },
             "jedinice": {"type": "array", "items": {"$ref": "#/components/schemas/ReformaJedinica"}},
         },
     },
@@ -453,8 +630,8 @@ def spec(generated):
             "summary": "Ocjena financijske stabilnosti 576 općina, gradova i županija, kao statične datoteke.",
             "description": (
                 "Statični API bez ključa i bez poslužitelja (GitHub Pages, CORS otvoren). Svi podaci izračunati su iz "
-                "otvorenih podataka Ministarstva financija (PR-RAS, Bilanca), DZS-a (Popis 2021., INSPIRE WFS) i "
-                "Portala otvorenih podataka (CKAN API). Popis svih skupova s licencama je skupovi.json. "
+                "otvorenih podataka Ministarstva financija (PR-RAS, Bilanca, fiskalno izravnanje), DZS-a (Popis 2021., "
+                "INSPIRE WFS, PxWeb API), Porezne uprave i Portala otvorenih podataka (CKAN API). Popis svih skupova s licencama je skupovi.json. "
                 "Metodologija: PLAN §3 u repozitoriju. "
                 f"Datoteke su generirane {generated}."),
             "license": {"name": "CC BY 4.0", "identifier": "CC-BY-4.0"},
@@ -468,7 +645,8 @@ def spec(generated):
             "/jedinice/{slug}.json": {
                 "parameters": [{"name": "slug", "in": "path", "required": True, "schema": {"type": "string"},
                                 "description": "Slug jedinice iz jedinice.json, npr. grad-zagreb."}],
-                **_get("Svjedodžba jedinice", "Sve godine, paket činjenica, objašnjenje i susjedi jedne jedinice.",
+                **_get("Pregled jedinice", "Sve godine, paket činjenica, objašnjenje i susjedi jedne jedinice, uz kontekst "
+                       "koji ne ulazi u ocjenu: stanovništvo i gospodarstvo, fiskalno izravnanje i lokalne porezne stope.",
                        "Jedinica"),
             },
             "/jedinice/{slug}/izvor.json": {

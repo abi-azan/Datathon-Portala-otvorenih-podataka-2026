@@ -1,6 +1,6 @@
 # Video (najviše 3 minute): scenarij v2
 
-Nacrt noćne smjene od 3.11., na temelju PLAN §10 ("Svjedodžba za vašu općinu", vrhunac "Spoji pa vidi"). **v2 (4.11. noću):** simulator, Karta reforme i klik na brojku sada postoje, pa su rezervni kadrovi maknuti, a brojke u kadrovima 4 i 5 su stvarne. Pravila traže da video obuhvati 7 elemenata; tablica na dnu provjerava je li svaki pokriven.
+Nacrt noćne smjene od 3.11., na temelju PLAN §10 (vrhunac "Spoji pa vidi"). **v2 (4.11. noću):** simulator, Karta reforme i klik na brojku sada postoje, pa su rezervni kadrovi maknuti, a brojke u kadrovima 4 i 5 su stvarne. Pravila traže da video obuhvati 7 elemenata; tablica na dnu provjerava je li svaki pokriven.
 
 Naracija ima oko 400 riječi, što je oko 2:50 uz smirenu brzinu (oko 140 riječi u minuti). Brojke su iz trenutnog builda (2025.) i treba ih provjeriti prije snimanja.
 
@@ -25,12 +25,12 @@ Naracija ima oko 400 riječi, što je oko 2:50 uz smirenu brzinu (oko 140 riječ
 **Naracija:**
 > Fiskalna karta je za građane, novinare, vijećnike i ministarstvo. Svaka jedinica dobiva ocjenu od jedan do pet, iz službenih podataka i uz usporedbu sa sličnima. Ovo nije rang-lista. Mjeri financijsku održivost, a ne kvalitetu upravljanja.
 
-## 0:40-1:25 Ana traži svoju općinu (svjedodžba)
+## 0:40-1:25 Ana traži svoju općinu (pregled jedinice)
 
-**Kadar:** pretraga, upisuje se "povlj"; zatim svjedodžba Općine Povljana.
+**Kadar:** pretraga, upisuje se "povlj"; zatim pregled Općine Povljana.
 
 **Naracija:**
-> Ana živi u Povljani na Pagu. Upiše ime i dobije svjedodžbu: ocjena dva, pod pritiskom. Prošle godine bila je pet. Zašto? Ocjenu najviše spuštaju dospjele neplaćene obveze: milijun i četrdeset šest tisuća eura, gotovo polovina godišnjih rashoda. Kod sličnih općina medijan je dva posto.
+> Ana živi u Povljani na Pagu. Upiše ime i otvori se pregled njezine općine: ocjena dva, pod pritiskom. Prošle godine bila je pet. Zašto? Ocjenu najviše spuštaju dospjele neplaćene obveze: milijun i četrdeset šest tisuća eura, gotovo polovina godišnjih rashoda. Kod sličnih općina medijan je dva posto.
 
 **Kadar:** "Ukratko" s oznakom "AI tekst · Gemma 4 31B · N/N brojki provjereno". Klik na "1.045.908 €" otvara "Kako je izračunato": DO = 23 D + 24 D + 26 D, s ćelijama LU324 i MA324 na listu 2025 Bilance i rashodima poslovanja iz `13 Zadarska.xlsx`, redak 156.
 
@@ -44,7 +44,7 @@ Naracija ima oko 400 riječi, što je oko 2:50 uz smirenu brzinu (oko 140 riječ
 
 ## 1:25-2:15 Spoji pa vidi (simulator i Karta reforme)
 
-**Kadar:** s Povljanine svjedodžbe "Simuliraj spajanje sa susjedima", pa klik na Pag na karti (`#/simulator?j=05738,03166`). Ploča prije i poslije: ocjena 5 i "9. od 21 u skupini gradovi 2.000-5.000", tablica u eurima, poruka "Dug ne nestaje spajanjem…", ušteda "0 – 18.045 € godišnje" i okvir "Jaz koji postoji i bez spajanja: 1.400.511 €".
+**Kadar:** s pregleda Povljane "Simuliraj spajanje sa susjedima", pa klik na Pag na karti (`#/simulator?j=05738,03166`). Ploča prije i poslije: ocjena 5 i "9. od 21 u skupini gradovi 2.000-5.000", tablica u eurima, poruka "Dug ne nestaje spajanjem…", ušteda "0 – 18.045 € godišnje" i okvir "Jaz koji postoji i bez spajanja: 1.400.511 €".
 
 **Naracija:**
 > Hrvatska raspravlja o spajanju općina, ali bez brojki. Ovdje se može probati. Povljana i Pag zajedno dobivaju ocjenu pet. Ali dug ne nestaje: milijun i sto šezdeset tisuća eura ostaje, samo je sada petnaest posto rashoda umjesto pola. Ušteda od veličine je mala, do osamnaest tisuća eura godišnje. Pag na upravu troši milijun i četiristo tisuća više od sličnih gradova, ali taj trošak postoji i bez spajanja.
@@ -87,9 +87,9 @@ Naracija ima oko 400 riječi, što je oko 2:50 uz smirenu brzinu (oko 140 riječ
 Snima se zaslon 1920×1080, preglednik bez traka i kursor uvećan.
 
 1. Naslovnica i animacija godina ("Pokreni 2019.-2025.").
-2. Pretraga "povlj" i svjedodžba Povljane (ocjena, sastavnice, trend).
+2. Pretraga "povlj" i pregled Povljane (ocjena, sastavnice, trend).
 3. "Ukratko" s oznakom provjere; klik na "1.045.908 €" i ploča "Kako je izračunato" za dospjele obveze.
-4. Simulator Povljana + Pag, ulaz preko poveznice sa svjedodžbe.
+4. Simulator Povljana + Pag, ulaz preko poveznice s pregleda jedinice.
 5. Karta reforme: klizač 2.500 → 5.000 → 10.000 i klik na skupinu Paga.
 6. Naslovnica s prekidačem "Prikaz na karti" (trošak uprave, tekuće pomoći), ako stane u vrijeme.
 7. Shema arhitekture iz README-a (prepisati u vektorsku sliku).

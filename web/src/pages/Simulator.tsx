@@ -8,6 +8,7 @@ import {
   loadGroups,
   loadSimulator,
   loadUnit,
+  type GroupDemography,
   type GroupMedians,
   type IndexFile,
   type MergeSummary,
@@ -42,6 +43,12 @@ const EXAMPLES = [
 const keyOf = (sifre: string[]) => [...sifre].sort().join('-')
 const short = (naziv: string) => naziv.replace(/^(Općina|Grad) /, '')
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+const sign = (x: number) => (x > 0 ? '+' : x < 0 ? '−' : '')
+/** A change as a signed share: +6,2 %, −1,7 % (no line break before the % sign). */
+const signedPct = (x: number | null | undefined) => (x == null ? '–' : `${sign(x)}${pct(Math.abs(x)).replace(' ', '\u00a0')}`)
+/** A yearly count with its rate per 1.000 inhabitants of Popis 2021 (the base of every per-capita figure). */
+const withRate = (x: number | null | undefined, popis: number) =>
+  x == null ? '–' : `${sign(x)}${num(Math.abs(x))} (${sign(x)}${num(Math.abs(x / popis) * 1000, 1)} na 1.000)`
 /** 1 nepoznata šifra, 2–4 nepoznate šifre, 5 nepoznatih šifri (Croatian plural). */
 function unknownCodes(n: number) {
   const [d, h] = [n % 10, n % 100]
@@ -538,6 +545,7 @@ function Result({
             </p>
           </div>
         )}
+        {r.demografija && <Demography d={r.demografija} r={r} members={members} />}
       </Card>
 
       {/* savings on general administration: economy of scale only (research/08 §7.1) */}
@@ -680,6 +688,39 @@ function Result({
           ))}
         </p>
       </div>
+    </div>
+  )
+}
+
+/** Population trend of the members and the merged unit (pipeline/merge.py demography, decision P4).
+ *  Only the change is shown, never the yearly estimate next to the Popis 2021 figure in the table. */
+function Demography({ d, r, members }: { d: GroupDemography; r: MergeSummary; members: UnitIndex[] }) {
+  return (
+    <div className="mt-4 border-t border-hairline pt-4">
+      <div className="text-sm font-medium">
+        Promjena broja stanovnika od {d.od}. do {d.do}.
+      </div>
+      <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
+        {members.map((m) => (
+          <div key={m.sifra} className="contents">
+            <dt className="text-ink-2">{short(m.naziv)}</dt>
+            <dd className="tabular text-right">{signedPct(d.clanice[r.clanice.indexOf(m.sifra)])}</dd>
+          </div>
+        ))}
+        <dt className="font-semibold">Spojena</dt>
+        <dd className="tabular text-right font-semibold">{signedPct(d.promjena)}</dd>
+      </dl>
+      <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">
+        <dt className="text-ink-2">Rođeni manje umrli, {d.do}.</dt>
+        <dd className="tabular text-right">{withRate(d.prirodna, r.stanovnici)}</dd>
+        <dt className="text-ink-2">Doseljeni manje odseljeni, {d.do}.</dt>
+        <dd className="tabular text-right">{withRate(d.migracije, r.stanovnici)}</dd>
+      </dl>
+      <p className="mt-2 text-xs text-muted">
+        Zbroj za sve članice; na 1.000 stanovnika prema Popisu 2021. Kretanje stanovništva ne ulazi u ocjenu: ocjena i
+        iznosi po stanovniku računaju se s Popisom 2021. Izvor: Državni zavod za statistiku, stanovništvo sredinom godine,
+        rođeni, umrli i migracije po općinama i gradovima.
+      </p>
     </div>
   )
 }

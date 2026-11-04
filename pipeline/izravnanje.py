@@ -244,7 +244,10 @@ def stope_spojene(clanice, je_grad):
     - surtax cap (years up to 2023): municipalities 10 %, towns 12 %, towns over 30,000 15 %
       (Vinkovci 15 %; Koprivnica keeps 15 % from the 2011 census), Zagreb 18 %.
     The merged unit keeps the highest class any member town has and moves up when the summed
-    population passes the threshold. The class rules are read from the table, not the tax law."""
+    population passes the threshold. The classes follow Zakon o porezu na dohodak čl. 19.a st. 2.
+    (NN 152/24; veliki grad = more than 35,000 inhabitants, ZLP(R)S čl. 19.a) and, for the surtax,
+    Zakon o lokalnim porezima čl. 21. st. 1. (NN 115/16); the MF table applies the same classes
+    (docs/research/11 §3)."""
     if not je_grad:
         return {"prirez_max": 10.0, "stopa_max": 0.20}
     s = sum(c["stanovnici"] for c in clanice)

@@ -10,6 +10,7 @@ const SECTIONS = [
   ['pravila', 'Pravila i upozorenja'],
   ['ai', 'AI objašnjenje'],
   ['simulator', 'Simulator i Karta reforme'],
+  ['kontekst', 'Kontekst u pregledu jedinice'],
   ['podaci', 'Podaci'],
   ['ogranicenja', 'Ograničenja'],
 ] as const
@@ -49,6 +50,7 @@ export function Methodology() {
 
   const used = (sets ?? []).filter((s) => s.koristi_se)
   const ckan = used.find((s) => s.kljuc === 'ckan_package_search')
+  const dzsApi = used.find((s) => s.kljuc === 'dzs_pxweb_sp31_2')
 
   return (
     <main className="mx-auto max-w-4xl px-6 pt-10">
@@ -211,9 +213,39 @@ export function Methodology() {
               <li>
                 <strong className="font-semibold text-ink">Karta reforme.</strong> {doc.simulator.reforma}
               </li>
+              {doc.simulator.demografija && (
+                <li>
+                  <strong className="font-semibold text-ink">Stanovništvo.</strong> {doc.simulator.demografija}
+                </li>
+              )}
 
             </ul>
           </Section>
+
+          {(doc.stanovnistvo_gospodarstvo || doc.izravnanje_jedinice) && (
+            <Section id="kontekst" title="Kontekst u pregledu jedinice">
+              <p className="mt-3 text-ink-2">
+                Dvije kartice u pregledu jedinice ne ulaze u ocjenu ni u AI objašnjenje. Daju kontekst uz brojke proračuna.
+              </p>
+              {dzsApi && (
+                <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-sm shadow-sm ring-1 ring-hairline">
+                  Povučeno s PxWeb API-ja DZS-a {day(dzsApi.zadnje_preuzimanje)}
+                </p>
+              )}
+              <ul className="mt-3 space-y-3 text-ink-2">
+                {doc.stanovnistvo_gospodarstvo && (
+                  <li>
+                    <strong className="font-semibold text-ink">Stanovništvo i gospodarstvo.</strong> {doc.stanovnistvo_gospodarstvo}
+                  </li>
+                )}
+                {doc.izravnanje_jedinice && (
+                  <li>
+                    <strong className="font-semibold text-ink">Fiskalno izravnanje.</strong> {doc.izravnanje_jedinice}
+                  </li>
+                )}
+              </ul>
+            </Section>
+          )}
 
           <Section id="podaci" title="Podaci">
             {ckan && (
@@ -223,7 +255,8 @@ export function Methodology() {
             )}
             {doc.revizija && <p className="mt-3 text-sm text-ink-2">{doc.revizija}</p>}
             <p className="mt-3 text-sm text-ink-2">
-              Podaci Ministarstva financija, DZS-a i Portala otvorenih podataka preuzimaju se automatski pri svakoj izgradnji;
+              Podaci Ministarstva financija, Porezne uprave, DZS-a i Portala otvorenih podataka preuzimaju se automatski pri
+              svakoj izgradnji;
               izvješća revizije i podaci za šifrarnik (DGU, indeks razvijenosti) osvježavaju se ručno. Vrijeme, ETag i sha256
               svakog preuzimanja su u <a className={link} href="./api/v1/izvori.json">zapisu izvora</a>.
             </p>

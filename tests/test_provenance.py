@@ -39,7 +39,11 @@ def recompute(d):
     os_ = lambda y: po(y) - v[("3", y)]
     principal = lambda y: max(0.0, v[("54", y)] - v[("84", y)]) if refi.get(str(y)) else v[("54", y)]
     sd = lambda y: v[("341", y)] + v[("342", y)] + principal(y)
-    zo = lambda y: (v[("6", y)] + v[("7", y)] - v[("63", y)] + v[("6353", y)] - v[("663", y)] - v[("dio611", y)])
+    # FI: the MF decision amount, at most 6331 + 6352 + 6353 (6331 = 633 - 6332); without a decision 6353
+    room = lambda y: max(0.0, v[("633", y)] - v[("6332", y)] + v[("6352", y)] + v[("6353", y)])
+    fi_src = d["velicine"]["FI"]["izvor"]
+    fi = lambda y: min(v[(provenance.FI_KONTO, y)], room(y)) if fi_src.get(str(y)) == "odluka" else v[("6353", y)]
+    zo = lambda y: (v[("6", y)] + v[("7", y)] - v[("63", y)] + fi(y) - v[("663", y)] - v[("dio611", y)])
     s_po = sum(w * po(y) for w, y in zip(weights, years))
     s_os = sum(w * os_(y) for w, y in zip(weights, years))
     s_pr = sum(w * principal(y) for w, y in zip(weights, years))

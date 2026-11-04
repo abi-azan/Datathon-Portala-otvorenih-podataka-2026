@@ -9,7 +9,9 @@
                            and every input with its sheet and row in the MF files (provenance.py)
   jedinice/<slug>.json     full profile: every year's results, fact pack, peer medians,
                            neighbours, openness layer, explanation (AI text from
-                           data/ai/objasnjenja-<year>.json when it still matches, else template)
+                           data/ai/objasnjenja-<year>.json when it still matches, else template),
+                           and the context blocks of pipeline/kontekst.py (population and economy,
+                           fiscal equalization, local tax rates), which are not in the score
   skupine.json             peer-group medians per year (points and the five indicators)
   metodologija.json        the methodology as the code applies it: formulas, thresholds, weights,
                            rules, flags, the AI prompt and the verifier (pipeline/metodologija.py)
@@ -43,7 +45,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 
-from . import config, dcat, explain, facts, metodologija, openapi, provenance, verify
+from . import config, dcat, explain, facts, kontekst, metodologija, openapi, provenance, verify
 
 API = config.ROOT / "web" / "public" / "api" / "v1"
 DATASETS = config.REFERENCE / "skupovi.csv"
@@ -116,9 +118,11 @@ def datasets(rows, log):
     """skupovi.json: the dataset list plus download time and sha256 from the provenance log.
 
     A source fetched in pages (ckan_package_search_00000, _01000, ...) is one dataset:
-    the latest download time, the summed size and one sha256 per page.
-    zadnja_izmjena comes from the server's Last-Modified when the log has one (the publisher's
-    own date, newer than what the CSV says); otherwise it stays as typed into the CSV."""
+    the latest download time, the summed size and one sha256 per page. The metadata call of a
+    DZS PxWeb table (<key>_meta) is not a dataset of its own and is not counted here.
+    zadnja_izmjena comes from the publisher's own date when the log has one: the "updated" date
+    PxWeb gives for a DZS table, else the server's Last-Modified (newer than what the CSV says);
+    otherwise it stays as typed into the CSV."""
     out = []
     for r in rows:
         rec = {k: (v or None) for k, v in r.items()}
@@ -132,7 +136,10 @@ def datasets(rows, log):
             if len(hits) > 1:
                 rec["stranica"] = len(hits)
             modified = [parsedate_to_datetime(h["last_modified"]) for h in hits if h.get("last_modified")]
-            if modified:
+            px_updated = [h["px_updated"][:10] for h in hits if h.get("px_updated")]
+            if px_updated:
+                rec["zadnja_izmjena"] = max(px_updated)
+            elif modified:
                 rec["zadnja_izmjena"] = max(modified).date().isoformat()
         out.append(rec)
     return out
@@ -140,8 +147,8 @@ def datasets(rows, log):
 
 SOURCE_STATEMENT = (
     "Sadrži informacije tijela javne vlasti u skladu s Otvorenom dozvolom (https://data.gov.hr/otvorena-dozvola): "
-    "Ministarstvo financija, Državni zavod za statistiku, Državna geodetska uprava, Portal otvorenih podataka i "
-    "Državni ured za reviziju (izvješća o financijskim revizijama). "
+    "Ministarstvo financija, Porezna uprava, Državni zavod za statistiku, Državna geodetska uprava, Portal otvorenih "
+    "podataka i Državni ured za reviziju (izvješća o financijskim revizijama). "
     "Indeks razvijenosti: Ministarstvo regionalnoga razvoja i fondova Europske unije (razvoj.gov.hr). "
     "Poveznice na skupove i datumi zadnje izmjene: docs/skupovi-podataka.md. "
     "Izmjene: podaci su spojeni po jedinici i preračunati u pokazatelje, bodove i ocjene, a granice su "
@@ -199,8 +206,9 @@ def datasets_markdown(recs):
         "",
         "## Licence: dokaz i datum zadnje izmjene",
         "",
-        "Provjereno 4.11.2026. Datum za datoteke MF-a dolazi automatski iz zaglavlja Last-Modified "
-        "(`izvori.json`). Za ostale je to datum revizije ili metapodataka koji navodi izdavatelj. Katalog "
+        "Provjereno 4.11.2026. Datum za datoteke MF-a i Porezne uprave dolazi automatski iz zaglavlja "
+        "Last-Modified, a za tablice DZS-a iz datuma ažuriranja koji navodi PxWeb (`izvori.json`). Za ostale je "
+        "to datum revizije ili metapodataka koji navodi izdavatelj. Katalog "
         "portala i OSM mijenjaju se stalno, pa za njih vrijedi stanje pri preuzimanju.",
         "",
         evidence(recs),
@@ -228,6 +236,13 @@ def datasets_markdown(recs):
         "(ZAPSP, NN 111/21, čl. 18. st. 3.).",
         "- **DZS (WFS):** polje licence u CKAN-u je prazno, ali metapodaci (`access_constraints`) i "
         "GetCapabilities servisa (`Fees`) navode Otvorenu dozvolu.",
+        "- **DZS (PxWeb):** skupovi \"Stanovništvo\", \"Turizam\" (na portalu pod slugom "
+        "`proizvodnja-orani-nih-usjeva-u-tonama`) i \"Građevinarstvo\" imaju u CKAN-u Otvorenu dozvolu; resurs "
+        "pc-axis vodi na PxWeb API DZS-a, koji ETL zove izravno (GET metapodataka, POST upita, odgovor json-stat2). "
+        "Procjene stanovništva služe samo za kretanje broja stanovnika; iznosi po stanovniku računaju se s "
+        "Popisom 2021. Oznaka \"-\" (pojava ne postoji) broji se kao 0, a \"z\" (tajnost) ostaje prazno.",
+        "- **Porezna uprava:** oba skupa imaju u CKAN-u Otvorenu dozvolu. Portal na uvjetni GET uvijek odgovara "
+        "200, pa ETL datoteke preuzima pri svakom pokretanju. Ništa od toga ne ulazi u ocjenu.",
         "- **Katalog portala:** metapodaci su uvijek pod Otvorenom dozvolom, bez obzira na licencu skupa na koji "
         "se odnose (Pravilnik NN 67/17, čl. 4. st. 5.; tekst Otvorene dozvole: \"kao i na metapodatke\").",
         "- **Indeks razvijenosti:** uvjeti korištenja razvoj.gov.hr kažu: \"Sadržaji s ovih stranica mogu se "
@@ -284,6 +299,8 @@ def main():
     write(API / "jedinice.json", {"generirano": generated, "zadnja_godina": config.LAST_YEAR, "jedinice": index})
     write(API / "skupine.json", group_medians(res))
 
+    # context blocks (DZS PxWeb, Porezna uprava, MF equalization table; pipeline/kontekst.py), not in the score
+    ctx = kontekst.load(units)
     audit_doc = json.loads(AUDITS.read_text(encoding="utf-8")) if AUDITS.exists() else None
     audits = audit_doc["jedinice"] if audit_doc else None
     shown_ai = 0
@@ -299,6 +316,9 @@ def main():
             "susjedi": neighbours,
             "cinjenice": pack,
             "objasnjenje": explanation(pack, ai_texts.get(u["oib"])),
+            "stanovnistvo_gospodarstvo": ctx["stanovnistvo_gospodarstvo"][u["oib"]],
+            "izravnanje": ctx["izravnanje"].get(u["oib"]),
+            "porezne_stope": ctx["porezne_stope"].get(u["oib"]),
         })
         if audits is not None:
             # latest financial audit of the State Audit Office; None: none found on its lists 2019-2026.
