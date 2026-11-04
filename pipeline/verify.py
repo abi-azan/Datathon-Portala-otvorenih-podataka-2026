@@ -52,6 +52,8 @@ def allowed(pack):
 # Grades: after every "ocjen*" word, the first standalone digit 1-5 in the same sentence is
 # a claimed grade and must be this year's or last year's. The scale wording "od 1 ... do 5"
 # is removed first, and ordinals ("1. mjesto"), decimals and amounts ("1.767.926 €") are not grades.
+# The search runs to the end of the sentence with no fixed length: a window of 120 characters
+# once cut "3,8" after its "3", which was then read as a grade (11 correct texts rejected, 4.11.).
 SCALE = re.compile(r"\bod\s+1\b[^.;]{0,40}?\bdo\s+5\b", re.IGNORECASE)
 GRADE_WORD = re.compile(r"\bocjen\w*", re.IGNORECASE)
 GRADE_DIGIT = re.compile(r"(?<![\d,.])([1-5])(?!\d)(?![,.]\d)(?!\.\s*[a-zčćđšž])")
@@ -62,7 +64,7 @@ def claimed_grades(text):
     t = SCALE.sub(" ", text)
     out = []
     for m in GRADE_WORD.finditer(t):
-        rest = t[m.end():m.end() + 120]
+        rest = t[m.end():]
         end = SENTENCE_END.search(rest)
         d = GRADE_DIGIT.search(rest[:end.start() + 1] if end else rest)
         if d:

@@ -229,3 +229,25 @@ Sirovi izlaz: `kaggle/results/gemma_test_v7_31b_q4_0_ud.json`.
 - **Prijedlog** (zahtijeva promjenu činjenica i prompta, pa ponovni batch od oko 3,5 h): kad je najslabija sastavnica iznad 90 bodova, paket i prompt neka kažu "Najniže bodove ima sastavnica …", a medijan neka se uvijek prepiše s riječju predznaka. Odluka je na korisniku.
 
 **Na profilu:** oznaka je "AI tekst · Gemma 4 31B · 11/11 brojki provjereno" (Povljana). Klik na "1.045.908 €" otvara izračun dospjelih obveza s ćelijama Bilance.
+
+## v8b: ispravak provjere ocjena i ponovna provjera pri uvozu (4.11., dan, bez GPU-a)
+
+**Ispravak (odluka 6):** `verify.claimed_grades` iza riječi "ocjen…" sada traži ocjenu do kraja rečenice (`SENTENCE_END`), bez prozora od 120 znakova. U Gradcu je taj prozor završavao na "3," od "3,8", pa je "3" pročitana kao ocjena. `verify.py` i dalje koristi samo standardnu biblioteku. Novi otisak provjere je `d3d48582…`, a na Kaggleu je bio `2e91a046…`.
+
+**Dokaz da ništa drugo nije pogođeno:** stara i nova provjera pokrenute su na svim tekstovima iz `kaggle/results/` (7 izlaza, 1.713 tekstova: konačni tekst i svaki pokušaj), s današnjim paketima.
+- Presuda se mijenja za 44 teksta, svi iz pada u prolaz. To su 11 jedinica iz v8, svaka s konačnim tekstom i 3 pokušaja.
+- Iz prolaza u pad nije prešao nijedan tekst. `claimed_grades` se razlikuje samo u tih 44 teksta (`["5", "3"]` postaje `["5"]`).
+- Regresijski test sa stvarnim tekstom Gradca je `tests/test_explain.py::test_a_decimal_far_after_the_grade_word_is_not_cut_into_a_grade`.
+
+**Uvoz:** `--import-batch` sada svaki spremljeni tekst ponovno provjerava današnjom provjerom i današnjim paketom. Uzima najraniji pokušaj koji prolazi, a ako nijedan ne prolazi, konačni tekst kao "neprovjereno".
+- U zapisu teksta nova su polja `pokusaj` (koji je pokušaj uzet) i `izvor_kaggle` (presuda na Kaggleu).
+- Meta bilježi `verify_sha256` provjere pri uvozu, `verify_sha256_kaggle` po pokretanju i `commit_skripte`.
+- Rezultat je **576/576 AI tekstova**. Tekst i otisak paketa ostali su isti za svih 576, a promijenio se samo `izvor` kod tih 11 (svima je uzet 1. od 3 pokušaja).
+
+**Otisci paketa:** uvoz i `--skip` više ne čitaju `data/ai/manifest-2025.json`, jer ga svaki `--kaggle-batch` prepisuje.
+- Otisci dolaze iz `meta.paketi` u izlazu. Za ovaj izlaz, nastao prije tog polja, dolaze iz zamrznute datoteke `kaggle/results/gemma_batch_2025_31b_q4_0.paketi.json`: to je manifest iz commita `4c03c97`, vezan uz sha256 izlaza. Sirovi izlaz je ostao bajt po bajt isti.
+- Provjereno: otisci su jednaki današnjim paketima i paketima u poslanoj skripti `kaggle/gemma_batch.py`, za svih 576.
+- Runner, `verify.py` i prompt iz `4c03c97` daju poslanu skriptu bajt po bajt (osim CRLF), pa stranica metodologije povezuje runner iz tog commita.
+- `--skip` sada preskače samo jedinice čiji tekst odgovara trenutnom paketu.
+
+**Ručni pregled 11 novih AI tekstova:** svih 11 je gramatički ispravno i slaže se s paketom: brojke, najslabija sastavnica, jake strane i upozorenja (Kostrena i Breznica). U 9 od 11 ponavlja se nespretnost 3 iz v8: "servis duga" je najslabija sastavnica i ujedno jaka strana. Galovac i Pirovac je nemaju.

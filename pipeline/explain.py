@@ -4,8 +4,13 @@
     .venv/Scripts/python -m pipeline.explain --kaggle-test 20 --fresh   # 20 units not tested before
     .venv/Scripts/python -m pipeline.explain --check out.json   # re-verifies a downloaded Kaggle output
     .venv/Scripts/python -m pipeline.explain --kaggle-batch     # all 576 units, plus data/ai/manifest-2025.json
-    .venv/Scripts/python -m pipeline.explain --kaggle-batch --skip out.json   # resume: leave out finished units
+    .venv/Scripts/python -m pipeline.explain --kaggle-batch --skip out.json   # resume: leave out units whose text fits their pack
     .venv/Scripts/python -m pipeline.explain --import-batch out.json [out2.json]  # -> data/ai/objasnjenja-2025.json
+
+A batch output is matched to the packs its texts were written from by fingerprint (pack_sha256),
+taken from the output itself (meta.paketi) or, for an output made before that field existed, from
+its frozen sidecar kaggle/results/<name>.paketi.json (output_fingerprints). Never from
+data/ai/manifest-<year>.json, which every --kaggle-batch rewrites with the current packs.
 
 Python computes the facts (pipeline/facts.py). The model writes 3-5 sentences around them,
 and pipeline/verify.py rejects any text with a number that is not in the facts. A rejected
@@ -30,6 +35,8 @@ from . import config, facts, verify
 MAX_RETRIES = 2
 
 AI_DIR = config.ROOT / "data" / "ai"      # committed: manifest and imported texts
+RESULTS_DIR = config.ROOT / "kaggle" / "results"   # committed: raw Kaggle outputs, byte for byte
+SIDECAR = ".paketi.json"                  # <output>.paketi.json: frozen fingerprints of a legacy output
 BATCH_KERNEL = "albertmari/fiskalna-karta-jls-gemma-batch"
 BATCH_MODEL_SOURCE = "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2"
 BATCH_OUTPUT = "gemma_batch_output.json"
@@ -65,6 +72,54 @@ def prompt_sha256():
     """Fingerprint of the prompt text the model saw (SYSTEM, RULES and EXAMPLE)."""
     s = json.dumps([SYSTEM, RULES, EXAMPLE], ensure_ascii=False, separators=(",", ":"))
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
+
+
+def _sha256_lf(raw):
+    """sha256 of file bytes with CRLF read as LF, so a Windows checkout (autocrlf) gives the same value."""
+    return hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()
+
+
+def verify_sha256():
+    """Fingerprint of the number check (pipeline/verify.py) as it is now."""
+    return _sha256_lf((config.ROOT / "pipeline" / "verify.py").read_bytes())
+
+
+def sidecar_path(path):
+    """kaggle/results/<name>.json -> kaggle/results/<name>.paketi.json."""
+    path = Path(path)
+    return path.with_name(path.stem + SIDECAR)
+
+
+def output_fingerprints(path, raw=None):
+    """What a batch output's texts were written from: {"paketi": {oib: pack_sha256}, "prompt_sha256",
+    "verify_sha256" (the check on Kaggle, if known), "commit" (of the script, if known), "izvor"}.
+
+    From the output's own meta.paketi, written into the script together with the packs, or, for an
+    output made before that field existed, from its sidecar <name>.paketi.json, which is frozen and
+    names the output's sha256. Never from the manifest: every --kaggle-batch rewrites it with the
+    current packs, which would stamp old texts with new fingerprints. An output with neither, or
+    without the prompt fingerprint, is refused."""
+    path = Path(path)
+    raw = path.read_bytes() if raw is None else raw
+    meta = json.loads(raw.decode("utf-8")).get("meta") or {}
+    if meta.get("paketi"):
+        fp = {"paketi": meta["paketi"], "prompt_sha256": meta.get("prompt_sha256"),
+              "verify_sha256": meta.get("verify_sha256"), "commit": meta.get("commit"), "izvor": "meta.paketi"}
+    else:
+        side = sidecar_path(path)
+        if not side.exists():
+            raise SystemExit(f"{path}: izlaz nema meta.paketi ni datoteku {side.name}, pa se ne zna iz kojih su paketa "
+                             "tekstovi napisani. Manifest se za to ne koristi, jer ga svaki --kaggle-batch prepisuje.")
+        sc = json.loads(side.read_text(encoding="utf-8"))
+        if sc.get("izlaz_sha256") != _sha256_lf(raw):
+            raise SystemExit(f"{side.name} ne pripada izlazu {path}: sha256 izlaza se ne slaže")
+        if meta.get("prompt_sha256") not in (None, sc.get("prompt_sha256")):
+            raise SystemExit(f"{side.name}: prompt se razlikuje od onoga u izlazu {path}")
+        fp = {"paketi": sc["paketi"], "prompt_sha256": sc.get("prompt_sha256"),
+              "verify_sha256": sc.get("verify_sha256"), "commit": sc.get("commit"), "izvor": side.name}
+    if not fp["prompt_sha256"]:
+        raise SystemExit(f"{path}: nema otiska prompta (prompt_sha256)")
+    return fp
 
 
 def messages(pack):
@@ -133,7 +188,9 @@ TEST_FIXED = ["Općina Sveta Marija", "Općina Povljana", "Grad Senj", "Općina 
 def tested_oibs():
     """Units already used in earlier Kaggle tests (kaggle/results/*.json)."""
     seen = set()
-    for f in (config.ROOT / "kaggle" / "results").glob("*.json"):
+    for f in RESULTS_DIR.glob("*.json"):
+        if f.name.endswith(SIDECAR):
+            continue
         out = json.loads(f.read_text(encoding="utf-8"))
         models = out.get("models") or {"model": {"results": out.get("results", [])}}
         seen |= {r["oib"] for m in models.values() for r in m["results"]}
@@ -147,6 +204,10 @@ def pick_test_units(packs, n, seed=7, fresh=False):
     if fresh:
         seen = tested_oibs()
         chosen, rest = [], [p for p in packs if p["oib"] not in seen]
+        if len(rest) < n:
+            raise SystemExit(f"--fresh: traženo je {n} neisprobanih jedinica, a samo {len(rest)} od {len(packs)} nije ni u "
+                             f"jednom izlazu u {RESULTS_DIR.relative_to(config.ROOT).as_posix()}/ (batch za 576 jedinica "
+                             "pokriva sve). Pokreni test bez --fresh ili s manjim N.")
     else:
         chosen = [p for p in packs if p["naziv"]["nom"] in TEST_FIXED][:n]
         rest = [p for p in packs if p not in chosen]
@@ -194,61 +255,59 @@ def write_kaggle_test(n, fresh=False, hf=()):
                         hf_models=[x.split(":", 1) for x in hf])
 
 
-def done_oibs(paths):
-    """Units that already have a text in earlier batch outputs (an AI text or the model's
-    last unverified one). Units that hit an error have no text and run again."""
-    done = set()
+def done_oibs(paths, current):
+    """Units whose text in an earlier batch output (an AI text or the model's last unverified one)
+    was written from the pack they have now. current: {oib: pack_sha256} of today's packs. A unit
+    whose pack changed since (e.g. after a new MF release) needs a new text and runs again, as does
+    a unit that hit an error (no text). The fingerprints come from output_fingerprints."""
+    done, changed = set(), set()
     for p in paths:
+        fp = output_fingerprints(p)
+        if fp["prompt_sha256"] != prompt_sha256():
+            raise SystemExit(f"{p}: prompt se promijenio od tog izlaza: pokreni cijeli batch ponovno, bez --skip")
         out = json.loads(Path(p).read_text(encoding="utf-8"))
         for m in (out.get("models") or {}).values():
-            done |= {r["oib"] for r in m.get("results", []) if r.get("text")}
+            for r in m.get("results", []):
+                if r.get("text"):
+                    fits = fp["paketi"].get(r["oib"]) == current.get(r["oib"])
+                    (done if fits else changed).add(r["oib"])
+    changed -= done
+    if changed:
+        print(f"{len(changed)} jedinica ima tekst, ali se paket od tada promijenio: generiraju se ponovno "
+              f"{sorted(changed)[:10]}")
     return done
 
 
-def write_manifest(packs, year=config.LAST_YEAR, keep=frozenset()):
-    """data/ai/manifest-<year>.json: the fingerprint of every unit's pack and of the prompt,
-    written with the batch script, so an imported text can be matched to what the model saw.
-    keep: units whose text already exists (a resumed batch). They keep the fingerprint from
-    the existing manifest, i.e. of the pack the model saw, even if their pack changed since."""
+def write_manifest(packs, year=config.LAST_YEAR):
+    """data/ai/manifest-<year>.json: the fingerprint of every unit's current pack, of the prompt and
+    of the check, written with the batch script. It records the run; the import does not read
+    fingerprints from it, because the next --kaggle-batch rewrites it (output_fingerprints)."""
     AI_DIR.mkdir(parents=True, exist_ok=True)
     dest = AI_DIR / f"manifest-{year}.json"
-    old = {}
-    if keep:
-        if not dest.exists():
-            raise SystemExit(f"{dest} ne postoji, a nastavak batcha treba otiske paketa gotovih jedinica")
-        prev = json.loads(dest.read_text(encoding="utf-8"))
-        if prev["prompt_sha256"] != prompt_sha256():
-            raise SystemExit("prompt se promijenio od prvog dijela batcha: pokreni cijeli batch ponovno, bez --skip")
-        old = {o: h for o, h in prev["paketi"].items() if o in keep}
-    current = {p["oib"]: pack_sha256(p) for p in packs}
-    changed = sorted(o for o, h in old.items() if current.get(o) != h)
-    if changed:
-        print(f"UPOZORENJE: {len(changed)} gotovih jedinica ima promijenjen paket; njihovi tekstovi idu na predložak "
-              f"dok se ne generiraju ponovno: {changed[:10]}")
-    verify_src = (config.ROOT / "pipeline" / "verify.py").read_bytes().replace(b"\r\n", b"\n")
-    manifest = {"godina": year, "prompt_sha256": prompt_sha256(),
-                "verify_sha256": hashlib.sha256(verify_src).hexdigest(),
+    manifest = {"godina": year, "prompt_sha256": prompt_sha256(), "verify_sha256": verify_sha256(),
                 "model_izvor": BATCH_MODEL_SOURCE, "biljeznica": BATCH_KERNEL,
-                "paketi": {o: old.get(o, current[o]) for o in sorted(current)}}
+                "paketi": {p["oib"]: pack_sha256(p) for p in sorted(packs, key=lambda p: p["oib"])}}
     dest.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"{dest} ({len(manifest['paketi'])} paketa, prompt {manifest['prompt_sha256'][:12]})")
     return manifest
 
 
 def write_kaggle_batch(skip=(), dest=None):
-    """kaggle/gemma_batch.py: every unit's pack for LAST_YEAR, minus the units already done in
-    the outputs listed in skip. The manifest always covers all units."""
+    """kaggle/gemma_batch.py: every unit's pack for LAST_YEAR, minus the units whose text in one of
+    the outputs listed in skip still fits their pack. The manifest always covers all units."""
     packs = load_packs()[0]
-    done = done_oibs(skip)
-    manifest = write_manifest(packs, keep=done)
+    current = {p["oib"]: pack_sha256(p) for p in packs}
+    done = done_oibs(skip, current)
+    manifest = write_manifest(packs)
     todo = [p for p in packs if p["oib"] not in done]
-    if done:
-        print(f"preskačem {len(packs) - len(todo)} gotovih jedinica, ostaje {len(todo)}")
-    # the output carries the fingerprint of every pack it was given, so an import does not have
-    # to trust a manifest that a later run may have rewritten
+    if skip:
+        print(f"preskačem {len(done)} jedinica s tekstom za nepromijenjen paket, ostaje {len(todo)}")
+    # the output carries the fingerprint of every pack it was given (and of the check), so an
+    # import does not have to trust a manifest that a later run may have rewritten
     meta = {"vrsta": "batch", "godina": config.LAST_YEAR, "prompt_sha256": manifest["prompt_sha256"],
+            "verify_sha256": manifest["verify_sha256"],
             "model_izvor": BATCH_MODEL_SOURCE, "biljeznica": BATCH_KERNEL, "paketa": len(todo),
-            "paketi": {p["oib"]: manifest["paketi"][p["oib"]] for p in todo}}
+            "paketi": {p["oib"]: current[p["oib"]] for p in todo}}
     return write_kaggle_script(todo, dest or config.ROOT / "kaggle" / "gemma_batch.py",
                                out_name=BATCH_OUTPUT, run_meta=meta)
 
@@ -262,56 +321,108 @@ def model_name(gguf):
     return gguf
 
 
+def pick_attempt(r, pack):
+    """(text, attempt number, passes) for one stored result, checked with today's verify.py: the
+    earliest stored attempt that passes, else the final text."""
+    attempts = r.get("attempts") or []
+    for i, a in enumerate(attempts, 1):
+        if a.get("text") and verify.verify(a["text"], pack)["ok"]:
+            return a["text"], i, True
+    last = len(attempts) if attempts and attempts[-1].get("text") == r["text"] else None
+    return r["text"], last, verify.verify(r["text"], pack)["ok"]
+
+
+def _one(values, what):
+    """The single value all imported outputs agree on (None when none states it)."""
+    values = {v for v in values if v is not None}
+    if len(values) > 1:
+        raise SystemExit(f"izlazi se razlikuju u {what}: {sorted(values)}; uvezi ih odvojeno")
+    return next(iter(values), None)
+
+
 def import_batch(paths, dest=None, year=config.LAST_YEAR):
-    """data/ai/objasnjenja-<year>.json from downloaded batch outputs. pack_sha256 comes from the
-    output itself (meta.paketi, written with the script) or else from the manifest, so it records
-    the pack the model saw. A unit that
-    appears more than once keeps its first AI text; a later output only replaces an
-    unverified one. Warns when a current pack no longer matches the manifest."""
-    manifest = json.loads((AI_DIR / f"manifest-{year}.json").read_text(encoding="utf-8"))
-    current = {p["oib"]: pack_sha256(p) for p in load_packs(year)[0]}
+    """data/ai/objasnjenja-<year>.json from downloaded batch outputs (the raw files stay as they are).
+
+    pack_sha256 is the fingerprint of the pack the model saw, from the output itself or its frozen
+    sidecar (output_fingerprints), never from the manifest. Every stored text is checked again with
+    today's pipeline/verify.py against today's pack: the earliest stored attempt that passes becomes
+    the AI text (izvor "ai"); otherwise the final text is kept as "neprovjereno". A text whose pack
+    changed since cannot be checked against the pack it was written from, so it is "neprovjereno"
+    (publish shows the template for it anyway). A unit in more than one output keeps its first AI
+    text; a later output replaces only an unverified or outdated one. meta.verify_sha256 is the
+    check used here; each run keeps the one used on Kaggle."""
+    packs = {p["oib"]: p for p in load_packs(year)[0]}
+    current = {o: pack_sha256(p) for o, p in packs.items()}
     texts, runs = {}, []
+
+    def rank(t):
+        return (t["pack_sha256"] == current[t["oib"]], t["izvor"] == "ai")
+
     for path in paths:
         raw = Path(path).read_bytes()
         out = json.loads(raw.decode("utf-8"))
         meta = out.get("meta", {})
-        seen = meta.get("paketi") or {}
-        if meta.get("prompt_sha256") not in (None, manifest["prompt_sha256"]):
-            print(f"UPOZORENJE: {path}: prompt se razlikuje od manifesta")
+        fp = output_fingerprints(path, raw)
+        seen = fp["paketi"]
         runs.append({"datoteka": Path(path).name, "sha256": hashlib.sha256(raw).hexdigest(),
                      "djelomicno": bool(out.get("partial")), "llama_cpp_commit": meta.get("llama_cpp_commit"),
                      "gpu": (meta.get("gpu") or "").replace("\n", ", "), "sekundi": meta.get("seconds_total"),
-                     "modeli": list(out.get("models", {}))})
+                     "modeli": list(out.get("models", {})),
+                     "otisci_paketa": fp["izvor"], "prompt_sha256": fp["prompt_sha256"],
+                     "verify_sha256_kaggle": fp["verify_sha256"], "commit_skripte": fp["commit"],
+                     "model_izvor": meta.get("model_izvor"), "biljeznica": meta.get("biljeznica")})
+        missing = []
         for gguf, m in out.get("models", {}).items():
             for r in m.get("results", []):
-                if not r.get("text") or r["oib"] not in manifest["paketi"]:
+                o = r["oib"]
+                if not r.get("text") or o not in packs:
                     continue
-                old = texts.get(r["oib"])
-                if old and (old["izvor"] == "ai" or r.get("source") != "ai"):
+                if o not in seen:
+                    missing.append(o)
                     continue
-                texts[r["oib"]] = {"tekst": r["text"], "pack_sha256": seen.get(r["oib"]) or manifest["paketi"][r["oib"]],
-                                   "pokusaja": len(r.get("attempts", [])),
-                                   "izvor": "ai" if r.get("source") == "ai" else "neprovjereno",
-                                   "model": model_name(gguf), "gguf": gguf}
-    stale = sorted(o for o, t in texts.items() if current.get(o) != t["pack_sha256"])
+                if seen[o] == current[o]:
+                    text, attempt, ok = pick_attempt(r, packs[o])
+                else:
+                    text, attempt, ok = r["text"], None, False
+                entry = {"oib": o, "tekst": text, "pack_sha256": seen[o], "pokusaja": len(r.get("attempts", [])),
+                         "pokusaj": attempt, "izvor": "ai" if ok else "neprovjereno",
+                         "izvor_kaggle": "ai" if r.get("source") == "ai" else "neprovjereno",
+                         "model": model_name(gguf), "gguf": gguf}
+                if o not in texts or rank(entry) > rank(texts[o]):
+                    texts[o] = entry
+        if missing:
+            print(f"UPOZORENJE: {path}: {len(missing)} tekstova nema otisak paketa i nisu uvezeni: {missing[:10]}")
+    prompt = _one((r["prompt_sha256"] for r in runs), "promptu")
+    if prompt != prompt_sha256():
+        print("UPOZORENJE: prompt se promijenio od batcha; stranica metodologije to navodi")
+    stale = sorted(o for o, t in texts.items() if current[o] != t["pack_sha256"])
     if stale:
-        print(f"UPOZORENJE: {len(stale)} paketa se razlikuje od manifesta; ti tekstovi idu na predložak: {stale[:10]}")
+        print(f"UPOZORENJE: {len(stale)} paketa se promijenilo od batcha; ti tekstovi idu na predložak: {stale[:10]}")
+    rescued = sorted(t["oib"] for t in texts.values() if t["izvor"] == "ai" and t["izvor_kaggle"] != "ai")
+    if rescued:
+        print(f"{len(rescued)} tekstova koje je provjera na Kaggleu odbila prolazi današnju provjeru: "
+              + ", ".join(packs[o]["naziv"]["nom"] for o in rescued))
     ggufs = sorted({t["gguf"] for t in texts.values()})
     result = {
         "meta": {"godina": year, "modeli": [model_name(g) for g in ggufs], "gguf": ggufs,
-                 "model_izvor": manifest["model_izvor"], "biljeznica": manifest["biljeznica"],
-                 "prompt_sha256": manifest["prompt_sha256"], "verify_sha256": manifest["verify_sha256"],
+                 "model_izvor": next((r["model_izvor"] for r in runs if r["model_izvor"]), None),
+                 "biljeznica": next((r["biljeznica"] for r in runs if r["biljeznica"]), None),
+                 "prompt_sha256": prompt, "verify_sha256": verify_sha256(),
+                 "verify_sha256_kaggle": sorted({r["verify_sha256_kaggle"] for r in runs if r["verify_sha256_kaggle"]}),
+                 # the commit the batch script was generated from, only when every run states the same one
+                 "commit_skripte": runs[0]["commit_skripte"] if len({r["commit_skripte"] for r in runs}) == 1 else None,
                  "llama_cpp_commit": next((r["llama_cpp_commit"] for r in runs if r["llama_cpp_commit"]), None),
                  "pokretanja": runs, "uvezeno": pd.Timestamp.now(tz="UTC").isoformat(timespec="seconds"),
-                 "jedinica": len(manifest["paketi"]), "tekstova": len(texts),
+                 "jedinica": len(packs), "tekstova": len(texts),
                  "ai": sum(t["izvor"] == "ai" for t in texts.values())},
-        "tekstovi": {o: texts[o] for o in sorted(texts)},
+        "tekstovi": {o: {k: v for k, v in texts[o].items() if k != "oib"} for o in sorted(texts)},
     }
     dest = Path(dest) if dest else AI_DIR / f"objasnjenja-{year}.json"
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     m = result["meta"]
-    print(f"{dest}: {m['tekstova']}/{m['jedinica']} tekstova, od toga {m['ai']} AI (provjereno na Kaggleu)")
+    print(f"{dest}: {m['tekstova']}/{m['jedinica']} tekstova, od toga {m['ai']} AI "
+          f"(provjereno pri uvozu, verify {m['verify_sha256'][:12]})")
     return result
 
 
@@ -336,6 +447,7 @@ def check_output(path):
 
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")       # SystemExit messages are Croatian too
     ap = argparse.ArgumentParser()
     ap.add_argument("--kaggle-test", type=int, metavar="N")
     ap.add_argument("--fresh", action="store_true", help="test units not used in any earlier test")
@@ -346,7 +458,8 @@ def main():
     ap.add_argument("--kaggle-batch", action="store_true",
                     help="script for every unit (kaggle/gemma_batch.py) and data/ai/manifest-<year>.json")
     ap.add_argument("--skip", action="append", default=[], metavar="OUTPUT_JSON",
-                    help="with --kaggle-batch: leave out units that already have a text in this output")
+                    help="with --kaggle-batch: leave out units whose text in this output was written from "
+                         "their current pack")
     ap.add_argument("--import-batch", nargs="+", metavar="OUTPUT_JSON",
                     help="downloaded batch outputs -> data/ai/objasnjenja-<year>.json")
     ap.add_argument("--out", metavar="JSON", help="with --import-batch: write here instead of data/ai/")

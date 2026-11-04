@@ -94,8 +94,9 @@ def load_ai_texts(path=AI_TEXTS):
 
 
 def explanation(pack, ai=None):
-    """The unit's AI text when it was checked on Kaggle, was written from this very pack and
-    passes the number check here too; otherwise the template. Always shipped with its check."""
+    """The unit's AI text when the import accepted it (izvor "ai": it passed the check at import),
+    it was written from this very pack and it passes the number check here too; otherwise the
+    template. Always shipped with its check."""
     if not pack:
         return None
     if ai and ai.get("izvor") == "ai" and ai.get("pack_sha256") == explain.pack_sha256(pack):

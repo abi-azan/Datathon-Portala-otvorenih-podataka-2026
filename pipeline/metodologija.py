@@ -27,9 +27,12 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
     ai = None
     if ai_texts_path is not None and ai_texts_path.exists():
         meta = json.loads(ai_texts_path.read_text(encoding="utf-8"))["meta"]
+        # verify_sha256: the check run at import; verify_sha256_kaggle: the one run on Kaggle while generating
         ai = {k: meta.get(k) for k in ("modeli", "gguf", "model_izvor", "llama_cpp_commit", "tekstova", "uvezeno",
-                                       "prompt_sha256", "verify_sha256")}
+                                       "prompt_sha256", "verify_sha256", "verify_sha256_kaggle", "commit_skripte")}
         ai.update(uvezeno_ai=meta.get("ai"), prikazano_ai=shown_ai, jedinica=n_units or meta.get("jedinica"))
+    # the runner as it was when the batch script was generated, when the import knows that commit
+    runner_ref = (ai or {}).get("commit_skripte") or "main"
     w = methodology.WINDOW_WEIGHTS
     big = methodology.SIZE_CLASSES[-1][0]
     return {
@@ -69,15 +72,19 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
                     "koja nije stvarna, ili najslabija sastavnica, jake strane i ograničenje ocjene drukčiji od paketa. "
                     f"Odbijeni tekst piše se ponovno uz povratnu informaciju, najviše {explain.MAX_RETRIES} puta, a zatim "
                     "se koristi predložak. Na stranici se AI tekst prikazuje samo ako je napisan iz istog paketa "
-                    "(sha256) i ako provjera prolazi i pri objavi.",
+                    "(sha256) i ako ga prihvaća trenutna verzija provjere, koja se ponovno pokreće pri uvozu i pri objavi.",
             "model": (f"{', '.join(ai['modeli'])} ({', '.join(ai['gguf'] or [])}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"
                       if ai and ai.get("modeli") else
                       f"Gemma 4 ({explain.BATCH_MODEL_SOURCE}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"),
             "sustav": explain.SYSTEM, "pravila": explain.RULES, "primjer": explain.EXAMPLE,
             "prompt_sha256": explain.prompt_sha256(),
             "prompt_jednak_batchu": None if not ai else ai.get("prompt_sha256") == explain.prompt_sha256(),
+            # every published AI text passed this check at publication (publish.explanation runs it)
+            "verify_sha256": explain.verify_sha256(),
+            "provjera_jednaka_uvozu": None if not ai else ai.get("verify_sha256") == explain.verify_sha256(),
             "kod": {"prompt": f"{REPO}/blob/main/pipeline/explain.py", "provjera": f"{REPO}/blob/main/pipeline/verify.py",
-                    "cinjenice": f"{REPO}/blob/main/pipeline/facts.py", "biljeznica": f"{REPO}/blob/main/kaggle/gemma_runner.py"},
+                    "cinjenice": f"{REPO}/blob/main/pipeline/facts.py",
+                    "biljeznica": f"{REPO}/blob/{runner_ref}/kaggle/gemma_runner.py"},
             "batch": ai,
         },
         "simulator": {
