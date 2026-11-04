@@ -52,3 +52,26 @@ def test_publish_uses_the_ai_text_only_when_it_still_fits():
     wrong = publish.explanation(pack, {**ai, "tekst": text.replace("72,5", "75,2")})
     for e in (stale, unchecked, wrong, publish.explanation(pack, None)):
         assert e["izvor"] == "predlozak" and e["model"] is None
+
+
+def test_resumed_batch_keeps_the_fingerprint_the_model_saw(tmp_path, monkeypatch):
+    """A resume (--skip) must not stamp earlier texts with the fingerprint of a pack that changed
+    after they were written; the output also carries the fingerprints of its own packs."""
+    a = {**PACK, "oib": "1"}
+    b = {**PACK, "oib": "2"}
+    monkeypatch.setattr(explain, "AI_DIR", tmp_path)
+    monkeypatch.setattr(explain, "load_packs", lambda year=None: ([a, b], None))
+    explain.write_kaggle_batch(dest=tmp_path / "s1.py")
+    first = json.loads((tmp_path / "manifest-2025.json").read_text(encoding="utf-8"))["paketi"]
+    out = tmp_path / "out1.json"
+    out.write_text(json.dumps({"models": {"m.gguf": {"results": [{"oib": "1", "text": "T.", "source": "ai"}]}}}),
+                   encoding="utf-8")
+    a2 = {**a, "facts": [{"label": "Ocjena", "value": "3 (umjereno)"}]}      # unit 1 changed after its text
+    monkeypatch.setattr(explain, "load_packs", lambda year=None: ([a2, b], None))
+    dest = explain.write_kaggle_batch(skip=[out], dest=tmp_path / "s2.py")
+    second = json.loads((tmp_path / "manifest-2025.json").read_text(encoding="utf-8"))["paketi"]
+    assert second["1"] == first["1"] != explain.pack_sha256(a2)               # what the model saw
+    spec = importlib.util.spec_from_file_location("s2", dest)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    assert [p["oib"] for p in mod.PACKS] == ["2"] and mod.RUN_META["paketi"] == {"2": explain.pack_sha256(b)}

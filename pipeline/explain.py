@@ -205,16 +205,31 @@ def done_oibs(paths):
     return done
 
 
-def write_manifest(packs, year=config.LAST_YEAR):
+def write_manifest(packs, year=config.LAST_YEAR, keep=frozenset()):
     """data/ai/manifest-<year>.json: the fingerprint of every unit's pack and of the prompt,
-    written with the batch script, so an imported text can be matched to what the model saw."""
+    written with the batch script, so an imported text can be matched to what the model saw.
+    keep: units whose text already exists (a resumed batch). They keep the fingerprint from
+    the existing manifest, i.e. of the pack the model saw, even if their pack changed since."""
     AI_DIR.mkdir(parents=True, exist_ok=True)
+    dest = AI_DIR / f"manifest-{year}.json"
+    old = {}
+    if keep:
+        if not dest.exists():
+            raise SystemExit(f"{dest} ne postoji, a nastavak batcha treba otiske paketa gotovih jedinica")
+        prev = json.loads(dest.read_text(encoding="utf-8"))
+        if prev["prompt_sha256"] != prompt_sha256():
+            raise SystemExit("prompt se promijenio od prvog dijela batcha: pokreni cijeli batch ponovno, bez --skip")
+        old = {o: h for o, h in prev["paketi"].items() if o in keep}
+    current = {p["oib"]: pack_sha256(p) for p in packs}
+    changed = sorted(o for o, h in old.items() if current.get(o) != h)
+    if changed:
+        print(f"UPOZORENJE: {len(changed)} gotovih jedinica ima promijenjen paket; njihovi tekstovi idu na predložak "
+              f"dok se ne generiraju ponovno: {changed[:10]}")
     verify_src = (config.ROOT / "pipeline" / "verify.py").read_bytes().replace(b"\r\n", b"\n")
     manifest = {"godina": year, "prompt_sha256": prompt_sha256(),
                 "verify_sha256": hashlib.sha256(verify_src).hexdigest(),
                 "model_izvor": BATCH_MODEL_SOURCE, "biljeznica": BATCH_KERNEL,
-                "paketi": {p["oib"]: pack_sha256(p) for p in sorted(packs, key=lambda p: p["oib"])}}
-    dest = AI_DIR / f"manifest-{year}.json"
+                "paketi": {o: old.get(o, current[o]) for o in sorted(current)}}
     dest.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"{dest} ({len(manifest['paketi'])} paketa, prompt {manifest['prompt_sha256'][:12]})")
     return manifest
@@ -224,13 +239,16 @@ def write_kaggle_batch(skip=(), dest=None):
     """kaggle/gemma_batch.py: every unit's pack for LAST_YEAR, minus the units already done in
     the outputs listed in skip. The manifest always covers all units."""
     packs = load_packs()[0]
-    manifest = write_manifest(packs)
     done = done_oibs(skip)
+    manifest = write_manifest(packs, keep=done)
     todo = [p for p in packs if p["oib"] not in done]
     if done:
         print(f"preskačem {len(packs) - len(todo)} gotovih jedinica, ostaje {len(todo)}")
+    # the output carries the fingerprint of every pack it was given, so an import does not have
+    # to trust a manifest that a later run may have rewritten
     meta = {"vrsta": "batch", "godina": config.LAST_YEAR, "prompt_sha256": manifest["prompt_sha256"],
-            "model_izvor": BATCH_MODEL_SOURCE, "biljeznica": BATCH_KERNEL, "paketa": len(todo)}
+            "model_izvor": BATCH_MODEL_SOURCE, "biljeznica": BATCH_KERNEL, "paketa": len(todo),
+            "paketi": {p["oib"]: manifest["paketi"][p["oib"]] for p in todo}}
     return write_kaggle_script(todo, dest or config.ROOT / "kaggle" / "gemma_batch.py",
                                out_name=BATCH_OUTPUT, run_meta=meta)
 
@@ -246,7 +264,8 @@ def model_name(gguf):
 
 def import_batch(paths, dest=None, year=config.LAST_YEAR):
     """data/ai/objasnjenja-<year>.json from downloaded batch outputs. pack_sha256 comes from the
-    manifest written with the batch script, so it records the pack the model saw. A unit that
+    output itself (meta.paketi, written with the script) or else from the manifest, so it records
+    the pack the model saw. A unit that
     appears more than once keeps its first AI text; a later output only replaces an
     unverified one. Warns when a current pack no longer matches the manifest."""
     manifest = json.loads((AI_DIR / f"manifest-{year}.json").read_text(encoding="utf-8"))
@@ -256,6 +275,7 @@ def import_batch(paths, dest=None, year=config.LAST_YEAR):
         raw = Path(path).read_bytes()
         out = json.loads(raw.decode("utf-8"))
         meta = out.get("meta", {})
+        seen = meta.get("paketi") or {}
         if meta.get("prompt_sha256") not in (None, manifest["prompt_sha256"]):
             print(f"UPOZORENJE: {path}: prompt se razlikuje od manifesta")
         runs.append({"datoteka": Path(path).name, "sha256": hashlib.sha256(raw).hexdigest(),
@@ -269,7 +289,7 @@ def import_batch(paths, dest=None, year=config.LAST_YEAR):
                 old = texts.get(r["oib"])
                 if old and (old["izvor"] == "ai" or r.get("source") != "ai"):
                     continue
-                texts[r["oib"]] = {"tekst": r["text"], "pack_sha256": manifest["paketi"][r["oib"]],
+                texts[r["oib"]] = {"tekst": r["text"], "pack_sha256": seen.get(r["oib"]) or manifest["paketi"][r["oib"]],
                                    "pokusaja": len(r.get("attempts", [])),
                                    "izvor": "ai" if r.get("source") == "ai" else "neprovjereno",
                                    "model": model_name(gguf), "gguf": gguf}

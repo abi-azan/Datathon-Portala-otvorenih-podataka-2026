@@ -175,18 +175,14 @@ def _rank(data, skupina, year, points, members):
     return better + 1, n, (below + (ties + 1) / 2) / n * 100
 
 
-def _num(r, k):
-    v = r.get(k)
-    return 0.0 if _missing(v) else float(v)
-
-
-def savings(data, row, skupina, pop, year):
+def savings(data, uprava_pc, skupina, pop, year):
     """Savings block on general administration (01 - 017 - 018) for one year of a merged unit.
-    row: the merged unit-year row (sums over the members)."""
-    actual = _num(row, "p_01") - _num(row, "p_017") - _num(row, "p_018")
+    uprava_pc: the merged unit's cost per inhabitant as methodology.evaluate_unit computes it
+    (one definition for the profile, the context and the savings)."""
+    actual = None if _missing(uprava_pc) else uprava_pc * pop
     median = data.uprava_median.get((skupina, year))
     expected = median * pop if median is not None else None
-    gap = max(0.0, actual - expected) if expected is not None else None
+    gap = max(0.0, actual - expected) if None not in (actual, expected) else None
     realistic = min(SAVINGS_SHARE * max(actual, 0.0), gap) if gap is not None else None
     return {"godina": year, "uprava_zbroj": actual, "medijan_pc": median, "ocekivano": expected,
             "strukturni_jaz": gap, "realno_do": realistic, "iznad_10000": pop > NO_SAVINGS_ABOVE}
@@ -222,7 +218,7 @@ def merge(data, oibs, max_members=MAX_MEMBERS):
     last = max(godine) if godine else None
     return {"clanice": sorted(m["sifra"] for m in members), "vrsta": vrsta, "skupina": skupina,
             "stanovnici": pop, "zup_id": int(members[0]["zup_id"]), "godine": godine,
-            "usteda": savings(data, rows[last], skupina, pop, last) if last is not None else None,
+            "usteda": savings(data, godine[last]["uprava_pc"], skupina, pop, last) if last is not None else None,
             "izravnanje": equalization(data, oibs, vrsta)}
 
 

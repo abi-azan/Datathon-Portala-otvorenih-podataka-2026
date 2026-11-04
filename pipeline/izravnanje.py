@@ -433,8 +433,10 @@ def procjena(df, slugs):
 
 # ---------------------------------------------------------------- check against MF
 
-def _within(ours, mf, rel=PRAG_OPCINA_GRAD):
-    return abs(ours - mf) <= max(rel * abs(mf), 1.0)
+def _within(ours, mf, rel=PRAG_OPCINA_GRAD, floor=1.0):
+    """|ours - mf| within rel of MF, or within floor (1 EUR for amounts; 0 for shares, which
+    are below 1, so a floor in euros would let any share pass)."""
+    return abs(ours - mf) <= max(rel * abs(mf), floor)
 
 
 def provjera(path=XLSX, units_csv=config.BUILD / "units.csv"):
@@ -458,7 +460,7 @@ def provjera(path=XLSX, units_csv=config.BUILD / "units.csv"):
     res["kapacitet_pc_jednak"] = int(((kap - df["P2"]).abs() < 0.005).sum())
 
     ok_puni = [_within(a, b) for a, b in zip(ours, df["P4"])]
-    ok_udio = [_within(a, b, PRAG_OPCINA_GRAD) if b else a == 0
+    ok_udio = [_within(a, b, PRAG_OPCINA_GRAD, floor=0.0) if b else a == 0
                for a, b in zip(ud, df["udio_odluka"].fillna(df["Z"]))]
     exact = int(((ours - df["P4"]).abs() <= 1.0).sum())
     res["puni"] = {"prolazi": int(sum(ok_puni)), "do_1_eura": exact,

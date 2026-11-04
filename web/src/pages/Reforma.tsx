@@ -35,27 +35,39 @@ export function Reforma({ index }: { index: IndexFile }) {
   const year = String(index.zadnja_godina)
   const [{ prag, s: selected }, setState] = useState(readUrl)
   const [files, setFiles] = useState<Record<number, ReformFile>>({})
-  const [failed, setFailed] = useState(false)
+  const [failed, setFailed] = useState<number[]>([])
   const bySifra = useMemo(() => new Map(index.jedinice.map((u) => [u.sifra, u])), [index])
   const file = files[prag]
 
   useEffect(() => {
-    if (files[prag]) return
+    if (files[prag] || failed.includes(prag)) return
     let live = true
     loadReform(prag)
       .then((f) => live && setFiles((m) => ({ ...m, [prag]: f })))
-      .catch(() => live && setFailed(true))
+      .catch(() => live && setFailed((x) => [...x, prag]))
     return () => {
       live = false
     }
-  }, [prag, files])
+  }, [prag, files, failed])
+
+  // in-app links to another threshold or group change the hash while this page stays mounted
+  useEffect(() => {
+    const on = () => {
+      if (window.location.hash.startsWith('#/reforma')) setState(readUrl())
+    }
+    window.addEventListener('hashchange', on)
+    return () => window.removeEventListener('hashchange', on)
+  }, [])
 
   useEffect(() => {
     const href = `#/reforma?prag=${prag}${selected ? `&s=${selected}` : ''}`
     if (window.location.hash !== href) window.history.replaceState(null, '', href)
   }, [prag, selected])
 
-  const setPrag = (p: number) => setState((st) => ({ prag: p, s: st.s }))
+  const setPrag = (p: number) => {
+    setFailed((x) => x.filter((q) => q !== p))   // a retry: the load effect runs again for p
+    setState((st) => ({ prag: p, s: st.s }))
+  }
   const select = (s: string) => setState((st) => ({ ...st, s }))
 
   const before = useMemo(() => {
@@ -119,7 +131,7 @@ export function Reforma({ index }: { index: IndexFile }) {
           </div>
         </div>
 
-        {failed && !file && <p className="text-sm text-ink-2">Podaci Karte reforme nisu se učitali. Osvježi stranicu.</p>}
+        {failed.includes(prag) && !file && <p className="text-sm text-ink-2">Podaci Karte reforme nisu se učitali. Osvježi stranicu.</p>}
 
         {file && (
           <Card>

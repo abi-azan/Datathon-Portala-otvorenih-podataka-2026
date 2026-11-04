@@ -122,8 +122,21 @@ def find_models():
     return files
 
 
+def stop_server(proc):
+    """Stop llama-server; kill it when it ignores SIGTERM (a 31B model stuck in CUDA can), so
+    the port is free for the next start."""
+    proc.terminate()
+    try:
+        proc.wait(timeout=60)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=30)
+
+
 def start_server(model):
-    log = open(LOG, "w")
+    log = open(LOG, "a")                      # append: a restart keeps the crashed server's log
+    log.write(f"\n===== {time.strftime('%H:%M:%S')} start {os.path.basename(model)}\n")
+    log.flush()
     proc = subprocess.Popen([SERVER, "-m", model, "-ngl", "99", "-c", "8192", "--jinja",
                              "--split-mode", "layer", "--port", str(PORT), "-np", "1"],
                             stdout=log, stderr=subprocess.STDOUT)
@@ -200,9 +213,8 @@ def main():
                 r = run_job(pack)
             except Exception as e:             # a hung or crashed server: restart it once, try again
                 print(f"[{name} {i}/{len(PACKS)}] {pack['naziv']['nom']}: {e!r}, restarting server", flush=True)
-                proc.terminate()
                 try:
-                    proc.wait(timeout=60)
+                    stop_server(proc)
                     proc = start_server(model)
                     r = run_job(pack)
                 except BaseException as e2:    # SystemExit from start_server too: keep the output
@@ -218,8 +230,7 @@ def main():
                   f"{r['check']['n_brojki']} brojki, nepoznate {r['check']['nepoznate']}", flush=True)
             out["models"][name]["results"] = results
             json.dump(out, open(OUT, "w"), ensure_ascii=False, indent=1)
-        proc.terminate()
-        proc.wait(timeout=60)
+        stop_server(proc)
         out["models"][name]["seconds"] = round(time.time() - t1)
         ok = sum(r.get("source") == "ai" for r in results)
         print(f"{name}: {ok}/{len(results)} tekstova prošlo provjeru u {out['models'][name]['seconds']} s", flush=True)

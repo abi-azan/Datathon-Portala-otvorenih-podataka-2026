@@ -1,5 +1,5 @@
 import { AlertTriangle, ArrowRight, Info, RotateCcw, Scale, X } from 'lucide-react'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { Search } from '../components/Search'
@@ -119,12 +119,18 @@ export function Simulator({ index }: { index: IndexFile }) {
     }
   }, [zup])
 
+  // member profiles (overdue liabilities), each requested once; a failed one may be retried
+  const requested = useRef(new Set<string>())
   useEffect(() => {
     for (const s of sel) {
       const u = bySifra.get(s)
-      if (u && !details[s]) loadUnit(u.slug).then((d) => setDetails((m) => ({ ...m, [s]: d }))).catch(() => {})
+      if (!u || requested.current.has(s)) continue
+      requested.current.add(s)
+      loadUnit(u.slug)
+        .then((d) => setDetails((m) => ({ ...m, [s]: d })))
+        .catch(() => requested.current.delete(s))
     }
-  }, [sel, bySifra, details])
+  }, [sel, bySifra])
 
   useEffect(() => {
     loadGroups().then(setGroups).catch(() => {})

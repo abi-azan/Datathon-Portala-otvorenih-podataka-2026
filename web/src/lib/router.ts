@@ -6,12 +6,13 @@ export type Route =
   | { page: 'home' }
   | { page: 'unit'; slug: string }
   | { page: 'methodology' }
-  | { page: 'simulator'; j: string[] }
+  | { page: 'simulator' }
   | { page: 'reform' }
 
 export type Page = Route['page']
 
-/** DGU codes from the simulator's ?j= parameter (5 digits each, at most 4, no repeats). */
+/** DGU codes from the simulator's ?j= parameter (5 digits each, at most 4, no repeats).
+ *  The simulator reads it itself and keeps it in sync with replaceState, so the route has no copy. */
 export function parseSelection(hash: string): string[] {
   const q = hash.split('?')[1] ?? ''
   const j = new URLSearchParams(q).get('j') ?? ''
@@ -23,7 +24,7 @@ function parse(hash: string): Route {
   const unit = path.match(/^\/jedinica\/([a-z0-9-]+)/)
   if (unit) return { page: 'unit', slug: unit[1] }
   if (path.startsWith('/metodologija')) return { page: 'methodology' }
-  if (path.startsWith('/simulator')) return { page: 'simulator', j: parseSelection(hash) }
+  if (path.startsWith('/simulator')) return { page: 'simulator' }
   if (path.startsWith('/reforma')) return { page: 'reform' }
   return { page: 'home' }
 }

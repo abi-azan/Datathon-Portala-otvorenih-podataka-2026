@@ -197,7 +197,7 @@ SCHEMAS = {
                              "iznad_10000"],
                 "properties": {
                     "godina": {"type": "integer"},
-                    "uprava_zbroj": {"type": "number", "description": "Zbroj troška opće uprave članica, €."},
+                    "uprava_zbroj": {**NUM, "description": "Zbroj troška opće uprave članica, € (uprava_pc spojene × stanovnici)."},
                     "medijan_pc": {**NUM, "description": "Medijan troška uprave po stanovniku u skupini, €."},
                     "ocekivano": {**NUM, "description": "medijan_pc × stanovnici, €."},
                     "strukturni_jaz": {**NUM, "minimum": 0, "description": "max(0, uprava_zbroj − ocekivano), €; gornja granica."},
@@ -223,7 +223,8 @@ SCHEMAS = {
                                 "description": "Puni iznos svake članice, €, istim redom kao clanice."},
             "puni_clanice": {"type": "number", "minimum": 0, "description": "Zbroj punih iznosa članica, €."},
             "puni_spojena": {"type": "number", "minimum": 0, "description": "Puni iznos spojene jedinice, €."},
-            "promjena": {"type": "number", "description": "puni_spojena − puni_clanice, €; nikad pozitivna uz fiksne referentne vrijednosti."},
+            "promjena": {"type": "number", "description": "puni_spojena − puni_clanice, €. S tablicom za 2027. nikad nije pozitivna, "
+                                                         "jer je referentna vrijednost za gradove niža od one za općine; zakon to ne jamči."},
             "promjena_udio": NUM,
             "kapacitet_pc": {"type": "number", "description": "Porezni kapacitet spojene jedinice po stanovniku, €."},
             "referentna_pc": {"type": "number", "description": "Referentna vrijednost za vrstu spojene jedinice, €."},
@@ -302,7 +303,7 @@ SCHEMAS = {
                                                       "realističnog raspona uštede (donji je 0)."},
             "strukturni_jaz_zbroj": {"type": "number", "minimum": 0,
                                      "description": "Zbroj strukturnih jazova spojenih skupina, €: gornja granica."},
-            "izravnanje_promjena_zbroj": {"type": "number", "maximum": 0,
+            "izravnanje_promjena_zbroj": {"type": "number",
                                           "description": "Zbroj promjena punog iznosa fiskalnog izravnanja spojenih skupina, €."},
             "jedinice": {"type": "array", "items": {"$ref": "#/components/schemas/ReformaJedinica"}},
         },

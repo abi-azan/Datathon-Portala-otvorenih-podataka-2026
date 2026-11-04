@@ -9,34 +9,14 @@ import { feature } from 'topojson-client'
 import type { Topology } from 'topojson-specification'
 import type { FeatureCollection } from 'geojson'
 import { topoUrl, type UnitIndex } from '../lib/data'
-import { GRADES, grade, num } from '../lib/format'
+import { grade, num } from '../lib/format'
 import { go, unitHref } from '../lib/router'
 import { GradeChip } from './Grade'
+import { BASEMAP, BLANK, CROATIA, gradeFill, quietBasemap } from './mapStyle'
 
-// OpenFreeMap: free vector tiles from OpenStreetMap data, no key (openfreemap.org).
-const BASEMAP = 'https://tiles.openfreemap.org/styles/positron'
-const CROATIA: [number, number, number, number] = [13.45, 42.35, 19.45, 46.56]
 maplibregl.setWorkerUrl(workerUrl)
 
-const fillColor = [
-  'match',
-  ['coalesce', ['feature-state', 'g'], 0],
-  ...GRADES.flatMap((g) => [g.value, g.color]),
-  '#ffffff',
-] as unknown as maplibregl.ExpressionSpecification
-
-/** Make the basemap recede: white land, pale sea, Croatian place names where OSM has them,
- *  and no land-use fills that could be mistaken for the neutral grade colour. */
-function quietBasemap(m: maplibregl.Map) {
-  for (const l of m.getStyle().layers) {
-    if (l.type === 'background') m.setPaintProperty(l.id, 'background-color', '#fdfdfc')
-    else if (l.type === 'fill' && /water|ocean|sea/.test(l.id)) m.setPaintProperty(l.id, 'fill-color', '#dbe5ee')
-    else if (l.type === 'fill' && /land|park|wood|grass|forest|residential|industrial|aeroway|building/.test(l.id))
-      m.setLayoutProperty(l.id, 'visibility', 'none')
-    else if (l.type === 'symbol' && m.getLayoutProperty(l.id, 'text-field'))
-      m.setLayoutProperty(l.id, 'text-field', ['coalesce', ['get', 'name:hr'], ['get', 'name:latin'], ['get', 'name']])
-  }
-}
+const fillColor = gradeFill(['feature-state', 'g'])
 
 /** What the fill encodes. Only the grade for now; add a member and its COLOR_BY entry for new layers. */
 export type MapColorBy = 'ocjena'
@@ -71,12 +51,6 @@ interface Hover {
 
 const TOOLTIP_W = 256
 const TOOLTIP_H = 132 // approximate height, to keep the tooltip inside the map
-// Fallback when the OpenFreeMap style cannot be loaded: the choropleth still works on a plain background.
-const BLANK: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {},
-  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#fdfdfc' } }],
-}
 
 export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, selected, onSelect, dimmed, hint, focus }: Props) {
   const box = useRef<HTMLDivElement>(null)
