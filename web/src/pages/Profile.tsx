@@ -1,11 +1,11 @@
-import { AlertTriangle, ArrowLeft, CheckCircle2, ExternalLink, Info, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, ExternalLink, Info, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { TrendChart } from '../components/TrendChart'
 import { HttpError, loadGroups, loadUnit, type GroupMedians, type UnitDetail } from '../lib/data'
 import { COMPONENTS, FLAGS, QUALITY, VRSTA, eur, num, pct } from '../lib/format'
-import { unitHref } from '../lib/router'
+import { simulatorHref, unitHref } from '../lib/router'
 
 const YEARS = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']
 
@@ -259,6 +259,15 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                   </li>
                 ))}
               </ul>
+              {/* the simulator takes municipalities and towns of one county, not counties or Zagreb */}
+              {!isCounty && unit.sifra !== '01333' && (
+                <a
+                  href={simulatorHref([unit.sifra])}
+                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium underline decoration-axis underline-offset-4 hover:decoration-ink"
+                >
+                  Simuliraj spajanje sa susjedima <ArrowRight className="h-4 w-4" aria-hidden />
+                </a>
+              )}
             </Card>
           )}
 
