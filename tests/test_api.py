@@ -59,6 +59,17 @@ def test_every_unit_profile_matches_schema(spec):
     assert not bad, bad[:5]
 
 
+def test_ai_texts_cover_almost_every_profile():
+    """After the batch (data/ai/objasnjenja-<year>.json) at least 95 % of the profiles show the
+    AI text. Fewer means the fact packs changed after the batch, so texts fell back to the template."""
+    from pipeline import publish
+    if not publish.AI_TEXTS.exists():
+        pytest.skip("no AI texts imported yet")
+    index = load("jedinice.json")["jedinice"]
+    sources = [load(f"jedinice/{u['slug']}.json")["objasnjenje"]["izvor"] for u in index]
+    assert sources.count("ai") >= 0.95 * len(index), sources.count("ai")
+
+
 def test_groups_match_schema(spec):
     assert not list(validator(spec, "Skupine").iter_errors(load("skupine.json")))
 

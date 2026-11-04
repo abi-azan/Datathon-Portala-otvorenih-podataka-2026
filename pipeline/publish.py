@@ -1,10 +1,12 @@
 """Static API for the web app and for anyone else: web/public/api/v1/.
 
     .venv/Scripts/python -m pipeline.publish     # after pipeline.build
+    .venv/Scripts/python -m pipeline.publish --ai other.json   # publish AI texts from another file
 
   jedinice.json            index of all 576 units: names, codes, grade and points per year
   jedinice/<slug>.json     full profile: every year's results, fact pack, peer medians,
-                           neighbours, openness layer, template explanation
+                           neighbours, openness layer, explanation (AI text from
+                           data/ai/objasnjenja-<year>.json when it still matches, else template)
   skupine.json             peer-group medians per year (points and the five indicators)
   geo/jls.topo.json        boundaries (layers jls, zupanije)
   simulator/zup-<id>.json  merger simulator: every group of 2-4 neighbouring units in the county
@@ -19,6 +21,7 @@
 The files are generated, not committed: CI builds them before deploying the site.
 The same run rewrites docs/skupovi-podataka.md, the dataset table for the submission.
 """
+import argparse
 import csv
 import json
 import math
@@ -27,6 +30,7 @@ import shutil
 import sys
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from pathlib import Path
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -64,12 +68,28 @@ def group_medians(res):
     return out
 
 
-def explanation(pack):
-    """Template text until the AI texts exist; always shipped with its number check."""
+AI_TEXTS = explain.AI_DIR / f"objasnjenja-{config.LAST_YEAR}.json"
+
+
+def load_ai_texts(path=AI_TEXTS):
+    """{oib: entry} from data/ai/objasnjenja-<year>.json (pipeline.explain --import-batch), or {}."""
+    path = Path(path)
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))["tekstovi"]
+
+
+def explanation(pack, ai=None):
+    """The unit's AI text when it was checked on Kaggle, was written from this very pack and
+    passes the number check here too; otherwise the template. Always shipped with its check."""
     if not pack:
         return None
+    if ai and ai.get("izvor") == "ai" and ai.get("pack_sha256") == explain.pack_sha256(pack):
+        check = verify.verify(ai["tekst"], pack)
+        if check["ok"]:
+            return {"tekst": ai["tekst"], "izvor": "ai", "model": ai.get("model"), "provjera": check}
     text = explain.template(pack)
-    return {"tekst": text, "izvor": "predlozak", "provjera": verify.verify(text, pack)}
+    return {"tekst": text, "izvor": "predlozak", "model": None, "provjera": verify.verify(text, pack)}
 
 
 def read_datasets():
@@ -215,6 +235,10 @@ def datasets_markdown(recs):
 
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ai", default=AI_TEXTS, metavar="JSON",
+                    help="AI texts to publish (default data/ai/objasnjenja-<year>.json)")
+    ai_texts = load_ai_texts(ap.parse_args().ai)
     units = pd.read_csv(config.BUILD / "units.csv", dtype={"oib": str, "sifra": str, "rkp": str})
     res = pd.read_parquet(config.BUILD / "results.parquet")
     nested = {u["oib"]: u for u in json.loads((config.BUILD / "results.json").read_text(encoding="utf-8"))}
@@ -251,7 +275,7 @@ def main():
             "godine": n["godine"],
             "susjedi": neighbours,
             "cinjenice": pack,
-            "objasnjenje": explanation(pack),
+            "objasnjenje": explanation(pack, ai_texts.get(u["oib"])),
         })
         write(API / "jedinice" / f"{u['slug']}.json", detail)
 

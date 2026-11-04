@@ -91,6 +91,7 @@ export interface UnitDetail {
   objasnjenje: {
     tekst: string
     izvor: 'ai' | 'predlozak'
+    model?: string | null
     provjera?: { ok: boolean; n_brojki: number; nepoznate: string[]; sadrzaj?: string[] }
   } | null
 }

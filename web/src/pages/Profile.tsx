@@ -129,7 +129,9 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                 <Eyebrow>Ukratko</Eyebrow>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-page px-2.5 py-1 text-xs text-ink-2">
                   {unit.objasnjenje.izvor === 'ai' ? <Sparkles className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                  {unit.objasnjenje.izvor === 'ai' ? 'AI tekst' : 'Predložak'}
+                  {unit.objasnjenje.izvor === 'ai'
+                    ? `AI tekst${unit.objasnjenje.model ? ` · ${unit.objasnjenje.model}` : ''}`
+                    : 'Predložak'}
                   {unit.objasnjenje.provjera &&
                     (unit.objasnjenje.provjera.ok
                       ? ` · ${unit.objasnjenje.provjera.n_brojki}/${unit.objasnjenje.provjera.n_brojki} brojki provjereno`

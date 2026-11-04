@@ -98,9 +98,13 @@ SCHEMAS = {
                                "km": {"type": "number"}}}},
             "cinjenice": {"type": ["object", "null"], "properties": {
                 "facts": {"type": "array", "items": {"$ref": "#/components/schemas/Cinjenica"}}}},
-            "objasnjenje": {"type": ["object", "null"], "required": ["tekst", "izvor"], "properties": {
+            "objasnjenje": {"type": ["object", "null"], "required": ["tekst", "izvor", "model", "provjera"],
+                            "description": "Kratko objašnjenje ocjene. AI tekst (Gemma 4 na Kaggleu) objavljuje se samo ako je "
+                                           "napisan iz istog paketa činjenica (pack_sha256) i ako prolazi provjeru brojki; "
+                                           "inače predložak iz činjenica.", "properties": {
                 "tekst": {"type": "string"},
                 "izvor": {"type": "string", "enum": ["ai", "predlozak"]},
+                "model": {"type": ["string", "null"], "description": "Model koji je napisao AI tekst, npr. Gemma 4 31B; null za predložak."},
                 "provjera": {"type": "object", "required": ["ok", "n_brojki", "nepoznate"], "properties": {
                     "ok": {"type": "boolean"}, "n_brojki": {"type": "integer"},
                     "nepoznate": {"type": "array", "items": {"type": "string"}},

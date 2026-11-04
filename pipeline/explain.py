@@ -5,6 +5,7 @@
     .venv/Scripts/python -m pipeline.explain --check out.json   # re-verifies a downloaded Kaggle output
     .venv/Scripts/python -m pipeline.explain --kaggle-batch     # all 576 units, plus data/ai/manifest-2025.json
     .venv/Scripts/python -m pipeline.explain --kaggle-batch --skip out.json   # resume: leave out finished units
+    .venv/Scripts/python -m pipeline.explain --import-batch out.json [out2.json]  # -> data/ai/objasnjenja-2025.json
 
 Python computes the facts (pipeline/facts.py). The model writes 3-5 sentences around them,
 and pipeline/verify.py rejects any text with a number that is not in the facts. A rejected
@@ -234,6 +235,66 @@ def write_kaggle_batch(skip=(), dest=None):
                                out_name=BATCH_OUTPUT, run_meta=meta)
 
 
+def model_name(gguf):
+    """Display name of a Gemma 4 GGUF file, e.g. gemma-4-31B_q4_0-it.gguf -> Gemma 4 31B."""
+    g = gguf.lower()
+    for key, name in (("26b", "Gemma 4 26B-A4B"), ("31b", "Gemma 4 31B"), ("12b", "Gemma 4 12B"), ("e4b", "Gemma 4 E4B")):
+        if key in g:
+            return name
+    return gguf
+
+
+def import_batch(paths, dest=None, year=config.LAST_YEAR):
+    """data/ai/objasnjenja-<year>.json from downloaded batch outputs. pack_sha256 comes from the
+    manifest written with the batch script, so it records the pack the model saw. A unit that
+    appears more than once keeps its first AI text; a later output only replaces an
+    unverified one. Warns when a current pack no longer matches the manifest."""
+    manifest = json.loads((AI_DIR / f"manifest-{year}.json").read_text(encoding="utf-8"))
+    current = {p["oib"]: pack_sha256(p) for p in load_packs(year)[0]}
+    texts, runs = {}, []
+    for path in paths:
+        raw = Path(path).read_bytes()
+        out = json.loads(raw.decode("utf-8"))
+        meta = out.get("meta", {})
+        if meta.get("prompt_sha256") not in (None, manifest["prompt_sha256"]):
+            print(f"UPOZORENJE: {path}: prompt se razlikuje od manifesta")
+        runs.append({"datoteka": Path(path).name, "sha256": hashlib.sha256(raw).hexdigest(),
+                     "djelomicno": bool(out.get("partial")), "llama_cpp_commit": meta.get("llama_cpp_commit"),
+                     "gpu": (meta.get("gpu") or "").replace("\n", ", "), "sekundi": meta.get("seconds_total"),
+                     "modeli": list(out.get("models", {}))})
+        for gguf, m in out.get("models", {}).items():
+            for r in m.get("results", []):
+                if not r.get("text") or r["oib"] not in manifest["paketi"]:
+                    continue
+                old = texts.get(r["oib"])
+                if old and (old["izvor"] == "ai" or r.get("source") != "ai"):
+                    continue
+                texts[r["oib"]] = {"tekst": r["text"], "pack_sha256": manifest["paketi"][r["oib"]],
+                                   "pokusaja": len(r.get("attempts", [])),
+                                   "izvor": "ai" if r.get("source") == "ai" else "neprovjereno",
+                                   "model": model_name(gguf), "gguf": gguf}
+    stale = sorted(o for o, t in texts.items() if current.get(o) != t["pack_sha256"])
+    if stale:
+        print(f"UPOZORENJE: {len(stale)} paketa se razlikuje od manifesta; ti tekstovi idu na predložak: {stale[:10]}")
+    ggufs = sorted({t["gguf"] for t in texts.values()})
+    result = {
+        "meta": {"godina": year, "modeli": [model_name(g) for g in ggufs], "gguf": ggufs,
+                 "model_izvor": manifest["model_izvor"], "biljeznica": manifest["biljeznica"],
+                 "prompt_sha256": manifest["prompt_sha256"], "verify_sha256": manifest["verify_sha256"],
+                 "llama_cpp_commit": next((r["llama_cpp_commit"] for r in runs if r["llama_cpp_commit"]), None),
+                 "pokretanja": runs, "uvezeno": pd.Timestamp.now(tz="UTC").isoformat(timespec="seconds"),
+                 "jedinica": len(manifest["paketi"]), "tekstova": len(texts),
+                 "ai": sum(t["izvor"] == "ai" for t in texts.values())},
+        "tekstovi": {o: texts[o] for o in sorted(texts)},
+    }
+    dest = Path(dest) if dest else AI_DIR / f"objasnjenja-{year}.json"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    m = result["meta"]
+    print(f"{dest}: {m['tekstova']}/{m['jedinica']} tekstova, od toga {m['ai']} AI (provjereno na Kaggleu)")
+    return result
+
+
 def check_output(path):
     """Re-verify a downloaded Kaggle output with the local packs and print a summary."""
     out = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -266,7 +327,12 @@ def main():
                     help="script for every unit (kaggle/gemma_batch.py) and data/ai/manifest-<year>.json")
     ap.add_argument("--skip", action="append", default=[], metavar="OUTPUT_JSON",
                     help="with --kaggle-batch: leave out units that already have a text in this output")
+    ap.add_argument("--import-batch", nargs="+", metavar="OUTPUT_JSON",
+                    help="downloaded batch outputs -> data/ai/objasnjenja-<year>.json")
+    ap.add_argument("--out", metavar="JSON", help="with --import-batch: write here instead of data/ai/")
     a = ap.parse_args()
+    if a.import_batch:
+        import_batch(a.import_batch, dest=a.out)
     if a.kaggle_test:
         write_kaggle_test(a.kaggle_test, fresh=a.fresh, hf=a.hf)
     if a.kaggle_batch:

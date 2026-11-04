@@ -36,3 +36,19 @@ def test_kaggle_script_carries_the_packs_and_metadata(tmp_path):
     assert mod.PACKS == [PACK] and mod.RUN_META == {"vrsta": "batch"}
     assert mod.OUT.endswith("/x.json") and mod.MAX_RETRIES == explain.MAX_RETRIES
     assert dest.stat().st_size < 1_000_000       # Kaggle refuses a script of 1 MB or more
+
+
+def test_publish_uses_the_ai_text_only_when_it_still_fits():
+    from pipeline import publish
+    pack = {"oib": "1", "year": 2025, "naziv": {"nom": "Općina Primjerovo"}, "ocjene": [4],
+            "facts": [{"label": "Ocjena financijske stabilnosti", "value": "4 (stabilno) na ljestvici od 1 do 5"},
+                      {"label": "Ukupni bodovi", "value": "72,5 boda od 100"}]}
+    text = "Općina Primjerovo ima ocjenu 4 (stabilno) i 72,5 boda od 100."
+    ai = {"tekst": text, "izvor": "ai", "pack_sha256": explain.pack_sha256(pack), "model": "Gemma 4 31B"}
+    shown = publish.explanation(pack, ai)
+    assert shown["izvor"] == "ai" and shown["model"] == "Gemma 4 31B" and shown["provjera"]["ok"]
+    stale = publish.explanation(pack, {**ai, "pack_sha256": "0" * 64})
+    unchecked = publish.explanation(pack, {**ai, "izvor": "neprovjereno"})
+    wrong = publish.explanation(pack, {**ai, "tekst": text.replace("72,5", "75,2")})
+    for e in (stale, unchecked, wrong, publish.explanation(pack, None)):
+        assert e["izvor"] == "predlozak" and e["model"] is None
