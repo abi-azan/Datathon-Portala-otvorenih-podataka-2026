@@ -78,6 +78,7 @@ STATIČNI API            pipeline/publish.py → web/public/api/v1/  (+ openapi.
    provenance.py (izvor svake brojke) · metodologija.py (metodologija iz koda)
    ▼
 WEB (React, Vite, Tailwind, MapLibre GL + OpenFreeMap)  web/
+MCP SERVER (fiskalna_mcp, stdio)  isti statični API za AI asistente, samo čitanje
    ▼
 GitHub Actions (.github/workflows/deploy.yml): ETL → API → testovi → build → GitHub Pages
 ```
@@ -119,6 +120,14 @@ Osnovna adresa je `<stranica>/api/v1/`, a opis je u `openapi.json`.
 | `geo/jls.topo.json` | granice, slojevi jls i zupanije |
 | `izvori.json` | zapis svakog preuzimanja |
 | `skupovi.json` | popis skupova podataka |
+
+## MCP server
+
+`fiskalna_mcp` je read-only [MCP](https://modelcontextprotocol.io) server nad istim statičnim API-jem. Bilo koji AI asistent koji podržava MCP (Claude Desktop, Claude Code, MCP Inspector…) može odgovarati na pitanja o jedinicama našim brojkama, uz poveznicu na izvor. Server ne računa ništa novo.
+
+- Alati: `pronadi_jedinicu`, `pregled_jedinice`, `usporedi`, `scenarij_spajanja`, `karta_reforme`, `izvor_brojke`; resurs `fiskalna://metodologija`.
+- Pokretanje: `.venv/Scripts/python -m fiskalna_mcp` (javni API) ili `… --api web/public/api/v1` (lokalni build, bez mreže).
+- Konfiguracija klijenta, naredbe za MCP Inspector i primjeri pitanja: [docs/mcp.md](docs/mcp.md). SDK: `mcp` 2.3.0 (MIT).
 
 ## Licence
 

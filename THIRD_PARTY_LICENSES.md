@@ -48,8 +48,9 @@ Fiskalna karta JLS gradi se i radi samo uz softver otvorenog koda. Ovdje su izra
 | spopt | 0.8.0 | BSD-3-Clause | u `requirements.txt` za Kartu reforme; kod ga još ne uvozi |
 | jsonschema, referencing | 4.26.0, 0.37.0 | MIT | provjera API-ja prema OpenAPI shemama |
 | pytest | 9.2.0 | MIT | testovi |
+| mcp (službeni MCP Python SDK) | 2.3.0 | MIT | MCP server `fiskalna_mcp` (stdio), vidi `docs/mcp.md` |
 
-- U `.venv` je ukupno 76 paketa, s prijelaznim ovisnostima (numpy, pyogrio s GDAL-om, pyproj s PROJ-om i dr.).
+- U `.venv` je ukupno 98 paketa, s prijelaznim ovisnostima (numpy, pyogrio s GDAL-om, pyproj s PROJ-om, a za MCP pydantic, starlette, uvicorn, anyio i dr.; provjereno 5.11.).
 - Sve su pod licencama otvorenog koda: MIT, BSD, Apache-2.0, ISC, PSF ili MPL-2.0 (certifi, tqdm).
 - Copyleft imaju samo GEOS (LGPL-2.1, u wheelovima shapely i pyogrio) i text-unidecode (Artistic ili GPL-2.0+). text-unidecode dolazi s Kaggle CLI-jem preko python-slugify.
 
@@ -61,6 +62,7 @@ Fiskalna karta JLS gradi se i radi samo uz softver otvorenog koda. Ovdje su izra
 | llama.cpp | commit `2cbca38` | MIT | izvođenje Gemme na Kaggle GPU-u, izgrađen iz izvornog koda |
 | Gemma 4 31B-it (QAT Q4_0, GGUF) | Kaggle v2 | Apache-2.0 | tekst objašnjenja ocjene |
 | Kaggle CLI (kaggle, kagglesdk) | 2.2.5, 0.1.38 | Apache-2.0 | slanje bilježnice na Kaggle |
+| MCP Inspector (`@modelcontextprotocol/inspector`, `npx`) | 2.13.0 | Apache-2.0 (stariji doprinosi MIT) | provjera MCP servera; nije dio rješenja |
 | GitHub Actions: checkout, setup-python, setup-node, cache, upload-pages-artifact, deploy-pages | v5 do v7 | MIT | CI i objava |
 
 ## Video (planirano, `docs/video-scenarij.md`)
