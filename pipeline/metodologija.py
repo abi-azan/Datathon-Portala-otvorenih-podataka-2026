@@ -62,6 +62,16 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
                       "iste godine, broji se umanjena za novi kredit (54 − 84)."},
         ],
         "zastavice": [{"oznaka": k, "tekst": v} for k, v in facts.FLAGS.items()],
+        "kriterij_10": "Kriterij od 10 % (Z5) uveo je zaključak Vlade od 16.4.2026. za pomoći iz državnog proračuna "
+                       "koje se dodjeljuju na temelju poziva (ne za izravnanje, decentralizirane funkcije ni EU ugovore). "
+                       "Manjak prihoda nad rashodima bez EU izvora smije biti najviše "
+                       f"{_pc(methodology.Z5_SHARE)} prihoda bez EU izvora, prema zadnjem godišnjem izvještaju. "
+                       "Računamo ga kao ((3 + 4) − (6 + 7)) / (6 + 7 − " + " − ".join(methodology.EU_REVENUE) + "). "
+                       "PR-RAS ne razdvaja rashode po izvoru, pa se rashodi iz EU izvora uzimaju jednaki EU prihodima "
+                       "iste godine; kod jedinica s velikim EU projektima rezultat je približan. Zaključak ne kaže je li riječ "
+                       "o manjku same godine ili o ukupnom manjku s prenesenim rezultatom; uzimamo manjak godine, jer je "
+                       "svrha zaključka fiskalni rezultat opće države, koji se mjeri po godinama. Izračun je naš, a ne "
+                       "MF-ov, i ne ulazi u ocjenu.",
         "skupine": {"razredi": [label for _, _, label in methodology.SIZE_CLASSES],
                     "opis": f"Općine i gradovi uspoređuju se unutar vrste i razreda veličine; gradovi od {_int(big)} "
                             "stanovnika naviše čine skupinu velikih gradova, županije svoju skupinu, a Grad Zagreb nema "
@@ -88,10 +98,19 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
             "batch": ai,
         },
         "simulator": {
-            "usteda": "Ušteda samo na općoj upravi (funkcija 01 bez 017 i 018). Očekivani trošak je medijan troška po "
-                      "stanovniku usporedne skupine spojene jedinice puta broj stanovnika. Strukturni jaz je gornja granica; "
-                      f"realističan raspon je 0 do {_pc(merge.SAVINGS_SHARE)} zbroja troška uprave, najviše do jaza. Iznad "
+            "usteda": "Ušteda samo na općoj upravi (funkcija 01 bez 017 i 018) i samo od veličine. Svaka članica "
+                      "vrednuje se medijanom troška po stanovniku jedinica svoje veličine iste vrste kao spojena jedinica "
+                      "(općina koja ulazi u grad mjeri se s gradovima svoje veličine), a spojena jedinica medijanom svoje "
+                      "skupine. Razlika je učinak veličine. Realističan raspon je 0 do manjeg od učinka veličine i "
+                      f"{_pc(merge.SAVINGS_SHARE)} zbroja troška uprave. Koliko članice troše iznad sličnih jedinica "
+                      "prikazuje se odvojeno: taj jaz postoji i bez spajanja i ne pripisuje se spajanju. Iznad "
                       f"{_int(merge.NO_SAVINGS_ABOVE)} stanovnika dodatna ušteda se ne očekuje.",
+            "poticaj": "Poticaj za stvarno spajanje po Odluci NN 88/2022 (t. IX., na snazi i u 2026.). Pretpostavljamo da "
+                       "najveća članica pripaja ostale. Pripojena jedinica iz razvojne skupine I.-V. donosi pet godina "
+                       f"godišnje {merge.INCENTIVE_FACTOR} × svoje fiskalno izravnanje iz godine prije spajanja i do "
+                       f"{_int(round(merge.INCENTIVE_CAPITAL))} € za kapitalne projekte; podmiruju se i njezine dospjele obveze "
+                       "i krediti sa stanjem 30.6.2022. Isplatu izravnanja procjenjujemo kao udio u zbroju punih iznosa "
+                       "tablice MF-a puta stavku proračuna za 2026. Poticaj je prijenos iz državnog proračuna, ne ušteda.",
             "izravnanje": "Fiskalno izravnanje po čl. 8. i 9. Zakona o financiranju JLP(R)S: puni iznos = max(0, (referentna "
                           "vrijednost − kapacitet) × stanovnici), s kapacitetima i referentnim vrijednostima iz tablice "
                           "Ministarstva financija. Formula na toj tablici daje iste pune iznose za svih 576 jedinica. Isplata "

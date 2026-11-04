@@ -159,8 +159,10 @@ def test_header_matches_the_list(data, groups, docs):
         assert sum(j["stanovnici"] for j in js) == total
         assert d["n_ispod_praga"] == sum(j["stanovnici"] < p for j in js)
         assert abs(d["usteda_realno_do_zbroj"] - sum(j["usteda"]["realno_do"] for j in merged)) < 1.0
-        assert abs(d["strukturni_jaz_zbroj"] - sum(j["usteda"]["strukturni_jaz"] for j in merged)) < 1.0
-        assert 0 <= d["usteda_realno_do_zbroj"] <= d["strukturni_jaz_zbroj"]
+        assert abs(d["razmjer_zbroj"] - sum(j["usteda"]["razmjer"] for j in merged)) < 1.0
+        assert abs(d["jaz_bez_spajanja_zbroj"] - sum(j["usteda"]["jaz_bez_spajanja"] for j in merged)) < 1.0
+        assert 0 <= d["usteda_realno_do_zbroj"] <= d["razmjer_zbroj"]
+        assert abs(d["poticaj_godisnje_zbroj"] - sum(j["poticaj"]["godisnje"] or 0 for j in merged)) < 1.0
 
 
 @needs_build

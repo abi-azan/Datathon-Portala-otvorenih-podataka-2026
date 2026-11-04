@@ -5,7 +5,7 @@ import { Card, Eyebrow } from '../components/Layout'
 import { TrendChart } from '../components/TrendChart'
 import { CheckedText, SourcePanel } from '../components/Sources'
 import { HttpError, canMerge, loadGroups, loadSource, loadUnit, type GroupMedians, type SourceFile, type UnitDetail } from '../lib/data'
-import { COMPONENTS, FLAGS, QUALITY, VRSTA, eur, normalizeGradeLabels, num, pct } from '../lib/format'
+import { COMPONENTS, FLAGS, QUALITY, VRSTA, criterion10, eur, normalizeGradeLabels, num, pct } from '../lib/format'
 import { simulatorHref, unitHref } from '../lib/router'
 
 const YEARS = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']
@@ -62,11 +62,13 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
   const med = groups[unit.skupina]
   const facts = unit.cinjenice?.facts ?? []
   const componentLines = facts.filter((f) => f.label.startsWith('Sastavnica:')).map((f) => f.value)
+  const z5 = criterion10(r.z5_manjak_udio, r.z5_zadovoljava, r.oznake)
   const notes = [
     ...r.zastavice.map((z) => ({ kind: 'flag' as const, text: FLAGS[z] ?? z })),
     ...(r.ogranicenje_do
       ? [{ kind: 'rule' as const, text: 'Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.' }]
       : []),
+    ...(z5?.warning ? [{ kind: 'rule' as const, text: z5.warning }] : []),
     ...r.kvaliteta.map((q) => ({ kind: 'data' as const, text: QUALITY[q] ?? q })),
   ]
   const isCounty = unit.vrsta === 'zupanija'
@@ -262,6 +264,13 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
               <Row label="Trošak opće uprave po stanovniku" value={eur(r.uprava_pc)} median={eur(med?.[year]?.uprava_pc)} />
               <Row label="Tekući prihodi po stanovniku" value={eur(r.tekuci_prihodi_pc)} />
               <Row label="Investicijska stopa" value={pct(r.investicijska_stopa)} />
+              {z5 && (
+                <Row
+                  label="Kriterij od 10 % za pomoći iz državnog proračuna"
+                  hint={`Zaključak Vlade od 16.4.2026.; ${z5.hint}.`}
+                  value={z5.value}
+                />
+              )}
               {r.DO != null && r.DO_iskazano != null && r.DO_iskazano !== r.DO && (
                 <>
                   <Row label="Dospjele obveze, kako ih je jedinica iskazala" value={eur(r.DO_iskazano)} />

@@ -132,3 +132,18 @@ def test_flags():
     rows = {2024: unit_year(p_3=1100.0), 2025: unit_year(p_3=1100.0, b_9222=200.0, b_9221=0.0, b_11=10.0)}
     z = m.evaluate_unit(rows, 1000)[2025]["zastavice"]
     assert {"Z1", "Z3", "Z4"} <= set(z)
+
+
+def test_criterion_10_without_eu_sources():
+    """Z5 (Government conclusion 16.4.2026, research/08 §5): deficit (3 + 4) - (6 + 7) as a share of
+    revenue without EU sources (638, 6324); a surplus counts as 0."""
+    r = {"p_6": 1_000_000, "p_7": 0, "p_638": 200_000, "p_6324": 0, "p_3": 900_000, "p_4": 180_000}
+    z = m.criterion_10(r)
+    assert abs(z["z5_manjak_udio"] - 80_000 / 800_000) < 1e-12 and z["z5_zadovoljava"]   # exactly 10 %
+    z = m.criterion_10({**r, "p_4": 181_000})
+    assert not z["z5_zadovoljava"]
+    z = m.criterion_10({**r, "p_4": 50_000})
+    assert z["z5_manjak_udio"] == 0 and z["z5_zadovoljava"]
+    assert m.criterion_10({"p_6": 0}) == {"z5_manjak_udio": None, "z5_zadovoljava": None}
+    # it is context: no red flag, so the AI fact packs do not change
+    assert "Z5" not in m.flags({2025: m.aux({**r, "p_4": 400_000})}, 2025, {**r, "p_4": 400_000})

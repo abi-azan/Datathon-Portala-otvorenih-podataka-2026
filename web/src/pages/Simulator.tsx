@@ -15,7 +15,7 @@ import {
   type UnitDetail,
   type UnitIndex,
 } from '../lib/data'
-import { COMPONENTS, FLAGS, QUALITY, VRSTA, eur, num, pct } from '../lib/format'
+import { COMPONENTS, FLAGS, QUALITY, VRSTA, criterion10, eur, num, pct } from '../lib/format'
 import { parseSelection, simulatorHref, unitHref } from '../lib/router'
 
 // Same lazy chunk as the home page: MapLibre is about 1 MB.
@@ -397,8 +397,11 @@ function Result({
       DO: d?.DO ?? null,
       I5: d?.I5 ?? null,
       uprava: u.uprava_pc != null ? u.uprava_pc * u.stanovnici : null,
+      z5: criterion10(d?.z5_manjak_udio, d?.z5_zadovoljava, d?.oznake),
+      d_udio: d?.z5_manjak_udio ?? null,
     }
   })
+  const z5 = criterion10(z.z5_manjak_udio, z.z5_zadovoljava, z.oznake)
   const worst = rows.reduce<(typeof rows)[number] | null>((w, x) => (x.I5 != null && (!w || (w.I5 ?? 0) < x.I5) ? x : w), null)
   const diluted = (z.DO ?? 0) > 0 && worst?.I5 != null && z.I5 != null && worst.I5 - z.I5 >= 0.02
   const u = r.usteda
@@ -407,6 +410,7 @@ function Result({
     ...(z.ogranicenje_do
       ? [{ kind: 'flag' as const, text: 'Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.' }]
       : []),
+    ...(z5?.warning ? [{ kind: 'flag' as const, text: z5.warning.replace('jedinica ne bi', 'spojena jedinica ne bi') }] : []),
     ...z.kvaliteta.map((q) => ({ kind: 'data' as const, text: QUALITY[q] ?? q })),
   ]
 
@@ -450,7 +454,7 @@ function Result({
       <Card>
         <Eyebrow>Prije i poslije, {year}.</Eyebrow>
         <div className="mt-3 -mx-2 overflow-x-auto">
-          <table className="w-full min-w-[480px] text-sm">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-hairline text-left text-xs text-muted">
                 <th scope="col" className="px-2 py-2 font-medium">Jedinica</th>
@@ -458,6 +462,7 @@ function Result({
                 <th scope="col" className="px-2 py-2 text-right font-medium">Stanovnici</th>
                 <th scope="col" className="px-2 py-2 text-right font-medium">Dospjele obveze</th>
                 <th scope="col" className="px-2 py-2 text-right font-medium">Opća uprava</th>
+                <th scope="col" className="px-2 py-2 text-right font-medium">Kriterij 10 %</th>
               </tr>
             </thead>
             <tbody>
@@ -480,6 +485,10 @@ function Result({
                     {eur(x.uprava)}
                     <div className="text-xs text-muted">{num(x.u.uprava_pc)} € po stanovniku</div>
                   </td>
+                  <td className="px-2 py-2.5 text-right">
+                    {x.z5 ? x.z5.value : '–'}
+                    {x.z5 && <div className="tabular text-xs text-muted">manjak {pct(x.d_udio)}{x.z5.approx && ', približno'}</div>}
+                  </td>
                 </tr>
               ))}
               <tr className="align-top font-semibold">
@@ -496,13 +505,24 @@ function Result({
                   {eur(u?.uprava_zbroj)}
                   <div className="text-xs font-normal text-muted">{num(z.uprava_pc)} € po stanovniku</div>
                 </td>
+                <td className="px-2 py-2.5 text-right">
+                  {z5 ? z5.value : '–'}
+                  {z5 && (
+                    <div className="tabular text-xs font-normal text-muted">
+                      manjak {pct(z.z5_manjak_udio)}
+                      {z5.approx && ', približno'}
+                    </div>
+                  )}
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
         <p className="mt-3 text-xs text-muted">
           Dospjele obveze su neplaćene obveze kojima je prošao rok, kao udio u rashodima poslovanja. Opća uprava je funkcija 01
-          bez transfera (017 i 018).
+          bez transfera (017 i 018). Kriterij od 10 % je iz zaključka Vlade od 16.4.2026.: manjak prihoda nad rashodima bez EU
+          izvora smije biti najviše 10 % prihoda bez EU izvora, inače jedinica ne dobiva pomoći iz državnog proračuna koje se
+          dodjeljuju putem poziva (naš izračun).
         </p>
         {diluted && worst && (
           <div className="mt-4 flex gap-2.5 rounded-xl bg-page p-3 text-sm">
@@ -516,7 +536,7 @@ function Result({
         )}
       </Card>
 
-      {/* savings on general administration (PLAN §4.3) */}
+      {/* savings on general administration: economy of scale only (research/08 §7.1) */}
       {u && (
         <Card>
           <Eyebrow>Ušteda na općoj upravi</Eyebrow>
@@ -524,31 +544,49 @@ function Result({
             <span className="tabular">0 – {eur(u.realno_do)}</span> <span className="text-base font-normal text-muted">godišnje</span>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-ink-2">
-            Procijenjeni potencijal uštede na općoj upravi: 0 – {eur(u.realno_do)} godišnje. Gornja granica temelji se na
-            usporedbi sa sličnim jedinicama; u praksi se ostvari tek dio, osobito kod dobrovoljnih spajanja.
+            Ušteda od veličine: veće jedinice iste vrste na upravu troše manje po stanovniku. U praksi se ostvari tek dio,
+            osobito kod dobrovoljnih spajanja.
           </p>
           <dl className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 border-t border-hairline pt-4 text-sm">
             <dt className="text-ink-2">Opća uprava članica zajedno</dt>
             <dd className="tabular text-right">{eur(u.uprava_zbroj)}</dd>
             <dt className="text-ink-2">
-              Očekivano za usporednu skupinu {r.skupina}
+              Očekivano za članice prije spajanja
               <div className="text-xs text-muted">
-                medijan {num(u.medijan_pc, 2)} € po stanovniku × {num(r.stanovnici)}
+                svaka prema medijanu {r.vrsta === 'grad' ? 'gradova' : 'općina'} svoje veličine
+              </div>
+            </dt>
+            <dd className="tabular text-right">{eur(u.ocekivano_clanice)}</dd>
+            <dt className="text-ink-2">
+              Očekivano za spojenu jedinicu
+              <div className="text-xs text-muted">
+                medijan skupine {r.skupina}: {num(u.medijan_pc, 2)} € po stanovniku × {num(r.stanovnici)}
               </div>
             </dt>
             <dd className="tabular text-right">{eur(u.ocekivano)}</dd>
-            <dt className="text-ink-2">Razlika od očekivanog troška (gornja granica)</dt>
-            <dd className="tabular text-right">{eur(u.strukturni_jaz)}</dd>
+            <dt className="text-ink-2">Učinak veličine (razlika)</dt>
+            <dd className="tabular text-right">{eur(u.razmjer)}</dd>
             <dt className="text-ink-2">
               Realističan raspon
-              <div className="text-xs text-muted">do 10 % troška uprave, najviše do jaza</div>
+              <div className="text-xs text-muted">najviše učinak veličine i najviše 10 % troška uprave</div>
             </dt>
             <dd className="tabular text-right font-semibold">0 – {eur(u.realno_do)}</dd>
           </dl>
-          {u.strukturni_jaz === 0 && (
+          {u.razmjer === 0 && (
             <p className="mt-3 text-sm text-ink-2">
-              Spojena jedinica na upravu troši manje od medijana sličnih jedinica, pa se ušteda od veličine ne očekuje.
+              Spojena jedinica ne prelazi u razred veličine s nižim troškom uprave po stanovniku, pa se ušteda od veličine ne
+              očekuje.
             </p>
+          )}
+          {u.jaz_bez_spajanja != null && u.jaz_bez_spajanja > 0 && (
+            <div className="mt-4 flex gap-2.5 rounded-xl bg-page p-3 text-sm">
+              <Scale className="mt-0.5 h-4 w-4 shrink-0 text-ink-2" aria-hidden />
+              <p>
+                <strong className="font-semibold">Jaz koji postoji i bez spajanja: {eur(u.jaz_bez_spajanja)} godišnje.</strong>{' '}
+                Toliko članice na upravu troše više od sličnih jedinica svoje veličine. Taj se trošak može smanjiti i bez
+                spajanja, unutarnjom uštedom ili zajedničkim službama, pa ga ne pripisujemo spajanju.
+              </p>
+            </div>
           )}
           {u.iznad_10000 && (
             <p className="mt-3 flex gap-2 text-sm text-ink-2">
@@ -559,12 +597,15 @@ function Result({
           )}
           <p className="mt-3 text-xs text-muted">
             Troškovi prijelaza (usklađivanje službi, sustava i propisa) nisu uključeni. Studije reformi u Danskoj, Njemačkoj i
-            Nizozemskoj pokazuju da se u praksi ostvari tek dio potencijala ili ništa.
+            Nizozemskoj pokazuju da se u praksi ostvari tek dio potencijala ili ništa, a Svjetska banka upozorava da spojena
+            jedinica često preuzme viši trošak članica.
           </p>
         </Card>
       )}
 
       <Equalization r={r} members={members} />
+
+      <IncentiveCard r={r} members={members} />
 
       {/* components */}
       <Card>
@@ -695,6 +736,59 @@ function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] })
         vrijednosti iz tablice Ministarstva financija{e ? ` za ${e.godina}.` : '.'} Formula na toj tablici daje iste pune
         iznose kao Ministarstvo za svih 576 jedinica. Isplata je udio u iznosu iz državnog proračuna (2026. oko 63 % punog
         iznosa), a promjena udjela ostalih jedinica nije uključena.
+      </p>
+    </Card>
+  )
+}
+
+/** Incentive for an actual merger under NN 88/2022 t. IX. (pipeline/merge.py incentive). */
+function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }) {
+  const p = r.poticaj
+  if (!p) return null
+  const name = (sifra: string) => short(members.find((m) => m.sifra === sifra)?.naziv ?? sifra)
+  const annexed = members.filter((m) => m.sifra !== p.pripaja)
+  const list = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} i ${xs[xs.length - 1]}`)
+  return (
+    <Card>
+      <Eyebrow>Poticaj države za stvarno spajanje</Eyebrow>
+      {p.s_pravom.length === 0 ? (
+        <p className="mt-3 text-sm leading-relaxed text-ink-2">
+          Po Vladinoj odluci (NN 88/2022) poticaj pripada samo kad je pripojena jedinica u razvojnoj skupini I.-V.{' '}
+          {list(annexed.map((m) => short(m.naziv)))} {annexed.length > 1 ? 'nisu' : 'nije'} u tim skupinama, pa poticaj ne
+          pripada.
+        </p>
+      ) : (
+        <>
+          {p.godisnje != null && (
+            <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="tabular font-serif text-2xl font-semibold">{eur(p.godisnje)}</span>
+              <span className="text-sm text-ink-2">godišnje kroz 5 godina, ukupno {eur(p.ukupno)}</span>
+            </div>
+          )}
+          <p className="mt-2 text-sm leading-relaxed text-ink-2">
+            Ako {name(p.pripaja)} pripoji {list(p.s_pravom.map(name))}, po Vladinoj odluci (NN 88/2022) pet godina dobiva
+            godišnje dvostruki iznos fiskalnog izravnanja pripojene jedinice, do {eur(p.kapitalni_do)} za kapitalne projekte te
+            podmirenje dospjelih obveza i kredita pripojene jedinice sa stanjem 30.6.2022.
+          </p>
+          {p.izravnanje_isplata != null && (
+            <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">
+              <dt className="text-ink-2">Izravnanje pripojenih, procjena isplate</dt>
+              <dd className="tabular text-right">{eur(p.izravnanje_isplata)}</dd>
+              <dt className="text-ink-2">Poticaj godišnje (2 ×)</dt>
+              <dd className="tabular text-right">{eur(p.godisnje)}</dd>
+              <dt className="text-ink-2">Kapitalni projekti, jednokratno</dt>
+              <dd className="tabular text-right">do {eur(p.kapitalni_do)}</dd>
+            </dl>
+          )}
+        </>
+      )}
+      <p className="mt-3 text-xs text-muted">
+        Pretpostavka: najveća članica pripaja ostale. Poticaj je prijenos iz državnog proračuna, a ne ušteda
+        {r.usteda?.realno_do != null && ` (ušteda na upravi je 0 – ${eur(r.usteda.realno_do)} godišnje)`}.
+        {p.omjer_isplate != null &&
+          ` Isplata izravnanja procijenjena je kao udio u zbroju punih iznosa puta stavka proračuna za 2026., što je ${pct(p.omjer_isplate)} punog iznosa.`}{' '}
+        Odluka ostaje na snazi i u 2026. (NN 152/25, čl. 70.); od 2022. isplaćeno je oko 17 % planiranih poticaja, a stvarnog
+        spajanja nije bilo.
       </p>
     </Card>
   )

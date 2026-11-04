@@ -18,12 +18,22 @@ Rules:
 A year is kept only when every member reports it. A value missing for every member stays
 missing; otherwise missing counts as 0 (pandas sum with min_count=1).
 
-Savings on general administration (PLAN §4.3, decision 17): only function 01 without
-017 and 018, for the last year. The expected cost is the median cost per inhabitant of the
-merged unit's peer group times its population. The structural gap (actual minus expected,
-never below 0) is the upper bound; the realistic range is 0 to 10 % of the actual cost,
-and never more than the gap (research/01 §4.2). Above about 10,000 inhabitants no further
-savings are expected (meta-analysis, research/01 §4.1).
+Savings on general administration (PLAN §4.3; formula decided 4.11., docs/research/08 §7.1):
+only function 01 without 017 and 018, for the last year, and only the economy of scale within
+the merged unit's type. Each member is valued at the median cost per inhabitant of its own size
+class in the merged type (a municipality joining a city is measured against cities of its
+size), the merged unit at the median of its own peer group. The difference, never below 0, is
+the scale effect; the realistic range is 0 to the smaller of the scale effect and 10 % of the
+actual cost (research/01 §4.2). How far members spend above their own peers is shown apart, as
+a gap that exists without merging. Above about 10,000 inhabitants no further savings are
+expected (meta-analysis, research/01 §4.1).
+
+Incentive for an actual merger (Odluka NN 88/2022, t. IX., in force in 2026; research/08 §3.2):
+the largest member is taken to annex the others. An annexed member in development group I-V
+brings 2 x its fiscal equalization of the year before, for five years, and up to 995,421 € for
+capital projects; its overdue liabilities and loans as at 30.6.2022 are settled. Equalization
+paid is estimated as the member's share of all full amounts in the MF table times the last
+budget line with an amount (izravnanje.ISPLATA_2026).
 
 Fiscal equalization (PLAN §4 t. 4, decision 17, docs/research/07): the full amount under the
 statutory formula for the members and for the merged unit (izravnanje.za_spajanje), with the
@@ -52,6 +62,12 @@ MAX_MEMBERS = 4
 SAVINGS_SHARE = 0.10            # realistic upper end: about 10 % of the summed administration cost
 NO_SAVINGS_ABOVE = 10_000       # inhabitants; beyond this size no further economies of scale
 
+# NN 88/2022 t. IX.: incentive for an actual merger, only for annexed units in development groups I-V
+INCENTIVE_GROUPS = range(1, 6)
+INCENTIVE_FACTOR = 2            # x the annexed unit's fiscal equalization, every year
+INCENTIVE_YEARS = 5
+INCENTIVE_CAPITAL = 995_421.0   # 7.5 mil. kn at 7.53450 kn/€, for capital projects
+
 # Every p_/b_ value the methodology reads: the literals in methodology.py plus the capital
 # grants it builds with f-strings. Summing only these keeps precompute fast.
 KEYS = sorted(set(re.findall(r'"([pb]_[A-Za-z0-9_]+)"', inspect.getsource(methodology)))
@@ -63,7 +79,7 @@ LAST_KEYS = ["bodovi", "bodovi_bez_ogranicenja", "ogranicenje_do", "ocjena", "oc
              "I1", "I2", "I3", "I4", "I5", "S1", "S2", "S3", "S4", "S5",
              "PO", "OS", "ND", "SD", "ZO", "DO", "DO_iskazano", "kredit_iskazan_dospio",
              "udio_tekucih_pomoci", "udio_pomoci", "investicijska_stopa", "tekuci_prihodi_pc",
-             "uprava_pc", "neto_dug_pc", "rang", "n_skupine", "percentil"]
+             "uprava_pc", "neto_dug_pc", "z5_manjak_udio", "z5_zadovoljava", "rang", "n_skupine", "percentil"]
 
 
 def _missing(v):
@@ -80,7 +96,8 @@ def load_equalization(units_csv=config.BUILD / "units.csv"):
     members = {r["oib"]: izravnanje.clanica(r, godine) for r in df.to_dict("records")
                if isinstance(r["oib"], str) and r["vrsta"] in ("opcina", "grad")}
     return {"godina": int(df.attrs["godina"]), "clanice": members,
-            "ref": {k: v["referentna"] for k, v in df.attrs["referentne_mf"].items()}}
+            "ref": {k: v["referentna"] for k, v in df.attrs["referentne_mf"].items()},
+            "puni_ukupno": float(df["P4"].sum())}
 
 
 class Data:
@@ -98,6 +115,9 @@ class Data:
         # same medians as the profiles and skupine.json (facts.peer_medians)
         med = facts.peer_medians(res)["uprava_pc"]
         self.uprava_median = {(g, int(y)): v for (g, y), v in med.items() if not _missing(v)}
+        # each member's own cost per inhabitant, for the gap that exists without merging
+        self.uprava_pc = {(r["oib"], int(r["year"])): r["uprava_pc"]
+                          for r in res[["oib", "year", "uprava_pc"]].to_dict("records") if not _missing(r["uprava_pc"])}
         self.points = {}
         for r in res[["skupina", "year", "oib", "bodovi"]].to_dict("records"):
             if not _missing(r["bodovi"]):
@@ -175,17 +195,45 @@ def _rank(data, skupina, year, points, members):
     return better + 1, n, (below + (ties + 1) / 2) / n * 100
 
 
-def savings(data, uprava_pc, skupina, pop, year):
-    """Savings block on general administration (01 - 017 - 018) for one year of a merged unit.
-    uprava_pc: the merged unit's cost per inhabitant as methodology.evaluate_unit computes it
-    (one definition for the profile, the context and the savings)."""
+def savings(data, oibs, uprava_pc, vrsta, skupina, pop, year):
+    """Savings block on general administration (01 - 017 - 018) for one year of a merged unit
+    (module docstring). uprava_pc: the merged unit's cost per inhabitant as
+    methodology.evaluate_unit computes it (one definition for the profile, the context and the savings)."""
     actual = None if _missing(uprava_pc) else uprava_pc * pop
     median = data.uprava_median.get((skupina, year))
     expected = median * pop if median is not None else None
-    gap = max(0.0, actual - expected) if None not in (actual, expected) else None
-    realistic = min(SAVINGS_SHARE * max(actual, 0.0), gap) if gap is not None else None
+    members_expected, gap_alone = 0.0, 0.0
+    for o in oibs:
+        u, n = data.units[o], int(data.units[o]["stanovnici_2021"])
+        same_type = methodology.peer_group(SimpleNamespace(vrsta=vrsta, zagreb=False, stanovnici_2021=n))
+        m_type = data.uprava_median.get((same_type, year))
+        members_expected = None if None in (members_expected, m_type) else members_expected + m_type * n
+        m_own, own_pc = data.uprava_median.get((u["skupina"], year)), data.uprava_pc.get((o, year))
+        gap_alone = None if None in (gap_alone, m_own, own_pc) else gap_alone + max(0.0, (own_pc - m_own) * n)
+    scale = max(0.0, members_expected - expected) if None not in (members_expected, expected) else None
+    realistic = min(SAVINGS_SHARE * max(actual, 0.0), scale) if None not in (actual, scale) else None
     return {"godina": year, "uprava_zbroj": actual, "medijan_pc": median, "ocekivano": expected,
-            "strukturni_jaz": gap, "realno_do": realistic, "iznad_10000": pop > NO_SAVINGS_ABOVE}
+            "ocekivano_clanice": members_expected, "razmjer": scale, "realno_do": realistic,
+            "jaz_bez_spajanja": gap_alone, "iznad_10000": pop > NO_SAVINGS_ABOVE}
+
+
+def incentive(data, oibs, fi):
+    """Incentive for an actual merger under NN 88/2022 t. IX. (module docstring). oibs in the
+    order of the equalization block fi (sorted by code); fi is None without the MF table."""
+    units = [data.units[o] for o in oibs]
+    annexing = min(units, key=lambda u: (-int(u["stanovnici_2021"]), u["sifra"]))
+    eligible = [i for i, u in enumerate(units)
+                if u is not annexing and not _missing(u["razvojna_skupina"])
+                and int(u["razvojna_skupina"]) in INCENTIVE_GROUPS]
+    # paid = share in the table (full amount / sum of all full amounts) x the budget line, which
+    # for the table's year is not set yet, so the last one with an amount (2026) is used
+    ratio = izravnanje.ISPLATA_2026 / data.fi["puni_ukupno"] if fi else None
+    paid = sum(fi["puni_po_clanici"][i] for i in eligible) * ratio if fi else None
+    yearly = None if paid is None else INCENTIVE_FACTOR * paid
+    return {"pripaja": annexing["sifra"], "s_pravom": [units[i]["sifra"] for i in eligible],
+            "izravnanje_isplata": paid, "godisnje": yearly,
+            "ukupno": None if yearly is None else yearly * INCENTIVE_YEARS,
+            "kapitalni_do": INCENTIVE_CAPITAL if eligible else 0.0, "omjer_isplate": ratio}
 
 
 # what the simulator file keeps of izravnanje.za_spajanje
@@ -216,10 +264,12 @@ def merge(data, oibs, max_members=MAX_MEMBERS):
     for y, r in godine.items():
         r["rang"], r["n_skupine"], r["percentil"] = _rank(data, skupina, y, r["bodovi"], set(oibs))
     last = max(godine) if godine else None
+    fi = equalization(data, oibs, vrsta)
     return {"clanice": sorted(m["sifra"] for m in members), "vrsta": vrsta, "skupina": skupina,
             "stanovnici": pop, "zup_id": int(members[0]["zup_id"]), "godine": godine,
-            "usteda": savings(data, godine[last]["uprava_pc"], skupina, pop, last) if last is not None else None,
-            "izravnanje": equalization(data, oibs, vrsta)}
+            "usteda": savings(data, oibs, godine[last]["uprava_pc"], vrsta, skupina, pop, last)
+                      if last is not None else None,
+            "izravnanje": fi, "poticaj": incentive(data, oibs, fi)}
 
 
 def groups(data, max_members=MAX_MEMBERS):
@@ -269,7 +319,8 @@ def summary(result):
                      "bodovi": {str(y): result["godine"][y]["bodovi"] for y in years},
                      "zadnja": {k: last.get(k) for k in LAST_KEYS},
                      "usteda": result.get("usteda"),
-                     "izravnanje": result.get("izravnanje")})
+                     "izravnanje": result.get("izravnanje"),
+                     "poticaj": result.get("poticaj")})
 
 
 def precompute(data, out_dir):

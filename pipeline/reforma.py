@@ -109,7 +109,8 @@ def reforma(data, prag, res=None):
                 "clanice": list(g), "naziv": u["naziv"], "vrsta": u["vrsta"], "zup_id": int(u["zup_id"]),
                 "stanovnici": int(u["stanovnici_2021"]), "skupina": u["skupina"], "ocjene_prije": prije,
                 "ocjena": _int(r["ocjena"]), "ocjena_rijec": r["ocjena_rijec"], "bodovi": _float(r["bodovi"]),
-                "rang": _int(r["rang"]), "n_skupine": _int(r["n_skupine"]), "usteda": None, "izravnanje": None})
+                "rang": _int(r["rang"]), "n_skupine": _int(r["n_skupine"]), "usteda": None, "izravnanje": None,
+                "poticaj": None})
             continue
         m = merge.merge(data, oibs, max_members=None)
         last = m["godine"].get(year, {})
@@ -119,7 +120,8 @@ def reforma(data, prag, res=None):
             "vrsta": m["vrsta"], "zup_id": m["zup_id"], "stanovnici": m["stanovnici"], "skupina": m["skupina"],
             "ocjene_prije": prije, "ocjena": _int(last.get("ocjena")), "ocjena_rijec": last.get("ocjena_rijec"),
             "bodovi": _float(last.get("bodovi")), "rang": _int(last.get("rang")),
-            "n_skupine": _int(last.get("n_skupine")), "usteda": m["usteda"], "izravnanje": m.get("izravnanje")})
+            "n_skupine": _int(last.get("n_skupine")), "usteda": m["usteda"], "izravnanje": m.get("izravnanje"),
+            "poticaj": m.get("poticaj")})
     jedinice.sort(key=lambda j: (j["zup_id"], j["clanice"][0]))
     merged = [j for j in jedinice if len(j["clanice"]) > 1]
     blocks = [j["usteda"] for j in merged if j["usteda"]]
@@ -131,7 +133,9 @@ def reforma(data, prag, res=None):
         "n_spojenih_skupina": len(merged),
         "n_ispod_praga": sum(j["stanovnici"] < prag for j in jedinice),
         "usteda_realno_do_zbroj": sum(b["realno_do"] or 0.0 for b in blocks),
-        "strukturni_jaz_zbroj": sum(b["strukturni_jaz"] or 0.0 for b in blocks),
+        "razmjer_zbroj": sum(b["razmjer"] or 0.0 for b in blocks),
+        "jaz_bez_spajanja_zbroj": sum(b["jaz_bez_spajanja"] or 0.0 for b in blocks),
+        "poticaj_godisnje_zbroj": sum((j["poticaj"] or {}).get("godisnje") or 0.0 for j in merged),
         "izravnanje_promjena_zbroj": sum(j["izravnanje"]["promjena"] for j in merged if j.get("izravnanje")),
         "jedinice": jedinice,
     })
@@ -160,8 +164,9 @@ def report(headers):
     for prag, h in headers.items():
         print(f"  prag {_hr(prag)}: {h['n_prije']} -> {h['n_poslije']} jedinica, {h['n_spojenih_skupina']} "
               f"spojenih skupina, {_hr(h['stanovnika_u_spojenima'])} stanovnika u spojenima, ušteda 0 do "
-              f"{_hr(h['usteda_realno_do_zbroj'] / 1e6, 1)} mil. € (jaz {_hr(h['strukturni_jaz_zbroj'] / 1e6, 1)} "
-              f"mil. €), ispod praga {h['n_ispod_praga']}")
+              f"{_hr(h['usteda_realno_do_zbroj'] / 1e6, 1)} mil. € (razmjer {_hr(h['razmjer_zbroj'] / 1e6, 1)} mil. €, "
+              f"jaz bez spajanja {_hr(h['jaz_bez_spajanja_zbroj'] / 1e6, 1)} mil. €), poticaj NN 88/2022 "
+              f"{_hr(h['poticaj_godisnje_zbroj'] / 1e6, 1)} mil. € godišnje, ispod praga {h['n_ispod_praga']}")
 
 
 def main():

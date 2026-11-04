@@ -59,6 +59,9 @@ export interface YearResult {
   tekuci_prihodi_pc: number | null
   neto_dug_pc: number | null
   investicijska_stopa: number | null
+  /** Z5, the 10 % criterion (methodology.criterion_10): deficit without EU sources / revenue without EU sources. */
+  z5_manjak_udio?: number | null
+  z5_zadovoljava?: boolean | null
 }
 
 export interface Fact {
@@ -129,15 +132,29 @@ export interface SourceFile {
 
 export type GroupMedians = Record<string, Record<string, Record<string, number | null>>>
 
-/** Savings on general administration (01 without 017 and 018), pipeline/merge.py savings(). */
+/** Savings on general administration (01 without 017 and 018), pipeline/merge.py savings():
+ * only the economy of scale within the merged unit's type (research/08 §7.1). */
 export interface Savings {
   godina: number
   uprava_zbroj: number
   medijan_pc: number | null
   ocekivano: number | null
-  strukturni_jaz: number | null
+  ocekivano_clanice: number | null
+  razmjer: number | null
   realno_do: number | null
+  jaz_bez_spajanja: number | null
   iznad_10000: boolean
+}
+
+/** Incentive for an actual merger under NN 88/2022 t. IX., pipeline/merge.py incentive(). */
+export interface Incentive {
+  pripaja: string
+  s_pravom: string[]
+  izravnanje_isplata: number | null
+  godisnje: number | null
+  ukupno: number | null
+  kapitalni_do: number
+  omjer_isplate: number | null
 }
 
 /** Full fiscal equalization under the statutory formula (pipeline/izravnanje.py za_spajanje). */
@@ -182,11 +199,15 @@ export interface MergeSummary {
     ND: number | null
     DO: number | null
     uprava_pc: number | null
+    z5_manjak_udio?: number | null
+    z5_zadovoljava?: boolean | null
+    oznake?: string[]
     rang: number
     n_skupine: number
   }
   usteda: Savings | null
   izravnanje?: Equalization | null
+  poticaj?: Incentive | null
 }
 
 export interface SimulatorFile {
@@ -255,6 +276,7 @@ export interface MethodologyDoc {
     prompt_jednak_batchu: boolean | null
   }
   simulator: Record<string, string>
+  kriterij_10?: string
   revizija?: string
   ogranicenja: string[]
 }
@@ -300,6 +322,7 @@ export interface ReformUnit {
   n_skupine: number | null
   usteda: Savings | null
   izravnanje: Equalization | null
+  poticaj?: Incentive | null
 }
 
 /** api/v1/reforma/prag-<N>.json (pipeline/reforma.py). */
@@ -313,7 +336,9 @@ export interface ReformFile {
   n_spojenih_skupina: number
   n_ispod_praga: number
   usteda_realno_do_zbroj: number
-  strukturni_jaz_zbroj: number
+  razmjer_zbroj: number
+  jaz_bez_spajanja_zbroj: number
+  poticaj_godisnje_zbroj: number
   izravnanje_promjena_zbroj?: number
   jedinice: ReformUnit[]
 }

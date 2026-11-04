@@ -24,6 +24,13 @@ const keyOf = (u: ReformUnit) => u.clanice.join('-')
 const short = (naziv: string) => naziv.replace(/^(Općina|Grad) /, '')
 const mil = (x: number) => `${num(x / 1e6, 1)} mil. €`
 
+// where each threshold comes from in Croatian rules (docs/research/08 §7.3); there is no official minimum size
+const THRESHOLD_SOURCE: Record<number, string> = {
+  2500: 'Razred iz Vladine odluke o poticajima za spajanje (NN 88/2022); do 2.500 stanovnika općinsko vijeće ima 9 članova.',
+  5000: 'Zadnji razred s dodatkom u Vladinoj odluci o poticajima (NN 88/2022); zakonski minimum u Sloveniji i Estoniji.',
+  10000: 'Zakonski uvjet za status grada (Zakon o lokalnoj i područnoj samoupravi, čl. 5.).',
+}
+
 function readUrl(): { prag: number; s: string } {
   const q = new URLSearchParams(window.location.hash.split('?')[1] ?? '')
   const prag = Number(q.get('prag'))
@@ -203,6 +210,9 @@ export function Reforma({ index }: { index: IndexFile }) {
               </button>
             ))}
           </div>
+          <p className="mt-2 text-xs text-muted">
+            {THRESHOLD_SOURCE[prag]} Službeni hrvatski minimum veličine jedinice ne postoji.
+          </p>
         </div>
 
         <p className="sr-only" role="status">
@@ -234,9 +244,16 @@ export function Reforma({ index }: { index: IndexFile }) {
               <dd className="tabular text-right">{num(file.stanovnika_u_spojenima)}</dd>
               <dt className="text-ink-2">
                 Ušteda na općoj upravi
-                <div className="text-xs text-muted">razlika od očekivanog troška (gornja granica) {mil(file.strukturni_jaz_zbroj)}</div>
+                <div className="text-xs text-muted">
+                  samo od veličine; jaz koji postoji i bez spajanja {mil(file.jaz_bez_spajanja_zbroj)}
+                </div>
               </dt>
               <dd className="tabular text-right">0 – {mil(file.usteda_realno_do_zbroj)} godišnje</dd>
+              <dt className="text-ink-2">
+                Poticaj države po NN 88/2022
+                <div className="text-xs text-muted">pet godina; prijenos iz proračuna, ne ušteda</div>
+              </dt>
+              <dd className="tabular text-right">{mil(file.poticaj_godisnje_zbroj)} godišnje</dd>
               {file.izravnanje_promjena_zbroj != null && (
                 <>
                   <dt className="text-ink-2">
@@ -247,6 +264,11 @@ export function Reforma({ index }: { index: IndexFile }) {
                 </>
               )}
             </dl>
+            <p className="mt-3 text-xs leading-relaxed text-muted">
+              Nacionalni plan oporavka kao smjer navodi 20 % stvarno spojenih jedinica, oko 111; ovaj scenarij uklanja{' '}
+              {num(file.n_prije - file.n_poslije)}. Do 2026. nije spojena nijedna jedinica, a od planiranih poticaja za spajanje
+              isplaćeno je oko 17 %.
+            </p>
             {savingsAbove10k > 0 && (
               <p className="mt-3 flex gap-2 text-xs text-muted">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />

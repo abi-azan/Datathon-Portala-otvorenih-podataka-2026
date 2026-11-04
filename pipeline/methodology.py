@@ -50,6 +50,16 @@ DO_CAP_POINTS = 39.9
 # a sum can pass or fail where no member does (PLAN §11, decision 16).
 RULE1_EXCLUDED = "pravilo1_iskljuceno"
 
+# Z5, the 10 % criterion (Government conclusion of 16.4.2026, docs/research/08 §5): a unit gets
+# state-budget aid awarded through calls only when its deficit of revenue over expenditure,
+# without EU sources, is at most 10 % of total revenue without EU sources, in the last annual
+# report. PR-RAS does not split expenditure by source, so EU-funded expenditure is taken to equal
+# EU revenue of the same year: the deficit is then (3 + 4) - (6 + 7) and only the base drops the
+# EU revenue (accounts 638 and 6324; 6323, current aid from EU bodies, is not in our extract).
+# Shown as context, outside the score and outside the red flags, so the AI fact packs stay as they are.
+Z5_SHARE = 0.10
+EU_REVENUE = ["638", "6324"]
+
 # Peer groups (PLAN §3.5): type and size class; each group has at least 15 units.
 SIZE_CLASSES = [(0, 2000, "do 2.000"), (2000, 5000, "2.000-5.000"), (5000, 10000, "5.000-10.000"),
                 (10000, 35000, "10.000-35.000"), (35000, 10**9, "35.000+")]
@@ -231,12 +241,25 @@ def flags(series, t, r):
     return [k for k, v in out.items() if v]
 
 
+def criterion_10(r):
+    """Z5 (Z5_SHARE above) for one unit-year dict: the deficit without EU sources as a share of
+    revenue without EU sources (0 when there is a surplus), and whether it is within 10 %.
+    Both are None when revenue without EU sources is not positive."""
+    g = lambda k: r.get(k) or 0.0
+    base = g("p_6") + g("p_7") - sum(g(f"p_{c}") for c in EU_REVENUE)
+    if base <= 0:
+        return {"z5_manjak_udio": None, "z5_zadovoljava": None}
+    share = max(0.0, (g("p_3") + g("p_4")) - (g("p_6") + g("p_7"))) / base
+    return {"z5_manjak_udio": share, "z5_zadovoljava": share <= Z5_SHARE}
+
+
 def context(r, a, pop):
     """Context measures (PLAN §3.4), shown but not scored."""
     g = lambda k: r.get(k) or 0.0
     kp63 = sum(g(f"p_{c}") for c in config.CAPITAL_GRANTS if c != "6632")
     div = lambda x, y: (x / y) if y else None
     return {
+        **criterion_10(r),
         "udio_tekucih_pomoci": div(g("p_63") - kp63, a["PO"]),
         "udio_fiskalnog_izravnanja": div(g("p_6353"), a["PO"]),
         "udio_pomoci": div(g("p_63"), g("p_6")),

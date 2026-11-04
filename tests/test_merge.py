@@ -121,16 +121,54 @@ def test_precomputed_files_cover_every_group(data):
 
 
 def test_savings_stay_inside_their_bounds(data):
-    """PLAN §4.3, decision 17: the realistic upper end is at most 10 % of the summed
-    administration cost and never above the structural gap; the gap is never negative."""
+    """research/08 §7.1 (decided 4.11.): the realistic upper end is at most 10 % of the summed
+    administration cost and never above the scale effect; scale effect and the gap without
+    merging are never negative."""
     rng = random.Random(3)
     for g in rng.sample(merge.groups(data), 400):
         u = merge.merge(data, [data.oib_of[s] for s in g])["usteda"]
         assert u["godina"] == config.LAST_YEAR
-        assert u["strukturni_jaz"] >= 0
+        assert u["razmjer"] >= 0 and u["jaz_bez_spajanja"] >= 0
         assert 0 <= u["realno_do"] <= merge.SAVINGS_SHARE * u["uprava_zbroj"] + 1e-6
-        assert u["realno_do"] <= u["strukturni_jaz"] + 1e-6
+        assert u["realno_do"] <= u["razmjer"] + 1e-6
+        assert abs(u["razmjer"] - max(0.0, u["ocekivano_clanice"] - u["ocekivano"])) < 1e-6
         assert abs(u["ocekivano"] - u["medijan_pc"] * sum(data.units[data.oib_of[s]]["stanovnici_2021"] for s in g)) < 1e-6
+
+
+def test_savings_count_only_the_scale_effect(data, res):
+    """Dubrovnik + Mljet (research/08 §7.1): almost all of the old gap was Dubrovnik spending
+    above large cities, which exists without merging. Mljet is valued at the median of cities
+    of its size, the merged city at the median of large cities."""
+    oibs = [by_name(data, "Grad Dubrovnik"), by_name(data, "Općina Mljet")]
+    u = merge.merge(data, oibs)["usteda"]
+    y = config.LAST_YEAR
+    med = data.uprava_median
+    n = {o: data.units[o]["stanovnici_2021"] for o in oibs}
+    expected_members = med[("veliki gradovi", y)] * n[oibs[0]] + med[("gradovi do 2.000", y)] * n[oibs[1]]
+    assert abs(u["ocekivano_clanice"] - expected_members) < 1e-6
+    assert u["ocekivano"] == med[("veliki gradovi", y)] * sum(n.values())
+    assert 150_000 < u["realno_do"] < 250_000                       # was 1,55 mil. € with the old formula
+    own_gap = sum(max(0.0, (res.loc[(o, y), "uprava_pc"] - med[(data.units[o]["skupina"], y)]) * n[o]) for o in oibs)
+    assert abs(u["jaz_bez_spajanja"] - own_gap) < 1e-6 and u["jaz_bez_spajanja"] > 30 * u["realno_do"]
+
+
+def test_incentive_follows_nn_88_2022(data):
+    """The largest member annexes; only annexed members in development groups I-V bring
+    2 x their equalization (estimated payout) for five years and the capital amount."""
+    vukovar, bogdanovci = by_name(data, "Grad Vukovar"), by_name(data, "Općina Bogdanovci")
+    m = merge.merge(data, [vukovar, bogdanovci])
+    p = m["poticaj"]
+    assert p["pripaja"] == data.units[vukovar]["sifra"]
+    assert p["s_pravom"] == [data.units[bogdanovci]["sifra"]]
+    if m["izravnanje"] is not None:
+        i = m["clanice"].index(data.units[bogdanovci]["sifra"])
+        assert abs(p["izravnanje_isplata"] - m["izravnanje"]["puni_po_clanici"][i] * p["omjer_isplate"]) < 1e-6
+        assert abs(p["godisnje"] - 2 * p["izravnanje_isplata"]) < 1e-6 and abs(p["ukupno"] - 5 * p["godisnje"]) < 1e-6
+        assert 0.4 < p["omjer_isplate"] < 0.8
+    assert p["kapitalni_do"] == merge.INCENTIVE_CAPITAL
+    # Povljana (development group VI or higher) joining Pag brings nothing
+    q = merge.merge(data, [by_name(data, "Grad Pag"), by_name(data, "Općina Povljana")])["poticaj"]
+    assert q["s_pravom"] == [] and q["kapitalni_do"] == 0
 
 
 def test_pag_island_savings(data, res):

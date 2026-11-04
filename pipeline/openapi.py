@@ -69,6 +69,12 @@ SCHEMAS = {
             "DO": {**NUM, "description": "Dospjele obveze nakon pravila 1, €."},
             "DO_iskazano": {**NUM, "description": "Dospjele obveze kako ih je jedinica iskazala, €."},
             "zastavice": {"type": "array", "items": {"type": "string", "enum": ["Z1", "Z2", "Z3", "Z4"]}},
+            "z5_manjak_udio": {**NUM, "minimum": 0,
+                               "description": "Kriterij od 10 % (Z5, zaključak Vlade 16.4.2026.): manjak prihoda nad rashodima "
+                                              "((3 + 4) − (6 + 7), najmanje 0) kao udio u prihodima bez EU izvora "
+                                              "(6 + 7 − 638 − 6324). Rashodi iz EU izvora uzimaju se jednaki EU prihodima. "
+                                              "Naš izračun, ne MF-ov; ne ulazi u ocjenu."},
+            "z5_zadovoljava": {"type": ["boolean", "null"], "description": "z5_manjak_udio <= 0,10."},
             "oznake": {"type": "array", "items": {"type": "string"}},
             "kvaliteta": {"type": "array", "items": {"type": "string"}},
         },
@@ -173,7 +179,7 @@ SCHEMAS = {
                        "Tokovi i stanja zbrajaju se po godini, a ocjena se računa istom metodologijom kao za "
                        "postojeće jedinice. Pravilo 1 primjenjuje se po članici prije zbrajanja.",
         "required": ["clanice", "vrsta", "skupina", "stanovnici", "godina", "ocjene", "bodovi", "zadnja", "usteda",
-                     "izravnanje"],
+                     "izravnanje", "poticaj"],
         "properties": {
             "clanice": {"type": "array", "minItems": 2, "maxItems": 4,
                         "items": {"type": "string", "pattern": "^[0-9]{5}$"},
@@ -198,28 +204,59 @@ SCHEMAS = {
                     "zastavice": {"type": "array", "items": {"type": "string"}},
                     "kvaliteta": {"type": "array", "items": {"type": "string"}},
                     **{f"I{i}": NUM for i in range(1, 6)}, **{f"S{i}": NUM for i in range(1, 6)},
+                    "z5_manjak_udio": {"$ref": "#/components/schemas/Godina/properties/z5_manjak_udio"},
+                    "z5_zadovoljava": {"$ref": "#/components/schemas/Godina/properties/z5_zadovoljava"},
                 },
             },
             "usteda": {
                 "type": ["object", "null"],
-                "description": "Potencijal uštede na općoj upravi (funkcija 01 bez 017 i 018) za zadnju godinu "
-                               "(PLAN §4.3, odluka 17). Očekivani trošak je medijan troška uprave po stanovniku "
-                               "usporedne skupine spojene jedinice puta broj stanovnika. Strukturni jaz je gornja "
-                               "granica; realističan raspon je 0 do realno_do (najviše 10 % zbroja i najviše jaz).",
-                "required": ["godina", "uprava_zbroj", "medijan_pc", "ocekivano", "strukturni_jaz", "realno_do",
-                             "iznad_10000"],
+                "description": "Potencijal uštede na općoj upravi (funkcija 01 bez 017 i 018) za zadnju godinu, samo "
+                               "od veličine unutar vrste spojene jedinice (odluka 4.11., docs/research/08 §7.1). Svaka "
+                               "članica vrednuje se medijanom svog razreda veličine u vrsti spojene jedinice, a spojena "
+                               "medijanom svoje skupine; razlika je razmjer. Realističan raspon je 0 do realno_do "
+                               "(najviše razmjer i najviše 10 % zbroja). Koliko članice troše iznad svojih skupina "
+                               "prikazuje se odvojeno (jaz_bez_spajanja): to nije ušteda od spajanja.",
+                "required": ["godina", "uprava_zbroj", "medijan_pc", "ocekivano", "ocekivano_clanice", "razmjer",
+                             "realno_do", "jaz_bez_spajanja", "iznad_10000"],
                 "properties": {
                     "godina": {"type": "integer"},
                     "uprava_zbroj": {**NUM, "description": "Zbroj troška opće uprave članica, € (uprava_pc spojene × stanovnici)."},
                     "medijan_pc": {**NUM, "description": "Medijan troška uprave po stanovniku u skupini, €."},
                     "ocekivano": {**NUM, "description": "medijan_pc × stanovnici, €."},
-                    "strukturni_jaz": {**NUM, "minimum": 0, "description": "max(0, uprava_zbroj − ocekivano), €; gornja granica."},
-                    "realno_do": {**NUM, "minimum": 0, "description": "min(0,10 × uprava_zbroj, strukturni_jaz), €."},
+                    "ocekivano_clanice": {**NUM, "minimum": 0,
+                                          "description": "Σ medijan(vrsta spojene, razred veličine članice) × stanovnici članice, €."},
+                    "razmjer": {**NUM, "minimum": 0, "description": "max(0, ocekivano_clanice − ocekivano), €: učinak veličine."},
+                    "realno_do": {**NUM, "minimum": 0, "description": "min(0,10 × uprava_zbroj, razmjer), €."},
+                    "jaz_bez_spajanja": {**NUM, "minimum": 0,
+                                         "description": "Σ max(0, trošak članice − medijan njezine skupine × njezini "
+                                                        "stanovnici), €: postoji i bez spajanja."},
                     "iznad_10000": {"type": "boolean",
                                     "description": "Spojena jedinica ima više od 10.000 stanovnika: dodatna ušteda se ne očekuje."},
                 },
             },
             "izravnanje": {"$ref": "#/components/schemas/Izravnanje"},
+            "poticaj": {
+                "type": ["object", "null"],
+                "description": "Poticaj za stvarno spajanje po Odluci NN 88/2022, t. IX. (na snazi i u 2026.). "
+                               "Pretpostavka: najveća članica pripaja ostale. Pripojena članica u razvojnoj skupini "
+                               "I.-V. donosi pet godina godišnje 2 × svoje fiskalno izravnanje iz godine prije spajanja "
+                               "i do 995.421 € za kapitalne projekte; podmiruju se i njezine dospjele obveze i krediti "
+                               "sa stanjem 30.6.2022. To je prijenos iz državnog proračuna, ne ušteda.",
+                "required": ["pripaja", "s_pravom", "izravnanje_isplata", "godisnje", "ukupno", "kapitalni_do",
+                             "omjer_isplate"],
+                "properties": {
+                    "pripaja": {"type": "string", "pattern": "^[0-9]{5}$", "description": "Šifra članice koja pripaja."},
+                    "s_pravom": {"type": "array", "items": {"type": "string", "pattern": "^[0-9]{5}$"},
+                                 "description": "Pripojene članice u razvojnoj skupini I.-V."},
+                    "izravnanje_isplata": {**NUM, "minimum": 0,
+                                           "description": "Procjena godišnje isplate izravnanja pripojenih članica s pravom, "
+                                                          "€: puni iznos × omjer_isplate."},
+                    "godisnje": {**NUM, "minimum": 0, "description": "2 × izravnanje_isplata, €."},
+                    "ukupno": {**NUM, "minimum": 0, "description": "5 × godisnje, €."},
+                    "kapitalni_do": {"type": "number", "minimum": 0, "description": "Najviše za kapitalne projekte, €."},
+                    "omjer_isplate": {**NUM, "description": "Stavka proračuna za 2026. / zbroj punih iznosa u tablici MF-a."},
+                },
+            },
         },
     },
     "Izravnanje": {
@@ -256,6 +293,8 @@ SCHEMAS = {
             "godina": {"type": "integer"},
             "pokazatelji": {"type": "array", "items": {"type": "object", "required": ["oznaka", "formula", "ponder", "pragovi"]}},
             "ai": {"type": "object", "required": ["opis", "sustav", "pravila", "primjer", "prompt_sha256"]},
+            "kriterij_10": {"type": "string", "description": "Opis kriterija od 10 % (Z5) i kako se računa."},
+            "simulator": {"type": "object", "required": ["usteda", "poticaj", "izravnanje", "reforma"]},
         },
     },
     "Izvor": {
@@ -312,7 +351,7 @@ SCHEMAS = {
                        "Rezultat spojene skupine računa se istom funkcijom kao u simulatoru spajanja (pipeline/merge.py), "
                        "bez gornje granice broja članica.",
         "required": ["clanice", "naziv", "vrsta", "zup_id", "stanovnici", "skupina", "ocjene_prije", "ocjena",
-                     "ocjena_rijec", "bodovi", "rang", "n_skupine", "usteda", "izravnanje"],
+                     "ocjena_rijec", "bodovi", "rang", "n_skupine", "usteda", "izravnanje", "poticaj"],
         "properties": {
             "clanice": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[0-9]{5}$"},
                         "description": "Šifre DGU članica, poredane; jedna šifra za jedinicu koja se nije spajala."},
@@ -335,6 +374,8 @@ SCHEMAS = {
                        "description": "Ušteda na općoj upravi kao u simulatoru; null za jedinicu koja se nije spajala."},
             "izravnanje": {"$ref": "#/components/schemas/Izravnanje",
                            "description": "Fiskalno izravnanje kao u simulatoru; null za jedinicu koja se nije spajala."},
+            "poticaj": {"$ref": "#/components/schemas/Spajanje/properties/poticaj",
+                        "description": "Poticaj po NN 88/2022 kao u simulatoru; null za jedinicu koja se nije spajala."},
         },
     },
     "Reforma": {
@@ -345,7 +386,8 @@ SCHEMAS = {
                        "izjednačenja odlučuje najniža šifra. Ponavlja se dok sve skupine ne dosegnu prag ili skupina "
                        "ispod praga nema više susjeda u županiji.",
         "required": ["prag", "godina", "n_prije", "n_poslije", "stanovnika_u_spojenima", "n_spojenih_skupina",
-                     "n_ispod_praga", "usteda_realno_do_zbroj", "strukturni_jaz_zbroj", "jedinice"],
+                     "n_ispod_praga", "usteda_realno_do_zbroj", "razmjer_zbroj", "jaz_bez_spajanja_zbroj",
+                     "poticaj_godisnje_zbroj", "jedinice"],
         "properties": {
             "prag": {"type": "integer", "enum": [2500, 5000, 10000], "description": "Prag stanovnika (Popis 2021.)."},
             "godina": {"type": "integer", "description": "Godina ocjena i uštede."},
@@ -360,8 +402,12 @@ SCHEMAS = {
             "usteda_realno_do_zbroj": {"type": "number", "minimum": 0,
                                        "description": "Zbroj realno_do svih spojenih skupina, €: gornji kraj "
                                                       "realističnog raspona uštede (donji je 0)."},
-            "strukturni_jaz_zbroj": {"type": "number", "minimum": 0,
-                                     "description": "Zbroj strukturnih jazova spojenih skupina, €: gornja granica."},
+            "razmjer_zbroj": {"type": "number", "minimum": 0,
+                              "description": "Zbroj učinka veličine (razmjer) spojenih skupina, €, prije granice od 10 %."},
+            "jaz_bez_spajanja_zbroj": {"type": "number", "minimum": 0,
+                                       "description": "Zbroj jazova članica prema vlastitim skupinama, €: postoji i bez spajanja."},
+            "poticaj_godisnje_zbroj": {"type": "number", "minimum": 0,
+                                       "description": "Zbroj godišnjeg poticaja po NN 88/2022 svih spojenih skupina, €."},
             "izravnanje_promjena_zbroj": {"type": "number",
                                           "description": "Zbroj promjena punog iznosa fiskalnog izravnanja spojenih skupina, €."},
             "jedinice": {"type": "array", "items": {"$ref": "#/components/schemas/ReformaJedinica"}},

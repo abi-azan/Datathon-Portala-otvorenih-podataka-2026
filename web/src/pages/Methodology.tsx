@@ -160,6 +160,7 @@ export function Methodology() {
                 </li>
               ))}
             </ul>
+            {doc.kriterij_10 && <p className="mt-5 text-sm leading-relaxed text-ink-2">{doc.kriterij_10}</p>}
           </Section>
 
           <Section id="ai" title="AI objašnjenje i provjera brojki">
@@ -202,6 +203,11 @@ export function Methodology() {
               <li>
                 <strong className="font-semibold text-ink">Izravnanje.</strong> {doc.simulator.izravnanje}
               </li>
+              {doc.simulator.poticaj && (
+                <li>
+                  <strong className="font-semibold text-ink">Poticaj.</strong> {doc.simulator.poticaj}
+                </li>
+              )}
               <li>
                 <strong className="font-semibold text-ink">Karta reforme.</strong> {doc.simulator.reforma}
               </li>
