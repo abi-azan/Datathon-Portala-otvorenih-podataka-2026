@@ -54,6 +54,9 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
   - Rule 1 is applied per member before summing; the merged row carries the excluded amount under `methodology.RULE1_EXCLUDED`.
   - `build.py` saves the unit-year inputs as `data/build/wide.parquet` and precomputes all 13,353 groups into `data/build/simulator/zup-XX.json`; `publish.py` copies them to the API (`simulator/zup-{id}.json`).
   - Peer groups (`SIZE_CLASSES`, `peer_group`) now live in `methodology.py`.
+  - Each merged result also has `usteda` (savings on general administration: peer median × population, structural gap, realistic 0-10 %; decision 17) and `izravnanje` (full fiscal equalization by the statutory formula, from `pipeline/izravnanje.py`). `merge(max_members=None)` drops the size limit. `python -m pipeline.merge --precompute` rewrites `data/build/simulator/` without a full build.
+- `pipeline/izravnanje.py`: fiscal equalization by the Zakon o financiranju JLP(R)S (čl. 8-9, NN 114/23). It reproduces MF's full amounts for 576/576 units from the MF table for 2027 (`config.MF_FI_XLSX`, fetched in the online build); `python -m pipeline.izravnanje --provjera`. Background in `docs/research/07`.
+- `pipeline/reforma.py`: Karta reforme, greedy rule within each county (decision 17), thresholds 2,500 / 5,000 / 10,000 → `data/build/reforma/prag-N.json`, published as `reforma/prag-N.json`.
 - `pipeline/facts.py`, `verify.py` and `explain.py` produce the AI explanation (PLAN §5).
   - Facts are pre-formatted Croatian strings. Python picks the story: the weakest component, the strengths and the comparison with the peer median.
   - The verifier fails a text when it contains a number not in the facts, or a grade other than this year's or last year's. A failed text is retried with feedback, at most twice, and then the template is used.
@@ -63,8 +66,11 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
   - The Kaggle user is `albertmari`. The notebook builds llama.cpp from source with `-DCMAKE_CUDA_ARCHITECTURES=75` for the T4 and serves the model with `llama-server --jinja`.
   - The model source string is `google/gemma-4/gguf/gemma-4-e4b-it-qat-q4_0-gguf/2`. The files are `gemma-4-E4B_q4_0-it.gguf` (5.2 GB) and an mmproj.
   - Re-check a downloaded output with `python -m pipeline.explain --check <gemma_test_output.json>`.
+  - Production batch (4.11.): `python -m pipeline.explain --kaggle-batch [--skip out.json]` writes `kaggle/gemma_batch.py` (gitignored; packs as gzip+base64 because Kaggle refuses scripts of 1 MB) and `data/ai/manifest-2025.json` (pack and prompt sha256). Notebook `albertmari/fiskalna-karta-jls-gemma-batch`, model `google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2`, metadata `kaggle/kernel-metadata-batch.json`. Import with `--import-batch <out.json> ...` into `data/ai/objasnjenja-2025.json` (committed); `publish.explanation` shows an AI text only when its pack sha256 still matches and the check passes.
 - `pipeline/publish.py` writes the static API to `web/public/api/v1/`. The folder is generated and gitignored.
   - Contents: `jedinice.json`, `jedinice/<slug>.json`, `skupine.json`, `sifrarnik.csv`, `rezultati.csv`, `izvori.json` (the provenance log) and `geo/jls.topo.json`.
+  - Also: `jedinice/<slug>/izvor.json` (`pipeline/provenance.py`: formula, quantities and every input with sheet and row in the MF files; `tests/test_provenance.py` recomputes I1-I5 from it), `metodologija.json` (`pipeline/metodologija.py`: thresholds, weights, rules and the AI prompt read from the code), `dcat.jsonld` (`pipeline/dcat.py`, DCAT-AP catalogue), `simulator/` and `reforma/`.
+  - The State Audit Office layer (`pipeline/dur.py`) is not part of the build: run `python -m pipeline.dur` by hand; it writes the committed `data/reference/dur_revizije.json` (331 units, with its provenance in `meta`), and profiles get `revizija`.
   - `openapi.json` describes all of these. It is built from `pipeline/openapi.py` as OpenAPI 3.1 with JSON Schema 2020-12.
   - `tests/test_api.py` validates every published file against those same schemas.
 - `.github/workflows/deploy.yml` runs, on push to main, weekly, or by hand: build → publish → pytest → `npm run build` → GitHub Pages.
