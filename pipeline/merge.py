@@ -25,6 +25,11 @@ never below 0) is the upper bound; the realistic range is 0 to 10 % of the actua
 and never more than the gap (research/01 §4.2). Above about 10,000 inhabitants no further
 savings are expected (meta-analysis, research/01 §4.1).
 
+Fiscal equalization (PLAN §4 t. 4, decision 17, docs/research/07): the full amount under the
+statutory formula for the members and for the merged unit (izravnanje.za_spajanje), with the
+capacities and reference values of the MF table. It is shown because the formula reproduces
+MF's full amounts for all 576 units. The block is null when the table is not downloaded.
+
 precompute() writes every allowed group of 2-4 units, one JSON file per county, for the
 static site (decision 4.11.: computed ahead in Python, no TypeScript copy of the method).
 
@@ -40,7 +45,7 @@ from types import SimpleNamespace
 
 import pandas as pd
 
-from . import config, facts, methodology
+from . import config, facts, izravnanje, methodology
 
 MAX_MEMBERS = 4
 
@@ -65,10 +70,25 @@ def _missing(v):
     return v is None or (isinstance(v, float) and math.isnan(v))
 
 
-class Data:
-    """Inputs of the simulator: unit-year rows, the register, peer-group points and neighbours."""
+def load_equalization(units_csv=config.BUILD / "units.csv"):
+    """{"godina", "ref", "clanice": {oib: member}} from the MF equalization table
+    (izravnanje.XLSX), or None when it has not been downloaded."""
+    if not izravnanje.XLSX.exists():
+        return None
+    df = izravnanje.ucitaj(units_csv=units_csv)
+    godine = df.attrs["godine"]
+    members = {r["oib"]: izravnanje.clanica(r, godine) for r in df.to_dict("records")
+               if isinstance(r["oib"], str) and r["vrsta"] in ("opcina", "grad")}
+    return {"godina": int(df.attrs["godina"]), "clanice": members,
+            "ref": {k: v["referentna"] for k, v in df.attrs["referentne_mf"].items()}}
 
-    def __init__(self, reg, wide, res, susjedi):
+
+class Data:
+    """Inputs of the simulator: unit-year rows, the register, peer-group points, neighbours and,
+    when available, the members' fiscal equalization inputs (load_equalization)."""
+
+    def __init__(self, reg, wide, res, susjedi, fi=None):
+        self.fi = fi
         self.units = {u["oib"]: u for u in reg.to_dict("records")}
         self.oib_of = {u["sifra"]: o for o, u in self.units.items()}
         cols = ["oib", "year"] + [k for k in KEYS if k in wide.columns]
@@ -94,7 +114,7 @@ class Data:
         wide = pd.read_parquet(config.BUILD / "wide.parquet")
         res = pd.read_parquet(config.BUILD / "results.parquet")
         susjedi = json.loads((config.BUILD / "geo" / "susjedi.json").read_text(encoding="utf-8"))
-        return cls(reg, wide, res, susjedi)
+        return cls(reg, wide, res, susjedi, fi=load_equalization())
 
     def eligible(self, oib):
         u = self.units[oib]
@@ -172,6 +192,20 @@ def savings(data, row, skupina, pop, year):
             "strukturni_jaz": gap, "realno_do": realistic, "iznad_10000": pop > NO_SAVINGS_ABOVE}
 
 
+# what the simulator file keeps of izravnanje.za_spajanje
+FI_KEYS = ["godina", "puni_po_clanici", "puni_clanice", "puni_spojena", "promjena", "promjena_udio",
+           "kapacitet_pc", "referentna_pc", "oznake"]
+
+
+def equalization(data, oibs, vrsta):
+    """Full equalization of the members and of the merged unit, or None without the MF table."""
+    if not data.fi or not all(o in data.fi["clanice"] for o in oibs):
+        return None
+    out = izravnanje.za_spajanje([data.fi["clanice"][o] for o in oibs], vrsta == "grad", referentne=data.fi["ref"])
+    out["godina"] = data.fi["godina"]
+    return {k: out[k] for k in FI_KEYS}
+
+
 def merge(data, oibs, max_members=MAX_MEMBERS):
     """Profile of the merged unit: type, peer group, population, a result per year and the
     savings block for the last year. max_members=None: no size limit (Karta reforme)."""
@@ -188,7 +222,8 @@ def merge(data, oibs, max_members=MAX_MEMBERS):
     last = max(godine) if godine else None
     return {"clanice": sorted(m["sifra"] for m in members), "vrsta": vrsta, "skupina": skupina,
             "stanovnici": pop, "zup_id": int(members[0]["zup_id"]), "godine": godine,
-            "usteda": savings(data, rows[last], skupina, pop, last) if last is not None else None}
+            "usteda": savings(data, rows[last], skupina, pop, last) if last is not None else None,
+            "izravnanje": equalization(data, oibs, vrsta)}
 
 
 def groups(data, max_members=MAX_MEMBERS):
@@ -237,7 +272,8 @@ def summary(result):
                      "ocjene": {str(y): result["godine"][y]["ocjena"] for y in years},
                      "bodovi": {str(y): result["godine"][y]["bodovi"] for y in years},
                      "zadnja": {k: last.get(k) for k in LAST_KEYS},
-                     "usteda": result.get("usteda")})
+                     "usteda": result.get("usteda"),
+                     "izravnanje": result.get("izravnanje")})
 
 
 def precompute(data, out_dir):

@@ -111,6 +111,8 @@ export interface Savings {
 
 /** Full fiscal equalization under the statutory formula (pipeline/izravnanje.py za_spajanje). */
 export interface Equalization {
+  godina: number
+  puni_po_clanici: number[]
   puni_clanice: number
   puni_spojena: number
   promjena: number

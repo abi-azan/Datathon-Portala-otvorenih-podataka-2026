@@ -109,7 +109,7 @@ def reforma(data, prag, res=None):
                 "clanice": list(g), "naziv": u["naziv"], "vrsta": u["vrsta"], "zup_id": int(u["zup_id"]),
                 "stanovnici": int(u["stanovnici_2021"]), "skupina": u["skupina"], "ocjene_prije": prije,
                 "ocjena": _int(r["ocjena"]), "ocjena_rijec": r["ocjena_rijec"], "bodovi": _float(r["bodovi"]),
-                "rang": _int(r["rang"]), "n_skupine": _int(r["n_skupine"]), "usteda": None})
+                "rang": _int(r["rang"]), "n_skupine": _int(r["n_skupine"]), "usteda": None, "izravnanje": None})
             continue
         m = merge.merge(data, oibs, max_members=None)
         last = m["godine"].get(year, {})
@@ -119,7 +119,7 @@ def reforma(data, prag, res=None):
             "vrsta": m["vrsta"], "zup_id": m["zup_id"], "stanovnici": m["stanovnici"], "skupina": m["skupina"],
             "ocjene_prije": prije, "ocjena": _int(last.get("ocjena")), "ocjena_rijec": last.get("ocjena_rijec"),
             "bodovi": _float(last.get("bodovi")), "rang": _int(last.get("rang")),
-            "n_skupine": _int(last.get("n_skupine")), "usteda": m["usteda"]})
+            "n_skupine": _int(last.get("n_skupine")), "usteda": m["usteda"], "izravnanje": m.get("izravnanje")})
     jedinice.sort(key=lambda j: (j["zup_id"], j["clanice"][0]))
     merged = [j for j in jedinice if len(j["clanice"]) > 1]
     blocks = [j["usteda"] for j in merged if j["usteda"]]
@@ -132,6 +132,7 @@ def reforma(data, prag, res=None):
         "n_ispod_praga": sum(j["stanovnici"] < prag for j in jedinice),
         "usteda_realno_do_zbroj": sum(b["realno_do"] or 0.0 for b in blocks),
         "strukturni_jaz_zbroj": sum(b["strukturni_jaz"] or 0.0 for b in blocks),
+        "izravnanje_promjena_zbroj": sum(j["izravnanje"]["promjena"] for j in merged if j.get("izravnanje")),
         "jedinice": jedinice,
     })
 

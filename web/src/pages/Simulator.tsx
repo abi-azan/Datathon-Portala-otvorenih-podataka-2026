@@ -492,7 +492,7 @@ function Result({
         </Card>
       )}
 
-      <Equalization r={r} />
+      <Equalization r={r} members={members} />
 
       {/* components */}
       <Card>
@@ -567,9 +567,17 @@ function Result({
   )
 }
 
-/** Fiscal equalization under the statutory formula, when the build includes it (N5b). */
-function Equalization({ r }: { r: MergeSummary }) {
+/** Fiscal equalization under the statutory formula (pipeline/merge.py equalization, N5b). */
+function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] }) {
   const e = r.izravnanje
+  const own = (sifra: string) => e?.puni_po_clanici[r.clanice.indexOf(sifra)]
+  const why = !e
+    ? ''
+    : e.oznake.includes('clanica_iznad_referentne')
+      ? ' Smanjuje se jer je porezni kapacitet barem jedne članice iznad referentne vrijednosti, pa podiže kapacitet spojene jedinice.'
+      : r.vrsta === 'grad' && members.some((m) => m.vrsta === 'opcina')
+        ? ' Smanjuje se jer spojena jedinica postaje grad: za gradove vrijedi niža referentna vrijednost, a porez se računa po stopama grada.'
+        : ' Smanjuje se jer se porezni kapacitet spojene jedinice računa po njezinim stopama.'
   return (
     <Card>
       <Eyebrow>Fiskalno izravnanje</Eyebrow>
@@ -590,20 +598,31 @@ function Equalization({ r }: { r: MergeSummary }) {
             <ArrowRight className="h-4 w-4 self-center text-muted" aria-label="nakon spajanja" />
             <span className="tabular font-serif text-2xl font-semibold">{eur(e.puni_spojena)}</span>
             <span className="tabular text-sm text-ink-2">
-              {e.promjena === 0 ? 'bez promjene' : `${e.promjena < 0 ? '−' : '+'}${eur(Math.abs(e.promjena))}`}
-              {e.promjena_udio != null && e.promjena !== 0 && ` (${pct(e.promjena_udio)})`}
+              {Math.abs(e.promjena) < 1 ? 'bez promjene' : `${e.promjena < 0 ? '−' : '+'}${eur(Math.abs(e.promjena))}`}
+              {e.promjena_udio != null && Math.abs(e.promjena) >= 1 && ` (${pct(e.promjena_udio)})`}
             </span>
           </div>
-          <p className="mt-2 text-sm text-ink-2">
-            Puni godišnji iznos prema formuli: članice zajedno i spojena jedinica.
-            {e.promjena < 0 && ' Spajanje ga smanjuje jer je kapacitet spojene jedinice viši od kapaciteta najslabijih članica.'}
+          <p className="mt-2 text-sm leading-relaxed text-ink-2">
+            Puni godišnji iznos prema zakonskoj formuli, za članice zajedno i za spojenu jedinicu.
+            {Math.abs(e.promjena) < 1
+              ? ' Sve članice su ispod referentne vrijednosti, pa se zbroj ne mijenja.'
+              : e.promjena < 0 && why}
           </p>
+          <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">
+            {members.map((m) => (
+              <div key={m.sifra} className="contents">
+                <dt className="text-ink-2">{short(m.naziv)}</dt>
+                <dd className="tabular text-right">{eur(own(m.sifra))}</dd>
+              </div>
+            ))}
+          </dl>
         </>
       )}
       <p className="mt-3 text-xs text-muted">
         Zakon o financiranju jedinica lokalne i područne (regionalne) samouprave, čl. 8. i 9.; kapacitet i referentne
-        vrijednosti iz tablice Ministarstva financija za 2027. Isplata je udio u iznosu iz državnog proračuna (2026. oko 63 %
-        punog iznosa).
+        vrijednosti iz tablice Ministarstva financija{e ? ` za ${e.godina}.` : '.'} Formula na toj tablici daje iste pune
+        iznose kao Ministarstvo za svih 576 jedinica. Isplata je udio u iznosu iz državnog proračuna (2026. oko 63 % punog
+        iznosa), a promjena udjela ostalih jedinica nije uključena.
       </p>
     </Card>
   )

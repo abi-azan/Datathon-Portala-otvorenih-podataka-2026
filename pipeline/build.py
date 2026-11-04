@@ -20,7 +20,7 @@ import sys
 
 import pandas as pd
 
-from . import config, geo, merge, methodology, mf, openness, population, reforma, sources, units
+from . import config, geo, izravnanje, merge, methodology, mf, openness, population, reforma, sources, units
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -31,6 +31,8 @@ def fetch_all(offline):
         meta = {"publisher": "Ministarstvo financija", "license": "nije navedena (javni podatak, ZPPI)"}
         sources.fetch("mf_prras_zip", config.MF_PRRAS_ZIP, mf_dir / "prras.zip", meta=meta)
         sources.fetch("mf_bilanca", config.MF_BILANCA, mf_dir / "bilanca.xlsx", meta=meta)
+        # fiscal equalization table: inputs of the merger simulator's equalization estimate
+        sources.fetch("mf_fiskalno_izravnanje", config.MF_FI_XLSX, izravnanje.XLSX, meta=meta)
     return mf_dir / "prras.zip", mf_dir / "bilanca.xlsx"
 
 
@@ -147,7 +149,7 @@ def main():
 
     print("Simulator spajanja: sve skupine od 2-4 susjedne jedinice iste županije ...")
     susjedi = json.loads((config.BUILD / "geo" / "susjedi.json").read_text(encoding="utf-8"))
-    sim = merge.Data(reg, wide, res_df, susjedi)
+    sim = merge.Data(reg, wide, res_df, susjedi, fi=merge.load_equalization())
     n_groups = merge.precompute(sim, config.BUILD / "simulator")
     print(f"  {n_groups} skupina")
     print("Karta reforme: pohlepno spajanje do praga 2.500, 5.000 i 10.000 stanovnika ...")

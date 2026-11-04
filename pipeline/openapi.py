@@ -159,7 +159,8 @@ SCHEMAS = {
         "description": "Zamišljena jedinica nastala spajanjem 2-4 susjedne jedinice iste županije (pipeline/merge.py). "
                        "Tokovi i stanja zbrajaju se po godini, a ocjena se računa istom metodologijom kao za "
                        "postojeće jedinice. Pravilo 1 primjenjuje se po članici prije zbrajanja.",
-        "required": ["clanice", "vrsta", "skupina", "stanovnici", "godina", "ocjene", "bodovi", "zadnja", "usteda"],
+        "required": ["clanice", "vrsta", "skupina", "stanovnici", "godina", "ocjene", "bodovi", "zadnja", "usteda",
+                     "izravnanje"],
         "properties": {
             "clanice": {"type": "array", "minItems": 2, "maxItems": 4,
                         "items": {"type": "string", "pattern": "^[0-9]{5}$"},
@@ -205,6 +206,29 @@ SCHEMAS = {
                                     "description": "Spojena jedinica ima više od 10.000 stanovnika: dodatna ušteda se ne očekuje."},
                 },
             },
+            "izravnanje": {"$ref": "#/components/schemas/Izravnanje"},
+        },
+    },
+    "Izravnanje": {
+        "type": ["object", "null"],
+        "description": "Fiskalno izravnanje po zakonskoj formuli (Zakon o financiranju JLP(R)S, čl. 8. i 9.; "
+                       "pipeline/izravnanje.py, docs/research/07): puni godišnji iznos za članice i za spojenu jedinicu, "
+                       "uz kapacitete i referentne vrijednosti iz MF-ove tablice za danu godinu. Formula na toj tablici "
+                       "reproducira MF-ove pune iznose za svih 576 jedinica. Isplata je udio u stavci državnog proračuna, "
+                       "pa ovo nije iznos koji jedinica prima. null kad tablica nije preuzeta.",
+        "required": ["godina", "puni_po_clanici", "puni_clanice", "puni_spojena", "promjena", "oznake"],
+        "properties": {
+            "godina": {"type": "integer", "description": "Godina na koju se tablica MF-a odnosi."},
+            "puni_po_clanici": {"type": "array", "items": {"type": "number", "minimum": 0},
+                                "description": "Puni iznos svake članice, €, istim redom kao clanice."},
+            "puni_clanice": {"type": "number", "minimum": 0, "description": "Zbroj punih iznosa članica, €."},
+            "puni_spojena": {"type": "number", "minimum": 0, "description": "Puni iznos spojene jedinice, €."},
+            "promjena": {"type": "number", "description": "puni_spojena − puni_clanice, €; nikad pozitivna uz fiksne referentne vrijednosti."},
+            "promjena_udio": NUM,
+            "kapacitet_pc": {"type": "number", "description": "Porezni kapacitet spojene jedinice po stanovniku, €."},
+            "referentna_pc": {"type": "number", "description": "Referentna vrijednost za vrstu spojene jedinice, €."},
+            "oznake": {"type": "array", "items": {"type": "string"},
+                       "description": "Pretpostavke izračuna, npr. kapacitet_preracunat_na_stope_spojene, bez_prava_na_izravnanje."},
         },
     },
     "SimulatorZupanija": {
@@ -228,7 +252,7 @@ SCHEMAS = {
                        "Rezultat spojene skupine računa se istom funkcijom kao u simulatoru spajanja (pipeline/merge.py), "
                        "bez gornje granice broja članica.",
         "required": ["clanice", "naziv", "vrsta", "zup_id", "stanovnici", "skupina", "ocjene_prije", "ocjena",
-                     "ocjena_rijec", "bodovi", "rang", "n_skupine", "usteda"],
+                     "ocjena_rijec", "bodovi", "rang", "n_skupine", "usteda", "izravnanje"],
         "properties": {
             "clanice": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[0-9]{5}$"},
                         "description": "Šifre DGU članica, poredane; jedna šifra za jedinicu koja se nije spajala."},
@@ -249,6 +273,8 @@ SCHEMAS = {
             "n_skupine": INT,
             "usteda": {"$ref": "#/components/schemas/Spajanje/properties/usteda",
                        "description": "Ušteda na općoj upravi kao u simulatoru; null za jedinicu koja se nije spajala."},
+            "izravnanje": {"$ref": "#/components/schemas/Izravnanje",
+                           "description": "Fiskalno izravnanje kao u simulatoru; null za jedinicu koja se nije spajala."},
         },
     },
     "Reforma": {
@@ -276,6 +302,8 @@ SCHEMAS = {
                                                       "realističnog raspona uštede (donji je 0)."},
             "strukturni_jaz_zbroj": {"type": "number", "minimum": 0,
                                      "description": "Zbroj strukturnih jazova spojenih skupina, €: gornja granica."},
+            "izravnanje_promjena_zbroj": {"type": "number", "maximum": 0,
+                                          "description": "Zbroj promjena punog iznosa fiskalnog izravnanja spojenih skupina, €."},
             "jedinice": {"type": "array", "items": {"$ref": "#/components/schemas/ReformaJedinica"}},
         },
     },

@@ -162,3 +162,20 @@ def test_no_size_limit_for_karta_reforme(data):
         merge.merge(data, oibs[:1], max_members=None)
     with pytest.raises(ValueError, match="županije i Grad Zagreb"):
         merge.merge(data, [by_name(data, "Grad Zagreb"), by_name(data, "Grad Velika Gorica")], max_members=None)
+
+
+@pytest.mark.skipif(not merge.izravnanje.XLSX.exists(), reason="MF equalization table not downloaded")
+def test_equalization_block(data):
+    """N5b (decision 17, docs/research/07): the full amount under the formula never grows with a
+    merger (reference values fixed), is linear when every member is below its reference value
+    and drops when a member is above it."""
+    m = merge.merge(data, [by_name(data, "Općina Povljana"), by_name(data, "Grad Pag")])["izravnanje"]
+    assert m["godina"] == data.fi["godina"] and "bez_prava_na_izravnanje" in m["oznake"] and m["promjena"] == 0
+    jv = merge.merge(data, [by_name(data, "Općina Jelenje"), by_name(data, "Općina Viškovo")])["izravnanje"]
+    assert jv["puni_po_clanici"][1] == 0 and jv["promjena"] < -0.9 * jv["puni_clanice"]
+    bt = merge.merge(data, [by_name(data, "Općina Barilović"), by_name(data, "Općina Tounj")])["izravnanje"]
+    assert abs(bt["promjena"]) < 0.01 and bt["puni_clanice"] > 0
+    rng = random.Random(4)
+    for g in rng.sample(merge.groups(data), 300):
+        e = merge.merge(data, [data.oib_of[s] for s in g])["izravnanje"]
+        assert e["promjena"] <= 0.01 and abs(sum(e["puni_po_clanici"]) - e["puni_clanice"]) < 0.05
