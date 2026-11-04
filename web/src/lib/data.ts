@@ -96,6 +96,21 @@ export interface UnitDetail {
   } | null
 }
 
+/** jedinice/<slug>/izvor.json (pipeline/provenance.py): formula and inputs behind I1-I5. */
+export interface SourceFile {
+  godina: number
+  prozor: { godine: number[]; ponderi: number[] }
+  pokazatelji: Record<string, { naziv: string; formula: string; vrijednost: number | null; bodovi: number | null; velicine: string[] }>
+  velicine: Record<
+    string,
+    { formula: string; godine: Record<string, number | null>; iskazano?: number | null; pravilo1_iskljuceno?: number | null; refinanciranje?: Record<string, boolean> }
+  >
+  izvori: Record<string, { datoteka: string | null; list: string | null }>
+  konta: Record<string, { naziv: string | null; izvor: 'PR-RAS' | 'Bilanca'; za: string[] }>
+  ulazi: { konto: string; godina: number; iznos: number; redak: number | null; stupac?: string | null }[]
+  napomena?: string
+}
+
 export type GroupMedians = Record<string, Record<string, Record<string, number | null>>>
 
 /** Savings on general administration (01 without 017 and 018), pipeline/merge.py savings(). */
@@ -193,6 +208,7 @@ function get<T>(path: string): Promise<T> {
 
 export const loadIndex = () => get<IndexFile>('jedinice.json')
 export const loadUnit = (slug: string) => get<UnitDetail>(`jedinice/${slug}.json`)
+export const loadSource = (slug: string) => get<SourceFile>(`jedinice/${slug}/izvor.json`)
 export const loadGroups = () => get<GroupMedians>('skupine.json')
 /** One unit after the Karta reforme scenario: a merged group or a unit that stayed alone. */
 export interface ReformUnit {

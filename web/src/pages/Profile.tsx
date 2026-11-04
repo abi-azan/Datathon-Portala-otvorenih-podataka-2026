@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { TrendChart } from '../components/TrendChart'
-import { HttpError, loadGroups, loadUnit, type GroupMedians, type UnitDetail } from '../lib/data'
+import { CheckedText, SourcePanel } from '../components/Sources'
+import { HttpError, loadGroups, loadSource, loadUnit, type GroupMedians, type SourceFile, type UnitDetail } from '../lib/data'
 import { COMPONENTS, FLAGS, QUALITY, VRSTA, eur, num, pct } from '../lib/format'
 import { simulatorHref, unitHref } from '../lib/router'
 
@@ -13,6 +14,18 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
   const [unit, setUnit] = useState<UnitDetail | null>(null)
   const [groups, setGroups] = useState<GroupMedians | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // visible number check: which component's sources are open, and the source file once loaded
+  const [openSrc, setOpenSrc] = useState<string | null>(null)
+  const [src, setSrc] = useState<SourceFile | null>(null)
+  const [srcFailed, setSrcFailed] = useState(false)
+  const showSources = (k: string, scroll = false) => {
+    setOpenSrc((cur) => (cur === k && !scroll ? null : k))
+    if (!src)
+      loadSource(slug)
+        .then(setSrc)
+        .catch(() => setSrcFailed(true))
+    if (scroll) setTimeout(() => document.getElementById(`src-${k}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+  }
 
   // App renders <Profile key={slug}>, so state starts empty for every unit
   useEffect(() => {
@@ -120,7 +133,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_420px]">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="flex flex-col gap-6">
           {/* explanation */}
           {unit.objasnjenje && (
@@ -138,7 +151,13 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                       : ` · provjera nije prošla (${unit.objasnjenje.provjera.n_brojki - unit.objasnjenje.provjera.nepoznate.length}/${unit.objasnjenje.provjera.n_brojki})`)}
                 </span>
               </div>
-              <p className="mt-3 font-serif text-xl leading-relaxed">{unit.objasnjenje.tekst}</p>
+              <p className="mt-3 font-serif text-xl leading-relaxed">
+                <CheckedText text={unit.objasnjenje.tekst} facts={facts} onOpen={(k) => showSources(k, true)} />
+              </p>
+              <p className="mt-3 text-xs text-muted">
+                Svaka brojka u tekstu je iz paketa činjenica koji je izračunao Python. Prijeđi mišem preko brojke za njezin
+                izvor; klik na brojku sastavnice otvara konta i retke u datotekama Ministarstva financija.
+              </p>
             </Card>
           )}
 
@@ -150,7 +169,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
               {COMPONENTS.map((c, i) => {
                 const score = r[c.score as keyof typeof r] as number | null
                 return (
-                  <li key={c.key}>
+                  <li key={c.key} id={`src-${c.key}`} className="scroll-mt-24">
                     <div className="flex items-baseline justify-between gap-4">
                       <div>
                         <span className="font-medium">{c.name}</span>
@@ -162,6 +181,20 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                       <div className="h-full rounded-full bg-ink-2" style={{ width: `${score ?? 0}%` }} />
                     </div>
                     {componentLines[i] && <p className="mt-1.5 text-sm text-ink-2">{capitalize(componentLines[i])}</p>}
+                    <button
+                      type="button"
+                      onClick={() => showSources(c.key)}
+                      aria-expanded={openSrc === c.key}
+                      className="mt-1 text-xs text-muted underline decoration-axis underline-offset-4 hover:text-ink hover:decoration-ink"
+                    >
+                      {openSrc === c.key ? 'Sakrij izračun' : 'Kako je izračunato'}
+                    </button>
+                    {openSrc === c.key &&
+                      (src ? (
+                        <SourcePanel src={src} k={c.key} />
+                      ) : (
+                        <p className="mt-2 text-xs text-muted">{srcFailed ? 'Izvor se nije učitao.' : 'Učitavam izvor…'}</p>
+                      ))}
                   </li>
                 )
               })}
