@@ -159,7 +159,7 @@ SCHEMAS = {
         "description": "Zamišljena jedinica nastala spajanjem 2-4 susjedne jedinice iste županije (pipeline/merge.py). "
                        "Tokovi i stanja zbrajaju se po godini, a ocjena se računa istom metodologijom kao za "
                        "postojeće jedinice. Pravilo 1 primjenjuje se po članici prije zbrajanja.",
-        "required": ["clanice", "vrsta", "skupina", "stanovnici", "godina", "ocjene", "bodovi", "zadnja"],
+        "required": ["clanice", "vrsta", "skupina", "stanovnici", "godina", "ocjene", "bodovi", "zadnja", "usteda"],
         "properties": {
             "clanice": {"type": "array", "minItems": 2, "maxItems": 4,
                         "items": {"type": "string", "pattern": "^[0-9]{5}$"},
@@ -184,6 +184,25 @@ SCHEMAS = {
                     "zastavice": {"type": "array", "items": {"type": "string"}},
                     "kvaliteta": {"type": "array", "items": {"type": "string"}},
                     **{f"I{i}": NUM for i in range(1, 6)}, **{f"S{i}": NUM for i in range(1, 6)},
+                },
+            },
+            "usteda": {
+                "type": ["object", "null"],
+                "description": "Potencijal uštede na općoj upravi (funkcija 01 bez 017 i 018) za zadnju godinu "
+                               "(PLAN §4.3, odluka 17). Očekivani trošak je medijan troška uprave po stanovniku "
+                               "usporedne skupine spojene jedinice puta broj stanovnika. Strukturni jaz je gornja "
+                               "granica; realističan raspon je 0 do realno_do (najviše 10 % zbroja i najviše jaz).",
+                "required": ["godina", "uprava_zbroj", "medijan_pc", "ocekivano", "strukturni_jaz", "realno_do",
+                             "iznad_10000"],
+                "properties": {
+                    "godina": {"type": "integer"},
+                    "uprava_zbroj": {"type": "number", "description": "Zbroj troška opće uprave članica, €."},
+                    "medijan_pc": {**NUM, "description": "Medijan troška uprave po stanovniku u skupini, €."},
+                    "ocekivano": {**NUM, "description": "medijan_pc × stanovnici, €."},
+                    "strukturni_jaz": {**NUM, "minimum": 0, "description": "max(0, uprava_zbroj − ocekivano), €; gornja granica."},
+                    "realno_do": {**NUM, "minimum": 0, "description": "min(0,10 × uprava_zbroj, strukturni_jaz), €."},
+                    "iznad_10000": {"type": "boolean",
+                                    "description": "Spojena jedinica ima više od 10.000 stanovnika: dodatna ušteda se ne očekuje."},
                 },
             },
         },

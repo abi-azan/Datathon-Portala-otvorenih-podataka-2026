@@ -18,20 +18,34 @@ Rules:
 A year is kept only when every member reports it. A value missing for every member stays
 missing; otherwise missing counts as 0 (pandas sum with min_count=1).
 
+Savings on general administration (PLAN §4.3, decision 17): only function 01 without
+017 and 018, for the last year. The expected cost is the median cost per inhabitant of the
+merged unit's peer group times its population. The structural gap (actual minus expected,
+never below 0) is the upper bound; the realistic range is 0 to 10 % of the actual cost,
+and never more than the gap (research/01 §4.2). Above about 10,000 inhabitants no further
+savings are expected (meta-analysis, research/01 §4.1).
+
 precompute() writes every allowed group of 2-4 units, one JSON file per county, for the
 static site (decision 4.11.: computed ahead in Python, no TypeScript copy of the method).
+
+    .venv/Scripts/python -m pipeline.merge --precompute   # rewrite data/build/simulator only
 """
+import argparse
 import inspect
 import json
 import math
 import re
+import sys
 from types import SimpleNamespace
 
 import pandas as pd
 
-from . import config, methodology
+from . import config, facts, methodology
 
 MAX_MEMBERS = 4
+
+SAVINGS_SHARE = 0.10            # realistic upper end: about 10 % of the summed administration cost
+NO_SAVINGS_ABOVE = 10_000       # inhabitants; beyond this size no further economies of scale
 
 # Every p_/b_ value the methodology reads: the literals in methodology.py plus the capital
 # grants it builds with f-strings. Summing only these keeps precompute fast.
@@ -61,6 +75,9 @@ class Data:
         self.rows = {}
         for r in wide[cols].to_dict("records"):
             self.rows.setdefault(r.pop("oib"), {})[int(r.pop("year"))] = r
+        # same medians as the profiles and skupine.json (facts.peer_medians)
+        med = facts.peer_medians(res)["uprava_pc"]
+        self.uprava_median = {(g, int(y)): v for (g, y), v in med.items() if not _missing(v)}
         self.points = {}
         for r in res[["skupina", "year", "oib", "bodovi"]].to_dict("records"):
             if not _missing(r["bodovi"]):
@@ -84,10 +101,12 @@ class Data:
         return u["vrsta"] != "zupanija" and not bool(u["zagreb"])
 
 
-def check(data, oibs):
-    """Raise ValueError when the group breaks a rule; the message is shown to the user."""
-    if not 2 <= len(set(oibs)) <= MAX_MEMBERS or len(set(oibs)) != len(oibs):
-        raise ValueError(f"Spajaju se 2 do {MAX_MEMBERS} različite jedinice.")
+def check(data, oibs, max_members=MAX_MEMBERS):
+    """Raise ValueError when the group breaks a rule; the message is shown to the user.
+    max_members=None: no upper limit (Karta reforme); the other rules still hold."""
+    if len(set(oibs)) != len(oibs) or len(oibs) < 2 or (max_members is not None and len(oibs) > max_members):
+        raise ValueError(f"Spajaju se 2 do {max_members} različite jedinice." if max_members
+                         else "Spajaju se barem 2 različite jedinice.")
     for o in oibs:
         if o not in data.units:
             raise ValueError(f"Nepoznata jedinica: {o}")
@@ -136,19 +155,40 @@ def _rank(data, skupina, year, points, members):
     return better + 1, n, (below + (ties + 1) / 2) / n * 100
 
 
-def merge(data, oibs):
-    """Profile of the merged unit: type, peer group, population and a result per year."""
-    check(data, oibs)
+def _num(r, k):
+    v = r.get(k)
+    return 0.0 if _missing(v) else float(v)
+
+
+def savings(data, row, skupina, pop, year):
+    """Savings block on general administration (01 - 017 - 018) for one year of a merged unit.
+    row: the merged unit-year row (sums over the members)."""
+    actual = _num(row, "p_01") - _num(row, "p_017") - _num(row, "p_018")
+    median = data.uprava_median.get((skupina, year))
+    expected = median * pop if median is not None else None
+    gap = max(0.0, actual - expected) if expected is not None else None
+    realistic = min(SAVINGS_SHARE * max(actual, 0.0), gap) if gap is not None else None
+    return {"godina": year, "uprava_zbroj": actual, "medijan_pc": median, "ocekivano": expected,
+            "strukturni_jaz": gap, "realno_do": realistic, "iznad_10000": pop > NO_SAVINGS_ABOVE}
+
+
+def merge(data, oibs, max_members=MAX_MEMBERS):
+    """Profile of the merged unit: type, peer group, population, a result per year and the
+    savings block for the last year. max_members=None: no size limit (Karta reforme)."""
+    check(data, oibs, max_members)
     oibs = sorted(oibs, key=lambda o: data.units[o]["sifra"])   # same sums whatever the click order
     members = [data.units[o] for o in oibs]
     vrsta = "grad" if any(m["vrsta"] == "grad" for m in members) else "opcina"
     pop = int(sum(m["stanovnici_2021"] for m in members))
     skupina = methodology.peer_group(SimpleNamespace(vrsta=vrsta, zagreb=False, stanovnici_2021=pop))
-    godine = methodology.evaluate_unit(merged_rows(data, oibs), pop)
+    rows = merged_rows(data, oibs)
+    godine = methodology.evaluate_unit(rows, pop)
     for y, r in godine.items():
         r["rang"], r["n_skupine"], r["percentil"] = _rank(data, skupina, y, r["bodovi"], set(oibs))
+    last = max(godine) if godine else None
     return {"clanice": sorted(m["sifra"] for m in members), "vrsta": vrsta, "skupina": skupina,
-            "stanovnici": pop, "zup_id": int(members[0]["zup_id"]), "godine": godine}
+            "stanovnici": pop, "zup_id": int(members[0]["zup_id"]), "godine": godine,
+            "usteda": savings(data, rows[last], skupina, pop, last) if last is not None else None}
 
 
 def groups(data, max_members=MAX_MEMBERS):
@@ -196,7 +236,8 @@ def summary(result):
                      "godina": years[-1] if years else None,
                      "ocjene": {str(y): result["godine"][y]["ocjena"] for y in years},
                      "bodovi": {str(y): result["godine"][y]["bodovi"] for y in years},
-                     "zadnja": {k: last.get(k) for k in LAST_KEYS}})
+                     "zadnja": {k: last.get(k) for k in LAST_KEYS},
+                     "usteda": result.get("usteda")})
 
 
 def precompute(data, out_dir):
@@ -216,3 +257,17 @@ def precompute(data, out_dir):
         (out_dir / f"zup-{int(zup):02d}.json").write_text(
             json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return sum(len(s) for s in by_county.values())
+
+
+def main():
+    sys.stdout.reconfigure(encoding="utf-8")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--precompute", action="store_true",
+                    help="rewrite data/build/simulator/ from a finished build, without running the build")
+    if ap.parse_args().precompute:
+        n = precompute(Data.load(), config.BUILD / "simulator")
+        print(f"Simulator: {n} skupina -> {config.BUILD / 'simulator'}")
+
+
+if __name__ == "__main__":
+    main()

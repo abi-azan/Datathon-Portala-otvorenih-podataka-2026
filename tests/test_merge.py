@@ -118,3 +118,47 @@ def test_precomputed_files_cover_every_group(data):
             assert v["zadnja"]["ocjena"] in (1, 2, 3, 4, 5)
             keys.add(k)
     assert keys == {"-".join(g) for g in merge.groups(data)}
+
+
+def test_savings_stay_inside_their_bounds(data):
+    """PLAN §4.3, decision 17: the realistic upper end is at most 10 % of the summed
+    administration cost and never above the structural gap; the gap is never negative."""
+    rng = random.Random(3)
+    for g in rng.sample(merge.groups(data), 400):
+        u = merge.merge(data, [data.oib_of[s] for s in g])["usteda"]
+        assert u["godina"] == config.LAST_YEAR
+        assert u["strukturni_jaz"] >= 0
+        assert 0 <= u["realno_do"] <= merge.SAVINGS_SHARE * u["uprava_zbroj"] + 1e-6
+        assert u["realno_do"] <= u["strukturni_jaz"] + 1e-6
+        assert abs(u["ocekivano"] - u["medijan_pc"] * sum(data.units[data.oib_of[s]]["stanovnici_2021"] for s in g)) < 1e-6
+
+
+def test_pag_island_savings(data, res):
+    """Povljana + Pag: the block sums the members' administration and compares it with the
+    median of 'gradovi 2.000-5.000'."""
+    oibs = [by_name(data, "Općina Povljana"), by_name(data, "Grad Pag")]
+    u = merge.merge(data, oibs)["usteda"]
+    members = sum(res.loc[(o, config.LAST_YEAR), "uprava_pc"] * data.units[o]["stanovnici_2021"] for o in oibs)
+    assert abs(u["uprava_zbroj"] - members) < 1.0
+    peers = res.xs(config.LAST_YEAR, level="year")
+    assert u["medijan_pc"] == peers[peers.skupina == "gradovi 2.000-5.000"].uprava_pc.median()
+    assert u["uprava_zbroj"] > 0 and u["realno_do"] > 0 and not u["iznad_10000"]
+
+
+def test_no_size_limit_for_karta_reforme(data):
+    """merge(max_members=None) takes any connected group of one county (Karta reforme); the
+    county, Zagreb and connectivity rules still hold."""
+    g = min(g for g in merge.groups(data, 4) if len(g) == 4)
+    oibs = [data.oib_of[s] for s in g]
+    zup = data.units[oibs[0]]["zup_id"]
+    extra = next(data.oib_of[n] for s in g for n in data.adj[s]
+                 if data.oib_of[n] not in oibs and data.eligible(data.oib_of[n])
+                 and data.units[data.oib_of[n]]["zup_id"] == zup)
+    with pytest.raises(ValueError, match="2 do 4"):
+        merge.merge(data, oibs + [extra])
+    m = merge.merge(data, oibs + [extra], max_members=None)
+    assert len(m["clanice"]) == 5 and m["usteda"] is not None
+    with pytest.raises(ValueError, match="barem 2"):
+        merge.merge(data, oibs[:1], max_members=None)
+    with pytest.raises(ValueError, match="županije i Grad Zagreb"):
+        merge.merge(data, [by_name(data, "Grad Zagreb"), by_name(data, "Grad Velika Gorica")], max_members=None)
