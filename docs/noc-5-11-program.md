@@ -24,7 +24,9 @@ Ti si **voditelj** noćne smjene za projekt **Fiskalna karta JLS** (repo `C:\Use
    - `docs/video-scenarij.md`;
    - `docs/noc-4-11.md`, za stil dnevnika i primopredaje.
 2. **Stanje na početku (5.11. oko 0:30):**
-   - Lokalni `main` je na commitu s ovim programom. Ispred `origin/main` je 12 commitova, ništa nije pushano, a stranica uživo je starija verzija.
+   - Lokalni `main` je na commitu s ovim programom i 5 commitova je ispred `origin/main`.
+     - `origin/main` je `25c589c` (podatkovni slojevi). Ta je verzija uživo: CI je prošao 4.11. u 16:57 i trajao je 32 min.
+     - Ono što je nastalo poslije, tj. kontekst na pregledu jedinice, izravnanje iz odluka MF-a, stanovništvo 2025., ikona i karte, nije pushano.
    - Testovi: **252 prolaze**. **Dva padaju i to je poznato:** `tests/test_api.py::test_ai_texts_cover_almost_every_profile` i `tests/test_verify.py::test_no_false_grade_claims_in_real_model_texts`. Padaju dok se AI tekstovi ne generiraju ponovno (petak). Svaki drugi pad je nov i treba ga riješiti.
    - Paketi činjenica promijenili su se kod 561 od 576 jedinica (izravnanje iz odluka MF-a, kontekst stanovništva i dohotka). Ti profili do petka prikazuju predložak. To je očekivano i nije greška.
    - GPU kvota: 5,6 h od 30 h potrošeno; obnavlja se 7.11. u 01:00 po našem vremenu. Zadnji puni batch trajao je 3,5 h.
@@ -126,7 +128,7 @@ Bolje je da padne noćas nego u petak.
 
 ### N2. Code review dnevnih izmjena
 
-- **Opseg:** sve što je na grani, a nije na `origin/main` (`git diff origin/main...noc-5-11`). To je cijeli današnji rad pet agenata. Pokreni `/code-review high` nad tim rasponom; ako vještina gleda samo radnu kopiju, pregledaj raspon commitova izravno.
+- **Opseg:** sve što je na grani, a nije na `origin/main` (`git diff origin/main...noc-5-11`), tj. sve od `25c589c`: rad agenata od 4.11. poslijepodne. Pokreni `/code-review high` nad tim rasponom; ako vještina gleda samo radnu kopiju, pregledaj raspon commitova izravno.
 - **Posebno pogledaj:**
   - `pipeline/izravnanje_isplate.py` i njegov utjecaj na ZO i I4 u `methodology.py` (ulazi u ocjenu);
   - `pipeline/kontekst.py` i `pipeline/dzs_xlsx.py` (pravilo da PxWeb ima prednost, oznake "-" i "z");
