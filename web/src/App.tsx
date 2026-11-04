@@ -25,6 +25,7 @@ export default function App() {
   useEffect(() => {
     if (route.page === 'simulator') document.title = 'Simulator spajanja · Fiskalna karta'
     else if (route.page === 'reform') document.title = 'Karta reforme · Fiskalna karta'
+    else if (route.page === 'methodology') document.title = 'Metodologija i podaci · Fiskalna karta'
     else if (route.page !== 'unit') document.title = 'Fiskalna karta · financije općina, gradova i županija'
   }, [route])
 
