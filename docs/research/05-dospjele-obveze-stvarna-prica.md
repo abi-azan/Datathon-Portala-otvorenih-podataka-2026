@@ -87,3 +87,32 @@ Učinak na 2025.:
 Testovi:
 - `tests/test_methodology.py` (pravila na izmišljenim podacima);
 - `tests/test_data.py::test_overdue_rules_match_the_units_own_notes` (Sveta Marija i Povljana na stvarnim podacima).
+
+## Proširenje 4.11.2026. (odluka 17)
+
+**Slučaj:** Sveta Marija 2023. ima ocjenu 2, a sve ostale godine 5.
+- Kredit se tada još povlačio: stanje je naraslo s 241.522 na 1.061.782 €.
+- Glavnica se nije otplaćivala (poček, konto 54 = 0), a cijeli kredit je iskazan kao dospio.
+- Staro pravilo 1 traži otplatu od barem 3 % početnog stanja, pa se 1,06 mil. € brojio kao dospjela obveza.
+
+**Proširenje:** pravilo 1 vrijedi i kad je stanje kredita (26) na kraju godine veće nego na kraju prethodne godine. Kredit je tada u povlačenju i ne može biti cijeli dospio.
+- Ostali uvjeti su isti: kredit veći od 10.000 € i 26 D barem 90 % kredita.
+- Prva godina serije (2019.) nema prethodnu godinu, pa se ne računa kao povlačenje.
+- Kod: `methodology.loan_reported_all_due_but_repaid`.
+
+**Učinak** (`build --offline`, 4.11. u 1:45):
+
+| Godina | Pravilo 1 novo vrijedi | Promijenjena ocjena | Izgubilo ograničenje (pravilo 2) |
+|---|---|---|---|
+| 2019. | 0 | 0 | 0 |
+| 2020. | 6 | 4 | 3 |
+| 2021. | 5 | 3 | 1 |
+| 2022. | 5 | 2 | 1 |
+| 2023. | 3 | 3 | 3 |
+| 2024. | 1 | 1 | 0 |
+| **2025.** | **0** | **0** | **0** |
+
+- Ukupno 20 jedinica-godina u 2020.-2024., od kojih 13 mijenja ocjenu, a 8 gubi ograničenje.
+- Ograničenje ne gube Kalnik 2020. i Muć 2021., jer im i bez kredita ostaju dospjele obveze od barem 30 % rashoda poslovanja.
+- Ocjene za 2025. su iste: 5/4/3/2/1 = 306/149/68/43/10.
+- Primjeri: Sveta Marija 2023. ide s 2 na 5, Babina Greda 2022. s 2 na 4 i 2023. s 2 na 5, a Grad Vis 2021. s 2 na 5.

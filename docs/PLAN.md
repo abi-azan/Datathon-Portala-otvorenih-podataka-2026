@@ -88,6 +88,8 @@ Detalji i izvori su u `01` §2. Pondere i pragove kalibriramo jednom, prije preg
 - stanje kredita (26) je veće od 10.000 €, a 26 D je barem 90% od 26;
 - otplata glavnice (54) u godini t je barem 3% stanja kredita na kraju godine t−1. Novi kredit (početno stanje 0) uvjet zadovoljava. Za 2019., kad nema prethodne godine, uzima se stanje na kraju godine t.
 
+Od 4.11. (odluka 17) pravilo vrijedi i za kredit u povlačenju: kad je stanje kredita na kraju godine t veće nego na kraju godine t−1, drugi uvjet se ne traži. Za 2025. to ne mijenja nijednu ocjenu, a u 2020.-2024. mijenja 13 ocjena (`research/05`, "Proširenje 4.11.").
+
 Jedinica tada dobiva oznaku kvalitete `kredit_iskazan_kao_dospio`, a profil prikazuje i iskazani i ispravljeni DO. Ako se kredit ne otplaćuje (Povljana), 26 D ostaje u DO. Za 2025. pravilo pogađa 26 jedinica, a ranijih godina 21-67.
 
 ### 3.2 Ocjenjivani pokazatelji

@@ -80,13 +80,20 @@ def _num(r, k):
 
 
 def loan_reported_all_due_but_repaid(r, prev):
-    """Rule 1. r: unit-year dict for year t, prev: the same unit's dict for t-1 or None."""
+    """Rule 1. r: unit-year dict for year t, prev: the same unit's dict for t-1 or None.
+
+    The loan counts as regular (not overdue) when it is repaid on schedule, or, since
+    decision 17 (PLAN §11, 4.11.), when it is still being drawn: the balance at the end
+    of t is above the balance at the end of t-1 (Sveta Marija 2023, grace period, no
+    principal yet). The first year of the series has no t-1 and is never a drawdown."""
     loan, due = _num(r, "b_26"), _num(r, "b_26_D")
     if loan <= LOAN_ALL_DUE_MIN or due < LOAN_ALL_DUE_SHARE * loan:
         return False
     opening = (prev or {}).get("b_26")
     if opening is None or (isinstance(opening, float) and math.isnan(opening)):
         opening = loan                      # first year of the series: use the closing balance
+    elif loan > opening:
+        return True                         # decision 17: loan still being drawn
     return _num(r, "p_54") >= LOAN_REPAID_SHARE * opening   # opening 0 = new loan, passes
 
 

@@ -62,6 +62,9 @@ def test_overdue_rules_match_the_units_own_notes():
     assert sm.kredit_iskazan_dospio and abs(sm.DO - 1625.85) < 1.0
     pov = last.loc["Općina Povljana"]
     assert not pov.kredit_iskazan_dospio and pov.ogranicenje_do and pov.ocjena == 2
+    # decision 17: in 2023 the loan was still being drawn, so the grade is no longer capped
+    sm23 = res[(res.year == 2023) & (res.naziv == "Općina Sveta Marija")].iloc[0]
+    assert sm23.kredit_iskazan_dospio and not sm23.ogranicenje_do
 
 
 def test_geometry_covers_every_town_and_municipality(units):

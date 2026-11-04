@@ -99,6 +99,23 @@ def test_loan_rule_edges():
     assert first_year["kredit_iskazan_dospio"]          # 20.000 >= 3% of 500.000
 
 
+def test_loan_being_drawn_counts_as_regular():
+    # decision 17: Sveta Marija 2023 drew the rest of its loan (241.522 -> 1.061.782 €) in a
+    # grace period, so no principal was repaid, and still reported it all as overdue
+    prev = unit_year(b_26=241_522.0)
+    r = unit_year(b_26=1_061_782.0, b_26_D=1_061_782.0, p_54=0.0)
+    a = m.aux(r, prev)
+    assert a["kredit_iskazan_dospio"] and a["DO"] == 4.0
+    flat = m.aux(unit_year(b_26=1_061_782.0, b_26_D=1_061_782.0, p_54=0.0), unit_year(b_26=1_061_782.0))
+    assert not flat["kredit_iskazan_dospio"]            # same balance, no repayment: stays overdue
+    first = m.aux(unit_year(b_26=1_061_782.0, b_26_D=1_061_782.0, p_54=0.0), None)
+    assert not first["kredit_iskazan_dospio"]           # first year of the series is not a drawdown
+    small = m.aux(unit_year(b_26=9_000.0, b_26_D=9_000.0, p_54=0.0), unit_year(b_26=1_000.0))
+    assert not small["kredit_iskazan_dospio"]           # the size and share conditions still apply
+    partly = m.aux(unit_year(b_26=500_000.0, b_26_D=400_000.0, p_54=0.0), unit_year(b_26=100_000.0))
+    assert not partly["kredit_iskazan_dospio"]
+
+
 def test_overdue_at_30_percent_caps_grade_at_2():
     ok = m.evaluate_unit({2025: unit_year()}, 1000)[2025]
     hit = m.evaluate_unit({2025: unit_year(b_23_D=300.0)}, 1000)[2025]   # 300 / 850 = 35%
