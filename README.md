@@ -21,9 +21,12 @@ Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datat
   - trend kroz sedam godina;
   - upozorenja i napomene o kvaliteti podataka;
   - kontekst, otvorenost na data.gov.hr i susjedi.
-- **Kratko objašnjenje s provjerom brojki.** Python izračuna sve brojke i odabere što je važno. Jezični model (Gemma 4 na Kaggleu) samo napiše tekst oko njih. Program zatim provjeri da je svaka brojka u tekstu točna, da je navedena ocjena stvarna i da se najslabija sastavnica, jake strane i ograničenje ocjene slažu s činjenicama. Tekst koji ne prođe provjeru zamjenjuje predložak.
-- **Otvoreni API**: statične datoteke bez ključa, opisane u OpenAPI 3.1. Sadrži sve rezultate, šifrarnik (OIB ↔ RKP ↔ šifra DGU/DZS ↔ naziv), granice i zapis provenijencije svakog preuzimanja.
-- **U izradi:** simulator spajanja susjednih jedinica i Karta reforme (scenarij, ne prijedlog granica).
+- **Kratko objašnjenje s provjerom brojki.** Python izračuna sve brojke i odabere što je važno. Jezični model (Gemma 4 31B na Kaggleu) samo napiše tekst oko njih. Program zatim provjeri da je svaka brojka u tekstu točna, da je navedena ocjena stvarna i da se najslabija sastavnica, jake strane i ograničenje ocjene slažu s činjenicama. Tekst koji ne prođe provjeru zamjenjuje predložak.
+- **Vidljiva provjera brojki.** Svaka brojka u objašnjenju pokazuje činjenicu iz koje dolazi. Ispod svake sastavnice je "Kako je izračunato": formula, pomoćne veličine po godinama i ulazni iznosi s kontom, listom i retkom u datotekama Ministarstva financija. Test iz samih tih ulaza ponovno dobiva objavljene pokazatelje za svih 576 jedinica.
+- **Simulator spajanja** (`#/simulator`): odabir 2-4 susjedne općine ili grada iste županije na karti ili pretragom. Prikazuje ocjenu spojene jedinice i rang u skupini, iznose prije i poslije (dospjele obveze, uprava), raspon uštede na općoj upravi i promjenu fiskalnog izravnanja po zakonskoj formuli. Svih 13.353 dopuštenih skupina izračunato je unaprijed.
+- **Karta reforme** (`#/reforma`): scenarij u kojem se unutar županije najmanja jedinica ispod praga spaja s najmanjim susjedom, za pragove od 2.500, 5.000 i 10.000 stanovnika (555 → 370, 239 ili 147 jedinica). Scenarij, ne prijedlog granica.
+- **Metodologija i podaci** (`#/metodologija`): formule, pragovi, ponderi, pravila i AI prompt čitaju se iz koda (`metodologija.json`), uz popis svih skupova podataka.
+- **Otvoreni API**: statične datoteke bez ključa, opisane u OpenAPI 3.1. Sadrži sve rezultate, šifrarnik (OIB ↔ RKP ↔ šifra DGU/DZS ↔ naziv), granice, simulator, Kartu reforme, izvor svake brojke i zapis provenijencije svakog preuzimanja.
 
 ## Podaci
 
@@ -34,6 +37,7 @@ Svi korišteni skupovi s izdavateljem, poveznicom, licencom i načinom pristupa 
 | PR-RAS, RAS-funkcijski i Bilanca JLP(R)S 2019.-2025. | Ministarstvo financija | datoteke (uvjetni GET, ETag) |
 | Popis 2021. i granice gradova i općina (INSPIRE) | DZS, servis DGU/NIPP | **API: OGC WFS** |
 | Katalog Portala otvorenih podataka | data.gov.hr | **API: CKAN** |
+| Tablica fiskalnog izravnanja za 2027. (kapacitet, referentne vrijednosti, puni iznosi) | Ministarstvo financija | datoteka (uvjetni GET) |
 | Upravne jedinice INSPIRE, indeks razvijenosti 2024. | DGU, MRRFEU | jednokratno, u `data/reference/jls_master.csv` |
 
 Podaci Ministarstva financija nisu na Portalu otvorenih podataka i nemaju izričitu licencu. Koriste se prema Zakonu o pravu na pristup informacijama (čl. 27. i 31.) i uz uvjete Otvorene dozvole, koja prema Pravilniku NN 67/17 (čl. 4.) vrijedi kad tijelo nije objavilo druge uvjete. Obrazloženje je u [docs/skupovi-podataka.md](docs/skupovi-podataka.md). Preporuka Ministarstvu: objaviti PR-RAS, RAS-funkcijski i Bilancu na data.gov.hr, s licencom i API-jem.
@@ -63,9 +67,13 @@ IZVORI  MF (XLSX, ETag) · DZS INSPIRE WFS · data.gov.hr CKAN API
 ETL (Python 3.12)       pipeline/build.py
    mf.py → units.py → population.py → geo.py → openness.py → methodology.py
    │                                         (susjedi, otoci, TopoJSON)
-   ├─ facts.py → explain.py → verify.py ──► Kaggle (Gemma 4, llama.cpp, T4 GPU)
+   ├─ merge.py (+ izravnanje.py) → simulator/zup-XX.json   (13.353 skupine, unaprijed)
+   ├─ reforma.py → reforma/prag-N.json                     (pohlepno pravilo, 3 praga)
+   ├─ facts.py → explain.py → verify.py ──► Kaggle (Gemma 4 31B, llama.cpp, T4 GPU)
+   │                            ◄── data/ai/objasnjenja-2025.json (commitano, sha256 paketa)
    ▼
 STATIČNI API            pipeline/publish.py → web/public/api/v1/  (+ openapi.json)
+   provenance.py (izvor svake brojke) · metodologija.py (metodologija iz koda)
    ▼
 WEB (React, Vite, Tailwind, MapLibre GL + OpenFreeMap)  web/
    ▼
@@ -97,7 +105,11 @@ Osnovna adresa je `<stranica>/api/v1/`, a opis je u `openapi.json`.
 | Datoteka | Sadržaj |
 |---|---|
 | `jedinice.json` | sve jedinice, ocjena i bodovi po godini |
-| `jedinice/<slug>.json` | svjedodžba jedne jedinice |
+| `jedinice/<slug>.json` | svjedodžba jedne jedinice, s objašnjenjem i oznakom AI ili predložak |
+| `jedinice/<slug>/izvor.json` | formula pokazatelja, pomoćne veličine i ulazni iznosi s listom i retkom u datotekama MF-a |
+| `simulator/zup-<id>.json` | simulator: svaka skupina od 2-4 susjedne jedinice županije, s uštedom i izravnanjem |
+| `reforma/prag-<N>.json` | Karta reforme za prag od 2.500, 5.000 ili 10.000 stanovnika |
+| `metodologija.json` | formule, pragovi, ponderi, pravila, AI prompt i opis provjere, iz koda |
 | `skupine.json` | medijani usporednih skupina |
 | `rezultati.csv` | jedan red po jedinici i godini |
 | `sifrarnik.csv` | OIB, RKP, šifra, naziv, vrsta, županija |
@@ -123,7 +135,7 @@ Pravila natjecanja traže popis svih AI alata:
 
 | Alat | Licenca ili uvjeti | Za što |
 |---|---|---|
-| Gemma 4 31B-it (QAT Q4_0, GGUF) | Apache-2.0 | u proizvodu: tekst objašnjenja ocjene. Odabran nakon testa v6 (20/20 prolaza), vidi `docs/research/06-gemma-test.md` |
+| Gemma 4 31B-it (QAT Q4_0, GGUF) | Apache-2.0 | u proizvodu: tekst objašnjenja ocjene. Odabran nakon testova v6 i v7 (40/40 prolaza na jedinicama koje model nije vidio), vidi `docs/research/06-gemma-test.md` |
 | Gemma 4 E4B, 12B i 26B-A4B (QAT Q4_0) | Apache-2.0 | samo testovi; 12B je rezerva |
 | llama.cpp | MIT | izvođenje Gemme na Kaggle GPU-u (T4) |
 | Kaggle (bilježnice, Kaggle Models, službeni Kaggle MCP server) | Kaggle Terms of Use | izvođenje Gemme i upravljanje bilježnicama iz razvojnog okruženja |
