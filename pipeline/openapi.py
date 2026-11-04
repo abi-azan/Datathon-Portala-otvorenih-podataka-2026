@@ -404,6 +404,8 @@ def spec(generated):
                        "Izvor"),
             },
             "/skupine.json": _get("Medijani usporednih skupina", "Medijani po skupini i godini.", "Skupine"),
+            "/dcat.jsonld": _get("Katalog DCAT-AP", "Katalog skupova podataka projekta u DCAT-AP (JSON-LD), za "
+                                 "preuzimanje u portal otvorenih podataka.", media="application/ld+json"),
             "/metodologija.json": _get("Metodologija", "Formule, pragovi, ponderi, pravila, AI prompt i provjera, "
                                        "kako ih kod primjenjuje.", "Metodologija"),
             "/sifrarnik.csv": _get("Šifrarnik jedinica",

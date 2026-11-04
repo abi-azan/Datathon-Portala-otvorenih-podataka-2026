@@ -82,7 +82,7 @@ GitHub Actions (.github/workflows/deploy.yml): ETL → API → testovi → build
 
 - Nema poslužitelja ni baze. Sve se izračuna u CI-ju i objavi kao statične datoteke.
 - AI tekstovi generiraju se jednom na Kaggleu i commitaju. CI ih samo provjerava i objavljuje.
-- **Interoperabilnost:** stabilni ključevi (OIB, RKP, službena šifra DGU/DZS), OpenAPI 3.1, CSV i JSON, INSPIRE izvori i zapis provenijencije.
+- **Interoperabilnost:** stabilni ključevi (OIB, RKP, službena šifra DGU/DZS), OpenAPI 3.1, CSV i JSON, katalog DCAT-AP (EU kontrolirani rječnici za licencu, format, temu, državu i učestalost), INSPIRE izvori i zapis provenijencije.
 - **Preduvjeti:**
   - pravni: licenca podataka MF-a;
   - organizacijski: objava MF podataka na portalu;
@@ -110,6 +110,7 @@ Osnovna adresa je `<stranica>/api/v1/`, a opis je u `openapi.json`.
 | `simulator/zup-<id>.json` | simulator: svaka skupina od 2-4 susjedne jedinice županije, s uštedom i izravnanjem |
 | `reforma/prag-<N>.json` | Karta reforme za prag od 2.500, 5.000 ili 10.000 stanovnika |
 | `metodologija.json` | formule, pragovi, ponderi, pravila, AI prompt i opis provjere, iz koda |
+| `dcat.jsonld` | katalog skupova u DCAT-AP (JSON-LD), za preuzimanje u portal otvorenih podataka |
 | `skupine.json` | medijani usporednih skupina |
 | `rezultati.csv` | jedan red po jedinici i godini |
 | `sifrarnik.csv` | OIB, RKP, šifra, naziv, vrsta, županija |

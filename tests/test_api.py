@@ -128,6 +128,22 @@ def test_dataset_list_matches_schema_and_csv(spec):
     assert list(v.iter_errors(data))
 
 
+def test_dcat_catalogue_lists_what_is_published():
+    """DCAT-AP mandatory properties are present and every downloadable distribution exists."""
+    cat = load("dcat.jsonld")
+    assert cat["@type"] == "dcat:Catalog" and cat["dct:title"] and cat["dct:description"] and cat["dct:publisher"]
+    assert len(cat["dcat:dataset"]) >= 6
+    base = "https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/api/v1/"
+    for ds in cat["dcat:dataset"]:
+        assert ds["dct:title"]["@value"] and ds["dct:description"]["@value"] and ds["dcat:distribution"]
+        assert ds["dct:source"], ds["dct:identifier"]
+        for d in ds["dcat:distribution"]:
+            url = d["dcat:accessURL"]["@id"]
+            assert url.startswith(base)
+            if "dcat:downloadURL" in d:
+                assert (API / url[len(base):]).exists(), url
+
+
 def test_methodology_file_matches_the_code(spec):
     from pipeline import explain, methodology
     doc = load("metodologija.json")

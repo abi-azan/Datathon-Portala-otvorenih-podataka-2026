@@ -23,6 +23,7 @@
                            link, licence with its text and evidence, the publisher's last-change date,
                            access, role, plus last download and sha256
   openapi.json             OpenAPI 3.1 description of all of the above (pipeline/openapi.py)
+  dcat.jsonld              DCAT-AP catalogue of the outputs, for harvesting by a portal (pipeline/dcat.py)
 
 The files are generated, not committed: CI builds them before deploying the site.
 The same run rewrites docs/skupovi-podataka.md, the dataset table for the submission.
@@ -41,7 +42,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 
-from . import config, explain, facts, metodologija, openapi, provenance, verify
+from . import config, dcat, explain, facts, metodologija, openapi, provenance, verify
 
 API = config.ROOT / "web" / "public" / "api" / "v1"
 DATASETS = config.REFERENCE / "skupovi.csv"
@@ -331,6 +332,10 @@ def main():
     rows = read_datasets()
     recs = datasets(rows, json.loads(config.SOURCES_LOG.read_text(encoding="utf-8")))
     write(API / "skupovi.json", recs)
+    # DCAT-AP catalogue, so a portal can harvest the outputs (PLAN §6 MUST 7)
+    (API / "dcat.jsonld").write_text(json.dumps(dcat.catalogue(generated, [r for r in rows if r["koristi_se"] == "da"],
+                                                               config.YEARS[0], config.LAST_YEAR),
+                                                ensure_ascii=False, indent=1), encoding="utf-8")
     DATASETS_DOC.write_text(datasets_markdown(recs), encoding="utf-8", newline="\n")
     write(API / "openapi.json", openapi.spec(generated))
     size = sum(p.stat().st_size for p in API.rglob("*") if p.is_file())

@@ -96,6 +96,11 @@ export function Footer({ generated }: { generated?: string }) {
                 Zapis izvora i preuzimanja
               </a>
             </li>
+            <li>
+              <a href="./api/v1/dcat.jsonld" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+                Katalog skupova (DCAT-AP)
+              </a>
+            </li>
           </ul>
           <p className="mt-2">
             Kod: EUPL-1.2 · Podaci: CC BY 4.0 ·{' '}

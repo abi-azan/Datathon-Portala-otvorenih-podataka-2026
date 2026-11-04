@@ -260,8 +260,12 @@ export function Methodology() {
               ,{' '}
               <a className={link} href="./api/v1/metodologija.json">
                 metodologija (JSON)
+              </a>{' '}
+              i{' '}
+              <a className={link} href="./api/v1/dcat.jsonld">
+                katalog skupova u DCAT-AP-u
               </a>
-              . Kod je na{' '}
+              , koji portal otvorenih podataka može preuzeti. Kod je na{' '}
               <a className={`${link} inline-flex items-center gap-1`} href={REPO}>
                 GitHubu <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               </a>{' '}
