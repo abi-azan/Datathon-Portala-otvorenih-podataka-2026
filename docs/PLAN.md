@@ -358,3 +358,9 @@ Korisnik je 2.11. potvrdio plan i nalaze Fable reviewa (neovisni pregled modelom
     - **Statistički blizanci su izbačeni** (§3.5 i §6 MUST 3 vrijede bez blizanaca). MCP ostaje SHOULD, na kraju ako bude vremena.
     - Tablica kao alternativa karti dolazi nakon MUST-a, kao prekidač ispod karte.
     - Rečenica "Ocjena nije službena" maknuta je iz sučelja (§1).
+17. **Odlučeno 4.11. noću** (prije noćne smjene 4.11., program u `docs/noc-4-11-program.md`):
+    - **Pravilo 1 se proširuje na kredit u povlačenju.** Vrijedi i kad je stanje kredita veće nego prethodne godine, uz iste uvjete (kredit veći od 10.000 € i barem 90 % iskazano kao dospjelo). Prijedlog je iz `docs/noc-3-11.md` (10:45). Ocjene za 2025. se ne mijenjaju, a mijenjaju se trendovi (npr. Sveta Marija 2023.).
+    - **Karta reforme:** pohlepno pravilo umjesto spopta. Unutar županije najmanja jedinica ispod praga spaja se s najmanjim susjedom, dok sve ne dosegnu prag. Tri praga (2.500, 5.000 i 10.000 stanovnika) računaju se unaprijed, a klizač prelazi između njih. Koristi se ista funkcija spajanja kao u simulatoru. `spopt` zasad ostaje u `requirements.txt`.
+    - **Fiskalno izravnanje u simulatoru računa se po zakonskoj formuli** (§4.4 i `research/01` §5.5), ali se prikazuje samo ako formula na postojećim jedinicama reproducira objavljene iznose MF-a. Inače se prikazuje napomena.
+    - **Ušteda na općoj upravi** (§4.3) računa se iz medijana po razredu, ne regresijom. Očekivani trošak uprave po stanovniku je medijan usporedne skupine spojene jedinice. Strukturni jaz (gornja granica) je stvarni zbroj umanjen za očekivani trošak, a realističan raspon je 0 do 10 % zbroja, najviše do jaza.
+    - **Noćna smjena** radi na grani `noc-4-11` i pusha samo nju, kao sigurnosnu kopiju (push grane ne pokreće deploy). `main` i stranica ostaju netaknuti dok korisnik ne pregleda.
