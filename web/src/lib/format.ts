@@ -18,12 +18,16 @@ export interface GradeMeta {
 export const GRADES: GradeMeta[] = [
   { value: 5, word: 'vrlo stabilno', color: '#1c5cab', ink: '#ffffff' },
   { value: 4, word: 'stabilno', color: '#86b6ef', ink: '#0b0b0b' },
-  { value: 3, word: 'umjereno', color: '#e6e4dd', ink: '#0b0b0b' },
+  { value: 3, word: 'umjereno stabilno', color: '#e6e4dd', ink: '#0b0b0b' },
   { value: 2, word: 'pod pritiskom', color: '#f5938c', ink: '#0b0b0b' },
-  { value: 1, word: 'ozbiljan pritisak', color: '#9e3432', ink: '#ffffff' },
+  { value: 1, word: 'pod velikim pritiskom', color: '#9e3432', ink: '#ffffff' },
 ]
 
 export const grade = (g: number | null | undefined) => GRADES.find((x) => x.value === g)
+
+/** Display-only terminology; stored AI texts and their verification stay unchanged. */
+export const normalizeGradeLabels = (text: string) =>
+  text.replace(/\bumjereno\b(?!\s+stabilno)/g, 'umjereno stabilno').replaceAll('ozbiljan pritisak', 'pod velikim pritiskom')
 
 export const VRSTA: Record<string, string> = { opcina: 'općina', grad: 'grad', zupanija: 'županija' }
 

@@ -1,5 +1,5 @@
 import { Search as SearchIcon } from 'lucide-react'
-import { useId, useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState, type RefObject } from 'react'
 import type { UnitIndex } from '../lib/data'
 import { VRSTA, fold, num } from '../lib/format'
 import { go, unitHref } from '../lib/router'
@@ -15,6 +15,8 @@ interface Props {
   disabledReason?: (u: UnitIndex) => string | undefined
   label?: string
   placeholder?: string
+  /** The text input, for a parent that moves focus back to it (the simulator after a removal). */
+  inputRef?: RefObject<HTMLInputElement | null>
 }
 
 /** "Pronađi svoju općinu": accessible combobox, diacritics-insensitive. */
@@ -26,12 +28,14 @@ export function Search({
   disabledReason,
   label = 'Pronađi svoju općinu, grad ili županiju',
   placeholder = 'Pronađi svoju općinu ili grad…',
+  inputRef,
 }: Props) {
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
   const [open, setOpen] = useState(false)
   const listId = useId()
-  const input = useRef<HTMLInputElement>(null)
+  const own = useRef<HTMLInputElement>(null)
+  const input = inputRef ?? own
 
   const keyed = useMemo(() => units.map((u) => ({ u, k: fold(u.naziv.replace(/^(Općina|Grad) /, '')) })), [units])
   const hits = useMemo(() => {
@@ -119,7 +123,7 @@ export function Search({
                   <div className="truncate font-medium">{u.naziv}</div>
                   <div className="truncate text-xs text-muted">
                     {reason ??
-                      `${VRSTA[u.vrsta]}${u.vrsta !== 'zupanija' ? ` · ${u.zupanija}` : ''} · ${num(u.stanovnici)} st.`}
+                      `${VRSTA[u.vrsta]}${u.vrsta !== 'zupanija' ? ` · ${u.zupanija}` : ''} · ${num(u.stanovnici)} stanovnika`}
                   </div>
                 </div>
                 <GradeChip g={u.ocjena[year]} />

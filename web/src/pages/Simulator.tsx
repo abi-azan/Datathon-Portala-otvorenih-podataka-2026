@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, Info, RotateCcw, Scale, X } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Info, LoaderCircle, RotateCcw, Scale, X } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
@@ -42,6 +42,12 @@ const EXAMPLES = [
 const keyOf = (sifre: string[]) => [...sifre].sort().join('-')
 const short = (naziv: string) => naziv.replace(/^(Općina|Grad) /, '')
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+/** 1 nepoznata šifra, 2–4 nepoznate šifre, 5 nepoznatih šifri (Croatian plural). */
+function unknownCodes(n: number) {
+  const [d, h] = [n % 10, n % 100]
+  if (d === 1 && h !== 11) return `${n} nepoznata šifra`
+  return d >= 2 && d <= 4 && (h < 12 || h > 14) ? `${n} nepoznate šifre` : `${n} nepoznatih šifri`
+}
 
 /** One line per component for the merged unit, in the words of the profile page (pipeline/facts.py). */
 function describe(key: string, v: number | null, r: MergeSummary['zadnja']): string {
@@ -65,8 +71,8 @@ function describe(key: string, v: number | null, r: MergeSummary['zadnja']): str
 
 function median(key: string, v: number | null | undefined): string {
   if (v == null) return ''
-  if (key === 'I3') return `medijan skupine ${num(v, 1)} god.`
-  return `medijan skupine ${pct(v)}`
+  if (key === 'I3') return `medijan usporedne skupine ${num(v, 1)} god.`
+  return `medijan usporedne skupine ${pct(v)}`
 }
 
 export function Simulator({ index }: { index: IndexFile }) {
@@ -75,17 +81,42 @@ export function Simulator({ index }: { index: IndexFile }) {
   const jls = useMemo(() => index.jedinice.filter((u) => u.vrsta !== 'zupanija'), [index])
   const eligible = useCallback((u: UnitIndex) => canMerge(u), [])
 
-  /** A selection from the URL: known, allowed units of the first unit's county, at most MAX. */
+  /** A selection from the URL: known, allowed units of the first such unit's county, then at most
+   *  MAX of them; `notice` says which codes of the link were left out and why (empty if none). */
   const clean = useCallback(
-    (sifre: string[]) => {
-      const units = sifre.map((s) => bySifra.get(s)).filter((u): u is UnitIndex => !!u && eligible(u))
-      return units.filter((u) => u.zup_id === units[0].zup_id).slice(0, MAX).map((u) => u.sifra)
+    (codes: string[]): { sifre: string[]; notice: string } => {
+      const known = codes.map((s) => bySifra.get(s)).filter((u): u is UnitIndex => !!u)
+      const unknown = codes.length - known.length
+      const ok = known.filter(eligible)
+      const county = ok[0]
+      const same = ok.filter((u) => u.zup_id === county?.zup_id)
+      const names = (us: UnitIndex[]) => us.map((u) => u.naziv).join(', ')
+      const left: string[] = []
+      const other = ok.filter((u) => u.zup_id !== county?.zup_id)
+      if (other.length) left.push(`${names(other)} (druga županija; spajaju se samo jedinice iste županije, ovdje ${county!.zupanija})`)
+      const notAllowed = known.filter((u) => !eligible(u))
+      if (notAllowed.length) left.push(`${names(notAllowed)} (županije i Grad Zagreb ne spajaju se u simulatoru)`)
+      if (same.length > MAX) left.push(`${names(same.slice(MAX))} (najviše ${MAX} jedinice)`)
+      if (unknown) left.push(unknownCodes(unknown))
+      return { sifre: same.slice(0, MAX).map((u) => u.sifra), notice: left.length ? `Iz poveznice nije dodano: ${left.join('; ')}.` : '' }
     },
     [bySifra, eligible],
   )
 
-  const [sel, setSel] = useState<string[]>(() => clean(parseSelection(window.location.hash)))
+  const [fromLink] = useState(() => clean(parseSelection(window.location.hash)))
+  const [sel, setSel] = useState<string[]>(fromLink.sifre)
+  const [linkNotice, setLinkNotice] = useState(fromLink.notice)
   const [status, setStatus] = useState('')
+  // focus target after the focused control disappears: a member's remove button, else the search box
+  const searchInput = useRef<HTMLInputElement>(null)
+  const removeButtons = useRef(new Map<string, HTMLButtonElement>())
+  const focusAfter = useRef<string | null>(null)
+  useEffect(() => {
+    const target = focusAfter.current
+    if (target == null) return
+    focusAfter.current = null
+    ;(removeButtons.current.get(target) ?? searchInput.current)?.focus()
+  }, [sel])
   const [file, setFile] = useState<{ zup: number; data: SimulatorFile | null; failed: boolean } | null>(null)
   const [details, setDetails] = useState<Record<string, UnitDetail>>({})
   const [groups, setGroups] = useState<GroupMedians | null>(null)
@@ -93,7 +124,11 @@ export function Simulator({ index }: { index: IndexFile }) {
   // links to another selection (examples, the profile page) change the hash
   useEffect(() => {
     const on = () => {
-      if (window.location.hash.startsWith('#/simulator')) setSel(clean(parseSelection(window.location.hash)))
+      if (!window.location.hash.startsWith('#/simulator')) return
+      const c = clean(parseSelection(window.location.hash))
+      setSel(c.sifre)
+      setLinkNotice(c.notice)
+      setStatus('')
     }
     window.addEventListener('hashchange', on)
     return () => window.removeEventListener('hashchange', on)
@@ -159,6 +194,7 @@ export function Simulator({ index }: { index: IndexFile }) {
     (sifra: string) => {
       const u = bySifra.get(sifra)
       if (!u) return
+      setLinkNotice('')
       if (sel.includes(sifra)) {
         setSel(sel.filter((s) => s !== sifra))
         setStatus(`Uklonjeno iz odabira: ${u.naziv}.`)
@@ -166,7 +202,7 @@ export function Simulator({ index }: { index: IndexFile }) {
       }
       const r = reason(u)
       if (r) {
-        setStatus(`${u.naziv} se ne može dodati. ${r}.`)
+        setStatus(`${u.naziv} se ne može dodati. ${r}${/[.…]$/.test(r) ? '' : '.'}`)
         return
       }
       setSel([...sel, sifra])
@@ -192,8 +228,18 @@ export function Simulator({ index }: { index: IndexFile }) {
   const broken = sel.length >= 2 && !!skupine && !result
   const members = sel.map((s) => bySifra.get(s)!).sort((a, b) => b.stanovnici - a.stanovnici)
 
+  const loadingCounty = zup != null && !current
+
+  /** The remove button: focus moves to the next member's (or the previous one's), or to the search box. */
+  const remove = (sifra: string) => {
+    const i = members.findIndex((u) => u.sifra === sifra)
+    focusAfter.current = (members[i + 1] ?? members[i - 1])?.sifra ?? ''
+    toggle(sifra)
+  }
   const reset = () => {
+    focusAfter.current = ''
     setSel([])
+    setLinkNotice('')
     setStatus('Odabir je poništen.')
   }
 
@@ -222,6 +268,7 @@ export function Simulator({ index }: { index: IndexFile }) {
             disabledReason={reason}
             label="Dodaj općinu ili grad u spajanje"
             placeholder={sel.length ? 'Dodaj susjednu općinu ili grad…' : 'Odaberi prvu općinu ili grad…'}
+            inputRef={searchInput}
           />
           <p className="mt-2 text-xs text-muted">Jedinice možeš birati i klikom na karti.</p>
         </div>
@@ -240,6 +287,13 @@ export function Simulator({ index }: { index: IndexFile }) {
         <p className="sr-only" aria-live="polite">
           {status}
         </p>
+
+        {linkNotice && (
+          <p className="flex gap-2 rounded-xl border border-hairline bg-card px-4 py-3 text-sm text-ink-2" role="status">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden />
+            {linkNotice}
+          </p>
+        )}
 
         {sel.length > 0 && (
           <Card className="!p-5">
@@ -267,7 +321,11 @@ export function Simulator({ index }: { index: IndexFile }) {
                   <GradeChip g={u.ocjena[year]} />
                   <button
                     type="button"
-                    onClick={() => toggle(u.sifra)}
+                    ref={(el) => {
+                      if (el) removeButtons.current.set(u.sifra, el)
+                      else removeButtons.current.delete(u.sifra)
+                    }}
+                    onClick={() => remove(u.sifra)}
                     className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted hover:bg-hairline/60 hover:text-ink"
                     aria-label={`Ukloni ${u.naziv}`}
                   >
@@ -277,7 +335,15 @@ export function Simulator({ index }: { index: IndexFile }) {
               ))}
             </ul>
             {status && <p className="mt-2 text-sm text-ink-2" aria-hidden>{status}</p>}
-            {sel.length === 1 && <p className="mt-2 text-sm text-muted">Dodaj susjednu jedinicu: na karti su istaknute one koje se mogu odabrati.</p>}
+            {loadingCounty && (
+              <p className="mt-2 flex items-center gap-2 text-sm text-muted" role="status">
+                <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                {sel.length >= 2 ? 'Učitavam podatke županije za izračun spojene jedinice…' : 'Učitavam podatke županije…'}
+              </p>
+            )}
+            {sel.length === 1 && !loadingCounty && (
+              <p className="mt-2 text-sm text-muted">Dodaj susjednu jedinicu: na karti su istaknute one koje se mogu odabrati.</p>
+            )}
             {broken && (
               <p className="mt-2 flex gap-2 text-sm text-ink-2">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -365,7 +431,7 @@ function Result({
           <span className="tabular font-semibold text-ink">
             {z.rang}. od {z.n_skupine}
           </span>{' '}
-          u skupini {r.skupina} (rang među postojećim jedinicama skupine, bez samih članica), {r.godina}.
+          u usporednoj skupini {r.skupina} (rang među postojećim jedinicama skupine, bez samih članica), {r.godina}.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-4 text-sm">
           <span className="text-muted">Prije:</span>
@@ -412,7 +478,7 @@ function Result({
                   </td>
                   <td className="tabular px-2 py-2.5 text-right">
                     {eur(x.uprava)}
-                    <div className="text-xs text-muted">{num(x.u.uprava_pc)} € po st.</div>
+                    <div className="text-xs text-muted">{num(x.u.uprava_pc)} € po stanovniku</div>
                   </td>
                 </tr>
               ))}
@@ -428,7 +494,7 @@ function Result({
                 </td>
                 <td className="tabular px-2 py-2.5 text-right">
                   {eur(u?.uprava_zbroj)}
-                  <div className="text-xs font-normal text-muted">{num(z.uprava_pc)} € po st.</div>
+                  <div className="text-xs font-normal text-muted">{num(z.uprava_pc)} € po stanovniku</div>
                 </td>
               </tr>
             </tbody>
@@ -465,13 +531,13 @@ function Result({
             <dt className="text-ink-2">Opća uprava članica zajedno</dt>
             <dd className="tabular text-right">{eur(u.uprava_zbroj)}</dd>
             <dt className="text-ink-2">
-              Očekivano za skupinu {r.skupina}
+              Očekivano za usporednu skupinu {r.skupina}
               <div className="text-xs text-muted">
                 medijan {num(u.medijan_pc, 2)} € po stanovniku × {num(r.stanovnici)}
               </div>
             </dt>
             <dd className="tabular text-right">{eur(u.ocekivano)}</dd>
-            <dt className="text-ink-2">Strukturni jaz (gornja granica)</dt>
+            <dt className="text-ink-2">Razlika od očekivanog troška (gornja granica)</dt>
             <dd className="tabular text-right">{eur(u.strukturni_jaz)}</dd>
             <dt className="text-ink-2">
               Realističan raspon
@@ -502,7 +568,7 @@ function Result({
 
       {/* components */}
       <Card>
-        <Eyebrow>Pet sastavnica ocjene spojene jedinice</Eyebrow>
+        <Eyebrow>Od čega se sastoji ocjena spojene jedinice</Eyebrow>
         <ul className="mt-4 space-y-4">
           {COMPONENTS.map((c) => {
             const score = z[c.score as keyof typeof z] as number | null
@@ -558,7 +624,7 @@ function Result({
           </a>
         </p>
         <p className="mt-2">
-          Svjedodžbe članica:{' '}
+          Pregledi članica:{' '}
           {members.map((m, i) => (
             <span key={m.sifra}>
               {i > 0 && ' · '}

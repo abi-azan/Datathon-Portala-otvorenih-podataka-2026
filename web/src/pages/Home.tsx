@@ -102,8 +102,8 @@ export function Home({ index }: { index: IndexFile }) {
             Kako stoje financije tvoje općine?
           </h1>
           <p className="mt-4 text-[1.05rem] leading-relaxed text-ink-2">
-            Svaka jedinica dobiva ocjenu financijske stabilnosti od 1 do 5, izračunatu iz službenih izvještaja
-            Ministarstva financija i uspoređenu sa sličnim jedinicama. Metoda i kod su otvoreni.
+            Svaka općina, svaki grad i svaka županija dobivaju ocjenu financijske održivosti proračuna od 1 do 5,
+            izračunatu iz službenih izvještaja Ministarstva financija i uspoređenu sa sličnim jedinicama. Metoda i kod su otvoreni.
           </p>
           <p className="mt-3 border-l-2 border-axis pl-3 text-sm leading-relaxed text-muted">
             Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja.
@@ -167,8 +167,8 @@ export function Home({ index }: { index: IndexFile }) {
                 ))}
               </ul>
               <p className="mt-4 border-t border-hairline pt-4 text-sm leading-relaxed text-ink-2">
-                Kontekst, ne ulazi u ocjenu. Razredi su petine općina i gradova u {year}. godini; tamnije znači više, a ne
-                bolje ili lošije.
+                Ovi pokazatelji služe za usporedbu i ne ulaze u ocjenu. Jedinice su podijeljene u pet razreda prema
+                vrijednosti pokazatelja u {year}. godini. Tamnija boja znači veću vrijednost, ne nužno bolji rezultat.
               </p>
             </>
           )}

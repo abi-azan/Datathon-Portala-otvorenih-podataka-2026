@@ -5,7 +5,7 @@ import { Card, Eyebrow } from '../components/Layout'
 import { TrendChart } from '../components/TrendChart'
 import { CheckedText, SourcePanel } from '../components/Sources'
 import { HttpError, canMerge, loadGroups, loadSource, loadUnit, type GroupMedians, type SourceFile, type UnitDetail } from '../lib/data'
-import { COMPONENTS, FLAGS, QUALITY, VRSTA, eur, num, pct } from '../lib/format'
+import { COMPONENTS, FLAGS, QUALITY, VRSTA, eur, normalizeGradeLabels, num, pct } from '../lib/format'
 import { simulatorHref, unitHref } from '../lib/router'
 
 const YEARS = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']
@@ -54,7 +54,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
         </div>
       </main>
     )
-  if (!unit || !groups) return <main className="mx-auto max-w-[1440px] px-10 py-20 text-muted">Učitavam svjedodžbu…</main>
+  if (!unit || !groups) return <main className="mx-auto max-w-[1440px] px-10 py-20 text-muted">Učitavam podatke jedinice…</main>
 
   const year = String(lastYear)
   const r = unit.godine[year]
@@ -81,7 +81,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
       <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_420px] lg:items-start">
         <div className="lg:pt-6">
           <Eyebrow>
-            Svjedodžba · {VRSTA[unit.vrsta]}
+            Pregled jedinice · {VRSTA[unit.vrsta]}
             {!isCounty && ` · ${unit.zupanija}`}
           </Eyebrow>
           <h1 className="mt-2 font-serif text-5xl leading-[1.05] font-semibold tracking-tight">{unit.naziv}</h1>
@@ -90,7 +90,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             {unit.povrsina_km2 != null && <span className="tabular">{num(unit.povrsina_km2, 1)} km²</span>}
             {unit.otok && <span>otočna jedinica</span>}
             {unit.razvojna_skupina != null && <span>razvojna skupina {num(unit.razvojna_skupina)} od 8</span>}
-            <span>skupina: {unit.skupina}</span>
+            <span>usporedna skupina: {unit.skupina}</span>
           </div>
         </div>
         <div className="rounded-2xl border border-hairline bg-card p-5">
@@ -108,19 +108,19 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 border-t border-hairline pt-4 text-sm">
             <div>
-              <div className="text-xs text-muted">Mjesto u skupini</div>
+              <div className="text-xs text-muted">Mjesto u usporednoj skupini</div>
               <div className="tabular font-medium">
                 {r.rang != null && r.n_skupine != null && r.n_skupine > 1 ? `${num(r.rang)}. od ${num(r.n_skupine)}` : 'bez usporedne skupine'}
               </div>
             </div>
             <div>
               <div className="text-xs text-muted">Prošle godine</div>
-              <div className="font-medium">{prev?.ocjena ? `${prev.ocjena} · ${prev.ocjena_rijec}` : '–'}</div>
+              <div className="font-medium">{prev?.ocjena && prev.ocjena_rijec ? `${prev.ocjena} · ${normalizeGradeLabels(prev.ocjena_rijec)}` : '–'}</div>
             </div>
             <div className="col-span-2 flex items-center gap-2 text-ink-2">
               <ShieldCheck className="h-4 w-4 shrink-0" />
               {r.stabilnost === 'stabilna'
-                ? 'Ocjena je ista u sva četiri scenarija pondera.'
+                ? 'Ocjena ostaje ista u sva četiri načina vrednovanja pokazatelja.'
                 : `Ocjena ovisi o ponderima: od ${r.raspon_ocjena?.[0]} do ${r.raspon_ocjena?.[1]} u četiri scenarija.`}
             </div>
           </div>
@@ -138,32 +138,40 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           {/* explanation */}
           {unit.objasnjenje && (
             <Card>
-              <div className="flex items-center justify-between gap-4">
+              {/* the badge drops to its own line on narrow screens, and the model name is shown from sm up */}
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <Eyebrow>Ukratko</Eyebrow>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-page px-2.5 py-1 text-xs text-ink-2">
-                  {unit.objasnjenje.izvor === 'ai' ? <Sparkles className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                  {unit.objasnjenje.izvor === 'ai'
-                    ? `AI tekst${unit.objasnjenje.model ? ` · ${unit.objasnjenje.model}` : ''}`
-                    : 'Predložak'}
-                  {unit.objasnjenje.provjera &&
-                    (unit.objasnjenje.provjera.ok
-                      ? ` · ${unit.objasnjenje.provjera.n_brojki}/${unit.objasnjenje.provjera.n_brojki} brojki provjereno`
-                      : ` · provjera nije prošla (${unit.objasnjenje.provjera.n_brojki - unit.objasnjenje.provjera.nepoznate.length}/${unit.objasnjenje.provjera.n_brojki})`)}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-page px-2.5 py-1 text-xs whitespace-nowrap text-ink-2">
+                  {unit.objasnjenje.izvor === 'ai' ? <Sparkles className="h-3.5 w-3.5 shrink-0" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                  <span>
+                    {unit.objasnjenje.izvor === 'ai' ? 'AI tekst' : 'Predložak'}
+                    {unit.objasnjenje.izvor === 'ai' && unit.objasnjenje.model && (
+                      <span className="sr-only sm:not-sr-only"> · {unit.objasnjenje.model}</span>
+                    )}
+                    {unit.objasnjenje.provjera &&
+                      (unit.objasnjenje.provjera.ok
+                        ? ` · ${unit.objasnjenje.provjera.n_brojki}/${unit.objasnjenje.provjera.n_brojki} brojki provjereno`
+                        : ` · provjera nije prošla (${unit.objasnjenje.provjera.n_brojki - unit.objasnjenje.provjera.nepoznate.length}/${unit.objasnjenje.provjera.n_brojki})`)}
+                  </span>
                 </span>
               </div>
-              <p className="mt-3 font-serif text-xl leading-relaxed">
-                <CheckedText text={unit.objasnjenje.tekst} facts={facts} onOpen={(k) => showSources(k, true)} />
-              </p>
+              <CheckedText
+                text={unit.objasnjenje.tekst}
+                facts={facts}
+                onOpen={(k) => showSources(k, true)}
+                className="mt-3 font-serif text-xl leading-relaxed"
+              />
               <p className="mt-3 text-xs text-muted">
-                Svaka brojka u tekstu je iz paketa činjenica koji je izračunao Python. Prijeđi mišem preko brojke za njezin
-                izvor; klik na brojku sastavnice otvara konta i retke u datotekama Ministarstva financija.
+                Svaka brojka u tekstu je iz paketa činjenica koji je izračunao Python. Prijeđi mišem preko brojke, dodirni je ili
+                je odaberi tipkom Tab za njezin izvor; klik na brojku sastavnice otvara konta i retke u datotekama Ministarstva
+                financija.
               </p>
             </Card>
           )}
 
           {/* components */}
           <Card>
-            <Eyebrow>Pet sastavnica ocjene</Eyebrow>
+            <Eyebrow>Od čega se sastoji ocjena</Eyebrow>
             <p className="mt-1 text-sm text-muted">Bodovi 0–100 po sastavnici; prosjek zadnjih {r.prozor_godina} godina gdje je navedeno.</p>
             <ul className="mt-5 space-y-5">
               {COMPONENTS.map((c, i) => {
@@ -203,7 +211,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
 
           {/* trend */}
           <Card>
-            <Eyebrow>Bodovi kroz godine</Eyebrow>
+            <Eyebrow>Kretanje bodova</Eyebrow>
             <div className="mt-4">
               <TrendChart
                 groupName={unit.skupina}
@@ -242,7 +250,8 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           </Card>
 
           <Card>
-            <Eyebrow>Kontekst</Eyebrow>
+            <Eyebrow>Dodatni pokazatelji</Eyebrow>
+            <p className="mt-1 text-xs text-muted">Ne ulaze u ocjenu.</p>
             <dl className="mt-3 space-y-3 text-sm">
               <Row label="Tekuće pomoći u tekućim prihodima" value={pct(r.udio_tekucih_pomoci)} median={pct(med?.[year]?.udio_tekucih_pomoci)} />
               <Row label="Trošak opće uprave po stanovniku" value={eur(r.uprava_pc)} median={eur(med?.[year]?.uprava_pc)} />
@@ -286,7 +295,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           )}
 
           <Card>
-            <Eyebrow>Otvorenost na data.gov.hr</Eyebrow>
+            <Eyebrow>Otvoreni podaci jedinice</Eyebrow>
             {unit.portal_objavljuje ? (
               <div className="mt-3 space-y-2 text-sm text-ink-2">
                 <p>
@@ -351,7 +360,7 @@ function Row({ label, value, median }: { label: string; value: string; median?: 
       <dt className="text-ink-2">{label}</dt>
       <dd className="tabular shrink-0 text-right">
         <span className="font-medium whitespace-nowrap">{value}</span>
-        {median && <div className="text-xs whitespace-nowrap text-muted">medijan skupine {median}</div>}
+        {median && <div className="text-xs whitespace-nowrap text-muted">medijan usporedne skupine {median}</div>}
       </dd>
     </div>
   )

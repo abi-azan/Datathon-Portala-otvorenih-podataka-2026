@@ -1,5 +1,5 @@
-import { AlertTriangle, ArrowRight, X } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { AlertTriangle, ArrowRight, LoaderCircle, X } from 'lucide-react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { REFORM_THRESHOLDS, canMerge, loadReform, type IndexFile, type ReformFile, type ReformUnit } from '../lib/data'
@@ -30,13 +30,48 @@ function readUrl(): { prag: number; s: string } {
   return { prag: (REFORM_THRESHOLDS as readonly number[]).includes(prag) ? prag : 5000, s: q.get('s') ?? '' }
 }
 
+/** The unit at the new threshold that holds most of an old group's population. */
+function successor(key: string, units: ReformUnit[], bySifra: Map<string, { stanovnici: number }>): ReformUnit | undefined {
+  const old = new Set(key.split('-'))
+  let best: ReformUnit | undefined
+  let most = 0
+  for (const u of units) {
+    const n = u.clanice.reduce((a, s) => a + (old.has(s) ? (bySifra.get(s)?.stanovnici ?? 0) + 1 : 0), 0)
+    if (n > most) [best, most] = [u, n]
+  }
+  return best
+}
+
 export function Reforma({ index }: { index: IndexFile }) {
   const year = String(index.zadnja_godina)
   const [{ prag, s: selected }, setState] = useState(readUrl)
   const [files, setFiles] = useState<Record<number, ReformFile>>({})
   const [failed, setFailed] = useState<number[]>([])
+  const [note, setNote] = useState('')
   const bySifra = useMemo(() => new Map(index.jedinice.map((u) => [u.sifra, u])), [index])
-  const file = files[prag]
+  // the threshold on screen: it lags `prag` while the next file loads, so the map, the summary
+  // and the list stay (dimmed) instead of being replaced by a loading box
+  const [shown, setShown] = useState<number | null>(null)
+  if (files[prag] && shown !== prag) {
+    setShown(prag)
+    // the open group may not exist at the new threshold: open the one most of its people end up in
+    const units = files[prag].jedinice
+    let msg = ''
+    if (selected && !units.some((u) => keyOf(u) === selected)) {
+      const next = successor(selected, units, bySifra)
+      const was = shown != null ? files[shown]?.jedinice.find((u) => keyOf(u) === selected) : undefined
+      setState({ prag, s: next ? keyOf(next) : '' })
+      if (was && next)
+        msg =
+          was.clanice.length > 1
+            ? `Spojena jedinica ${was.naziv} ne postoji na pragu od ${num(prag)} stanovnika. Prikazana je jedinica u kojoj je većina njezinih stanovnika.`
+            : `${was.naziv} se na pragu od ${num(prag)} stanovnika spaja sa susjedima. Prikazana je spojena jedinica.`
+    }
+    if (msg !== note) setNote(msg)
+  }
+  const file = shown != null ? files[shown] : undefined
+  const stale = file != null && shown !== prag
+  const loadFailed = failed.includes(prag) && !files[prag]
 
   useEffect(() => {
     if (files[prag] || failed.includes(prag)) return
@@ -48,6 +83,20 @@ export function Reforma({ index }: { index: IndexFile }) {
       live = false
     }
   }, [prag, files, failed])
+
+  // once the first threshold is in, fetch the other two (about 130 KB each), so the slider is instant
+  const anyLoaded = Object.keys(files).length > 0
+  useEffect(() => {
+    if (!anyLoaded) return
+    let live = true
+    for (const p of REFORM_THRESHOLDS)
+      loadReform(p)
+        .then((f) => live && setFiles((m) => (m[p] ? m : { ...m, [p]: f })))
+        .catch(() => {}) // a failure shows up if that threshold is picked: the load effect retries it
+    return () => {
+      live = false
+    }
+  }, [anyLoaded])
 
   // in-app links to another threshold or group change the hash while this page stays mounted
   useEffect(() => {
@@ -67,7 +116,21 @@ export function Reforma({ index }: { index: IndexFile }) {
     setFailed((x) => x.filter((q) => q !== p))   // a retry: the load effect runs again for p
     setState((st) => ({ prag: p, s: st.s }))
   }
-  const select = (s: string) => setState((st) => ({ ...st, s }))
+  // where focus goes when the group card closes: back to what opened it
+  const openedBy = useRef<'list' | 'map'>('list')
+  const groupList = useRef<HTMLSelectElement>(null)
+  const mapArea = useRef<HTMLDivElement>(null)
+  const select = (s: string, by: 'list' | 'map' = 'list') => {
+    openedBy.current = by
+    setNote('')
+    setState((st) => ({ ...st, s }))
+  }
+  const close = () => {
+    const by = openedBy.current
+    select('')
+    if (by === 'map') mapArea.current?.querySelector<HTMLElement>('.maplibregl-canvas')?.focus({ preventScroll: true })
+    else groupList.current?.focus()
+  }
 
   const before = useMemo(() => {
     const c: Record<number, number> = {}
@@ -112,7 +175,10 @@ export function Reforma({ index }: { index: IndexFile }) {
             <label htmlFor="prag" className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
               Prag stanovnika
             </label>
-            <span className="tabular text-sm font-semibold">{num(prag)}</span>
+            <span className="tabular flex items-center gap-1.5 text-sm font-semibold">
+              {stale && !loadFailed && <LoaderCircle className="h-3.5 w-3.5 animate-spin text-muted" aria-hidden />}
+              {num(prag)}
+            </span>
           </div>
           <input
             id="prag"
@@ -139,10 +205,21 @@ export function Reforma({ index }: { index: IndexFile }) {
           </div>
         </div>
 
-        {failed.includes(prag) && !file && <p className="text-sm text-ink-2">Podaci Karte reforme nisu se učitali. Osvježi stranicu.</p>}
+        <p className="sr-only" role="status">
+          {stale && !loadFailed ? `Učitavam podatke za prag od ${num(prag)} stanovnika…` : ''}
+        </p>
+        {loadFailed && (
+          <p className="text-sm text-ink-2">
+            Podaci za prag od {num(prag)} stanovnika nisu se učitali.{' '}
+            <button type="button" onClick={() => setPrag(prag)} className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+              Pokušaj ponovno
+            </button>
+            {file && ` Prikazan je prag od ${num(shown)}.`}
+          </p>
+        )}
 
         {file && (
-          <Card>
+          <Card className={`transition-opacity duration-200 ${stale ? 'opacity-55' : ''}`}>
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="tabular font-serif text-4xl font-semibold">{num(file.n_prije)}</span>
               <ArrowRight className="h-5 w-5 self-center text-muted" aria-label="poslije" />
@@ -157,7 +234,7 @@ export function Reforma({ index }: { index: IndexFile }) {
               <dd className="tabular text-right">{num(file.stanovnika_u_spojenima)}</dd>
               <dt className="text-ink-2">
                 Ušteda na općoj upravi
-                <div className="text-xs text-muted">strukturni jaz (gornja granica) {mil(file.strukturni_jaz_zbroj)}</div>
+                <div className="text-xs text-muted">razlika od očekivanog troška (gornja granica) {mil(file.strukturni_jaz_zbroj)}</div>
               </dt>
               <dd className="tabular text-right">0 – {mil(file.usteda_realno_do_zbroj)} godišnje</dd>
               {file.izravnanje_promjena_zbroj != null && (
@@ -206,6 +283,7 @@ export function Reforma({ index }: { index: IndexFile }) {
             </label>
             <select
               id="skupina"
+              ref={groupList}
               value={unit && unit.clanice.length > 1 ? selected : ''}
               onChange={(e) => select(e.target.value)}
               className="mt-2 w-full rounded-xl border border-axis bg-card px-3 py-2.5 text-sm"
@@ -215,7 +293,7 @@ export function Reforma({ index }: { index: IndexFile }) {
                 <optgroup key={zupanija} label={zupanija}>
                   {us.map((u) => (
                     <option key={keyOf(u)} value={keyOf(u)}>
-                      {u.naziv} ({num(u.stanovnici)} st.)
+                      {u.naziv} ({num(u.stanovnici)} stanovnika)
                     </option>
                   ))}
                 </optgroup>
@@ -224,7 +302,13 @@ export function Reforma({ index }: { index: IndexFile }) {
           </div>
         )}
 
-        {unit && <Selected u={unit} bySifra={bySifra} year={year} onClose={() => select('')} />}
+        {note && (
+          <p className="text-sm text-ink-2" role="status">
+            {note}
+          </p>
+        )}
+
+        {unit && <Selected u={unit} bySifra={bySifra} year={year} onClose={close} />}
 
         <p className="text-xs leading-relaxed text-muted">
           Scenarij za raspravu, ne prijedlog granica. Pravilo je namjerno jednostavno, pa ponekad stvara velike jedinice: mala
@@ -237,13 +321,26 @@ export function Reforma({ index }: { index: IndexFile }) {
         </p>
       </div>
 
-      <div className="h-[60vh] min-h-[420px] lg:sticky lg:top-24 lg:h-[min(80vh,860px)] lg:min-h-[520px]">
-        {file ? (
+      <div ref={mapArea} className="h-[60vh] min-h-[420px] lg:sticky lg:top-24 lg:h-[min(80vh,860px)] lg:min-h-[520px]">
+        {/* stays mounted across threshold changes: the view is kept and the new groups fade in */}
+        {file && shown != null ? (
           <Suspense fallback={<MapBox>Učitavam kartu…</MapBox>}>
-            <ReformMap units={file.jedinice} prag={prag} selected={selected} onSelect={select} />
+            <ReformMap
+              units={file.jedinice}
+              prag={shown}
+              selected={selected}
+              onSelect={(s) => select(s, 'map')}
+              notice={
+                stale
+                  ? loadFailed
+                    ? { text: `Podaci za prag ${num(prag)} nisu se učitali`, loading: false }
+                    : { text: `Učitavam prag ${num(prag)}…`, loading: true }
+                  : undefined
+              }
+            />
           </Suspense>
         ) : (
-          <MapBox>Učitavam…</MapBox>
+          <MapBox>{loadFailed ? 'Podaci Karte reforme nisu se učitali. Osvježi stranicu.' : 'Učitavam…'}</MapBox>
         )}
       </div>
     </main>
@@ -269,7 +366,7 @@ function Selected({
       <div className="flex items-start justify-between gap-4">
         <Eyebrow>
           {u.clanice.length > 1 ? `Spojena jedinica · ${u.clanice.length} članice` : 'Bez spajanja'} · {VRSTA[u.vrsta]} ·{' '}
-          {num(u.stanovnici)} st.
+          {num(u.stanovnici)} stanovnika
         </Eyebrow>
         <button type="button" onClick={onClose} className="-mt-1 -mr-2 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted hover:bg-hairline/60" aria-label="Zatvori">
           <X className="h-4 w-4" />
@@ -287,7 +384,7 @@ function Selected({
           <span className="tabular font-semibold text-ink">
             {u.rang}. od {u.n_skupine}
           </span>{' '}
-          u skupini {u.skupina}
+          u usporednoj skupini {u.skupina}
         </p>
       )}
       {u.clanice.length > 1 && (
@@ -295,10 +392,13 @@ function Selected({
           <ul className="mt-4 divide-y divide-hairline border-t border-hairline">
             {members.map((m) => (
               <li key={m.sifra} className="flex items-center gap-3 py-2 text-sm">
-                <a href={unitHref(m.slug)} className="min-w-0 flex-1 truncate underline decoration-axis underline-offset-4 hover:decoration-ink">
-                  {m.naziv}
-                </a>
-                <span className="tabular text-xs text-muted">{num(m.stanovnici)} st.</span>
+                {/* the population under the name, so the name is not cut off on narrow screens */}
+                <div className="min-w-0 flex-1">
+                  <a href={unitHref(m.slug)} className="block truncate underline decoration-axis underline-offset-4 hover:decoration-ink">
+                    {m.naziv}
+                  </a>
+                  <div className="tabular text-xs text-muted">{num(m.stanovnici)} stanovnika</div>
+                </div>
                 <GradeChip g={u.ocjene_prije[m.sifra] ?? m.ocjena[year]} />
               </li>
             ))}
@@ -332,7 +432,7 @@ function Selected({
       )}
       {u.clanice.length === 1 && members[0] && (
         <a href={unitHref(members[0].slug)} className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium underline decoration-axis underline-offset-4 hover:decoration-ink">
-          Svjedodžba jedinice <ArrowRight className="h-4 w-4" aria-hidden />
+          Pregled jedinice <ArrowRight className="h-4 w-4" aria-hidden />
         </a>
       )}
     </Card>

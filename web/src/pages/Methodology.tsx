@@ -7,14 +7,19 @@ import { GRADES, num } from '../lib/format'
 const REPO = 'https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026'
 const SECTIONS = [
   ['pokazatelji', 'Pokazatelji'],
-  ['pravila', 'Pravila i zastavice'],
+  ['pravila', 'Pravila i upozorenja'],
   ['ai', 'AI objašnjenje'],
   ['simulator', 'Simulator i Karta reforme'],
   ['podaci', 'Podaci'],
   ['ogranicenja', 'Ograničenja'],
 ] as const
 
-const threshold = (key: string, v: number) => (key === 'I3' ? `${num(v, 0)} god.` : `${num(v * 100, v * 100 < 1 ? 1 : 0)} %`)
+// whole percentages without decimals (−10 %, 0 %, 5 %), others with one (0,5 %)
+const threshold = (key: string, v: number) => {
+  if (key === 'I3') return `${num(v, 0)} god.`
+  const p = v * 100
+  return `${num(p, Math.abs(p - Math.round(p)) < 1e-9 ? 0 : 1)} %`
+}
 const day = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('hr-HR') : '–')
 const link = 'underline decoration-axis underline-offset-4 hover:decoration-ink'
 
@@ -50,7 +55,7 @@ export function Methodology() {
       <Eyebrow>Metodologija i podaci</Eyebrow>
       <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight">Kako se računa ocjena</h1>
       <p className="mt-4 text-lg leading-relaxed text-ink-2">
-        Ocjena mjeri financijsku stabilnost proračuna jedinice: koliko tekući prihodi pokrivaju rashode, koliko je dug
+        Ocjena mjeri financijsku održivost proračuna jedinice: koliko tekući prihodi pokrivaju rashode, koliko je dug
         opterećenje i plaća li jedinica račune na vrijeme. Ne mjeri kvalitetu usluga ni razvijenost. Sve na ovoj stranici
         čita se iz istog koda koji računa ocjene.
       </p>
@@ -122,7 +127,7 @@ export function Methodology() {
                       <li key={g.ocjena} className="flex items-center gap-3 text-sm">
                         <span className="h-4 w-7 rounded" style={{ background: meta?.color, boxShadow: 'inset 0 0 0 1px rgb(0 0 0 / 0.12)' }} aria-hidden />
                         <strong className="w-3">{g.ocjena}</strong>
-                        <span className="flex-1">{g.rijec}</span>
+                        <span className="flex-1">{meta?.word ?? g.rijec}</span>
                         <span className="tabular text-muted">
                           {g.od_bodova}–{i === 0 ? 100 : doc.ocjene[i - 1].od_bodova} bodova
                         </span>
@@ -132,14 +137,14 @@ export function Methodology() {
                 </ul>
                 <p className="mt-4 text-sm text-ink-2">
                   Ocjena se računa i u četiri scenarija pondera ({Object.keys(doc.scenariji).join(', ')}). Ako je ista u svima,
-                  na svjedodžbi piše da je stabilna.
+                  na pregledu jedinice piše da je stabilna.
                 </p>
               </Card>
             </div>
             <p className="mt-4 text-sm text-ink-2">{doc.skupine.opis} Razredi veličine: {doc.skupine.razredi.join(', ')}.</p>
           </Section>
 
-          <Section id="pravila" title="Pravila i zastavice">
+          <Section id="pravila" title="Pravila i upozorenja">
             <ul className="mt-3 space-y-3">
               {doc.pravila.map((r) => (
                 <li key={r.oznaka} className="text-ink-2">
@@ -147,7 +152,7 @@ export function Methodology() {
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-sm text-muted">Crvene zastavice ne ulaze u bodove; upozoravaju na:</p>
+            <p className="mt-5 text-sm text-muted">Znakovi upozorenja ne ulaze u bodove; upozoravaju na:</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-2">
               {doc.zastavice.map((z) => (
                 <li key={z.oznaka}>
@@ -162,9 +167,11 @@ export function Methodology() {
             <p className="mt-3 text-sm text-ink-2">
               Model: {doc.ai.model}.
               {doc.ai.batch?.prikazano_ai != null &&
-                ` AI tekst je objavljen za ${num(doc.ai.batch.prikazano_ai)} od ${num(doc.ai.batch.jedinica)} jedinica; ostale imaju predložak s oznakom.`}
+                (doc.ai.batch.prikazano_ai < doc.ai.batch.jedinica
+                  ? ` AI tekst je objavljen za ${num(doc.ai.batch.prikazano_ai)} od ${num(doc.ai.batch.jedinica)} jedinica; ostale imaju predložak s oznakom.`
+                  : ` AI tekst je objavljen za svih ${num(doc.ai.batch.jedinica)} jedinica.`)}
               {doc.ai.prompt_jednak_batchu === false && ' Prompt se od generiranja promijenio; prikazan je trenutni.'}{' '}
-              Na svjedodžbi je svaka brojka u tekstu označena: pokazuje činjenicu iz koje dolazi, a brojka sastavnice vodi na
+              Na pregledu jedinice je svaka brojka u tekstu označena: pokazuje činjenicu iz koje dolazi, a brojka sastavnice vodi na
               konta i retke u datotekama Ministarstva financija.
             </p>
             <details className="mt-4 rounded-xl border border-hairline bg-card p-4">
@@ -252,7 +259,7 @@ export function Methodology() {
               </table>
             </div>
             <p className="mt-4 text-sm text-ink-2">
-              Otvoreni izlaz:{' '}
+              Preuzimanje podataka i koda:{' '}
               <a className={link} href="./api/v1/openapi.json">
                 API (OpenAPI 3.1)
               </a>

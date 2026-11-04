@@ -1,5 +1,6 @@
+import { useEffect, useId, useRef, useState } from 'react'
 import type { Fact, SourceFile } from '../lib/data'
-import { eur, num, pct } from '../lib/format'
+import { eur, normalizeGradeLabels, num, pct } from '../lib/format'
 
 // Quantities each indicator needs, and what each quantity is built from (PLAN §3.1).
 const DEPS: Record<string, string[]> = { OS: ['PO'], PO: ['KP'], SD: ['glavnica'] }
@@ -167,6 +168,7 @@ const value = (token: string) => Math.abs(Number(token.replace(/[.\u00a0\u202f]/
 /** What follows a number ("%", "€", "boda", "god."), so "2 %" is not taken for the grade "2". */
 const UNIT = /^\s*(%|€|bod|god)/
 const unitAfter = (s: string, end: number) => UNIT.exec(s.slice(end, end + 8))?.[1] ?? ''
+const TIP_W = 288 // px, the fact popover under a number
 
 /** The fact a number comes from: the first fact in pack order (grade and points come before the
  *  components) that writes it the same way and with the same unit after it; then the same spelling
@@ -189,41 +191,109 @@ function factFor(token: string, unit: string, facts: Fact[]): { fact: Fact; comp
 }
 
 /** The explanation with every number marked: it shows the fact it comes from, and a number that
- *  belongs to a component opens that component's sources (PLAN §5, visible number check). */
-export function CheckedText({ text, facts, onOpen }: { text: string; facts: Fact[]; onOpen: (component: string) => void }) {
+ *  belongs to a component opens that component's sources (PLAN §5, visible number check).
+ *  Every number is a button, so the fact is reachable by mouse (hover), keyboard (focus) and touch (tap). */
+export function CheckedText({
+  text,
+  facts,
+  onOpen,
+  className = '',
+}: {
+  text: string
+  facts: Fact[]
+  onOpen: (component: string) => void
+  className?: string
+}) {
+  const wrap = useRef<HTMLDivElement>(null)
+  const tipId = useId()
+  // the number whose fact is shown; `pinned` when opened by a tap or click, so it outlasts hover
+  const [tip, setTip] = useState<{ i: number; left: number; top: number; width: number; pinned: boolean } | null>(null)
+  const displayText = normalizeGradeLabels(text)
   const parts: (string | { token: string; fact: Fact | null; component?: string })[] = []
   let last = 0
-  for (const m of text.matchAll(NUMBER)) {
+  for (const m of displayText.matchAll(NUMBER)) {
     const i = m.index ?? 0
-    if (i > last) parts.push(text.slice(last, i))
-    const hit = factFor(m[0], unitAfter(text, i + m[0].length), facts)
+    if (i > last) parts.push(displayText.slice(last, i))
+    const hit = factFor(m[0], unitAfter(displayText, i + m[0].length), facts)
     parts.push({ token: m[0], fact: hit?.fact ?? null, component: hit?.component })
     last = i + m[0].length
   }
-  parts.push(text.slice(last))
+  parts.push(displayText.slice(last))
+
+  // a pinned fact closes on a tap anywhere else (touch browsers do not always move focus)
+  const pinned = !!tip?.pinned
+  useEffect(() => {
+    if (!pinned) return
+    const away = (e: PointerEvent) => {
+      if (!(e.target instanceof Element && e.target.closest('[data-fact]'))) setTip(null)
+    }
+    document.addEventListener('pointerdown', away)
+    return () => document.removeEventListener('pointerdown', away)
+  }, [pinned])
+
+  const show = (i: number, el: HTMLElement, pin: boolean) => {
+    const box = wrap.current?.getBoundingClientRect()
+    if (!box) return
+    const r = el.getBoundingClientRect()
+    const width = Math.min(TIP_W, box.width)
+    const left = Math.max(0, Math.min(r.left - box.left + r.width / 2 - width / 2, box.width - width))
+    setTip({ i, left, top: r.bottom - box.top + 6, width, pinned: pin })
+  }
+  const hide = (i: number) => setTip((t) => (t && t.i === i ? null : t))
+  const shown = tip ? parts[tip.i] : undefined
+  const cur = shown && typeof shown !== 'string' ? shown : undefined
+
   return (
-    <>
-      {parts.map((p, i) => {
-        if (typeof p === 'string') return <span key={i}>{p}</span>
-        const title = p.fact ? `Iz paketa činjenica: ${p.fact.label} – ${p.fact.value}` : 'Broj nije u paketu činjenica'
-        if (p.component)
+    <div ref={wrap} className="relative">
+      <p className={className}>
+        {parts.map((p, i) => {
+          if (typeof p === 'string') return <span key={i}>{p}</span>
           return (
             <button
               key={i}
               type="button"
-              onClick={() => onOpen(p.component!)}
-              title={`${title}. Klikni za konta i izvorne datoteke.`}
-              className="cursor-pointer underline decoration-axis decoration-dotted underline-offset-4 hover:decoration-ink"
+              data-fact
+              aria-describedby={tip?.i === i ? tipId : undefined}
+              onMouseEnter={(e) => !tip?.pinned && show(i, e.currentTarget, false)}
+              onMouseLeave={() => setTip((t) => (t && !t.pinned ? null : t))}
+              onFocus={(e) => show(i, e.currentTarget, false)}
+              onBlur={() => hide(i)}
+              onKeyDown={(e) => e.key === 'Escape' && hide(i)}
+              onClick={(e) => {
+                if (p.component) {
+                  setTip(null)
+                  onOpen(p.component)
+                } else if (tip?.i === i && tip.pinned) setTip(null)
+                else show(i, e.currentTarget, true)
+              }}
+              className={`rounded-sm underline decoration-dotted underline-offset-4 ${
+                p.component ? 'cursor-pointer decoration-axis hover:decoration-ink' : 'cursor-help decoration-hairline hover:decoration-axis'
+              }`}
             >
               {p.token}
             </button>
           )
-        return (
-          <span key={i} title={title} className="underline decoration-hairline decoration-dotted underline-offset-4">
-            {p.token}
-          </span>
-        )
-      })}
-    </>
+        })}
+      </p>
+      {tip && cur && (
+        <div
+          id={tipId}
+          role="tooltip"
+          className="pointer-events-none absolute z-20 rounded-xl border border-hairline bg-card p-3 font-sans text-sm leading-snug shadow-lg"
+          style={{ left: tip.left, top: tip.top, width: tip.width }}
+        >
+          {cur.fact ? (
+            <>
+              <div className="text-xs text-muted">Iz paketa činjenica</div>
+              <div className="mt-0.5 font-medium">{cur.fact.label}</div>
+              <div className="text-ink-2">{normalizeGradeLabels(cur.fact.value)}</div>
+            </>
+          ) : (
+            <div>Broj nije u paketu činjenica.</div>
+          )}
+          {cur.component && <div className="mt-1.5 text-xs text-muted">Klik otvara konta i retke u datotekama Ministarstva financija.</div>}
+        </div>
+      )}
+    </div>
   )
 }

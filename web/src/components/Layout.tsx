@@ -41,7 +41,7 @@ export function Footer({ generated }: { generated?: string }) {
         <div>
           <div className="font-serif text-base font-semibold text-ink">Fiskalna karta</div>
           <p className="mt-2 max-w-sm">
-            Ocjena financijske stabilnosti svih 576 općina, gradova i županija iz otvorenih podataka. Datathon Portala
+            Ocjena financijske održivosti proračuna svih 576 općina, gradova i županija iz otvorenih podataka. Datathon Portala
             otvorenih podataka 2026.
           </p>
         </div>

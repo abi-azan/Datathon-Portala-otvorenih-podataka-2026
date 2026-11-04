@@ -11,12 +11,13 @@ export type Route =
 
 export type Page = Route['page']
 
-/** DGU codes from the simulator's ?j= parameter (5 digits each, at most 4, no repeats).
- *  The simulator reads it itself and keeps it in sync with replaceState, so the route has no copy. */
+/** DGU codes from the simulator's ?j= parameter (5 digits each, no repeats). Not capped here:
+ *  the simulator drops unknown and ineligible codes first and only then keeps the first 4.
+ *  It reads the parameter itself and keeps it in sync with replaceState, so the route has no copy. */
 export function parseSelection(hash: string): string[] {
   const q = hash.split('?')[1] ?? ''
   const j = new URLSearchParams(q).get('j') ?? ''
-  return [...new Set(j.split(',').filter((s) => /^\d{5}$/.test(s)))].slice(0, 4)
+  return [...new Set(j.split(',').filter((s) => /^\d{5}$/.test(s)))].slice(0, 50)
 }
 
 function parse(hash: string): Route {

@@ -235,11 +235,18 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
     faded.current = next
   }, [ready, dimmed])
 
-  // fit the view to the focus units when their list changes
+  // fit the view to the focus units when their list changes; back to the whole country when it empties
   const focusKey = (focus ?? []).join(',')
+  const fitted = useRef(false)
   useEffect(() => {
     const m = map.current
-    if (!ready || !m || !geo.current || !focusKey) return
+    if (!ready || !m || !geo.current) return
+    if (!focusKey) {
+      if (fitted.current) m.fitBounds(CROATIA, { padding: 24, duration: 600 })
+      fitted.current = false
+      return
+    }
+    fitted.current = true
     const want = new Set(focusKey.split(','))
     let [w, s, e, n] = [180, 90, -180, -90]
     const visit = (c: unknown): void => {
@@ -265,9 +272,9 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
       <div ref={box} className="h-full w-full" aria-label="Karta ocjena općina i gradova" role="region" />
       {/* max width keeps the caption clear of the zoom buttons on narrow screens */}
       <div className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur">
-        <div className="text-sm font-semibold">{view ? view.label : 'Ocjena financijske stabilnosti'}, {year}.</div>
+        <div className="text-sm font-semibold">{view ? view.label : 'Ocjena financijske održivosti proračuna'}, {year}.</div>
         <div className="text-xs text-muted">
-          556 općina i gradova · prijeđi mišem, klikni za {selectable ? 'odabir' : 'svjedodžbu'}
+          556 općina i gradova · prijeđi mišem, klikni za {selectable ? 'odabir' : 'pregled'}
         </div>
       </div>
       {!ready && (
@@ -296,7 +303,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
           )}
           <div className="mt-2 text-xs text-muted">
             {hint?.(hover.unit.sifra) ??
-              (!selectable ? 'Klikni za svjedodžbu jedinice' : hoverSelected ? 'Klikni za uklanjanje iz odabira' : 'Klikni za odabir jedinice')}
+              (!selectable ? 'Klikni za pregled jedinice' : hoverSelected ? 'Klikni za uklanjanje iz odabira' : 'Klikni za odabir jedinice')}
           </div>
         </div>
       )}

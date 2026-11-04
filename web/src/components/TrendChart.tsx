@@ -34,7 +34,7 @@ export function TrendChart({ points, groupName }: { points: Point[]; groupName: 
 
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`Bodovi po godinama i medijan skupine ${groupName}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`Bodovi po godinama i medijan usporedne skupine ${groupName}`}>
         {BANDS.map((b) => {
           const meta = GRADES.find((g) => g.value === b.g)!
           return (
@@ -89,7 +89,7 @@ export function TrendChart({ points, groupName }: { points: Point[]; groupName: 
           <div className="tabular">
             Bodovi: <strong>{num(hp.value, 1)}</strong> {hp.grade ? `(ocjena ${hp.grade})` : ''}
           </div>
-          <div className="tabular text-muted">Medijan skupine: {num(hp.median, 1)}</div>
+          <div className="tabular text-muted">Medijan usporedne skupine: {num(hp.median, 1)}</div>
         </div>
       )}
       <div className="mt-2 flex flex-wrap gap-5 text-xs text-ink-2">
@@ -103,7 +103,7 @@ export function TrendChart({ points, groupName }: { points: Point[]; groupName: 
           <svg width="22" height="8" aria-hidden>
             <line x1="0" x2="22" y1="4" y2="4" stroke="#898781" strokeWidth="2" strokeDasharray="5 4" />
           </svg>
-          Medijan skupine „{groupName}”
+          Medijan usporedne skupine „{groupName}”
         </span>
       </div>
     </div>

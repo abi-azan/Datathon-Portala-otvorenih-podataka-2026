@@ -27,8 +27,8 @@ export const CONTEXT_VIEWS: ContextView[] = [
     label: 'Trošak opće uprave po stanovniku',
     short: 'Trošak uprave',
     value: (u, y) => u.uprava_pc_po_godini?.[y] ?? null,
-    format: (v) => (v == null ? '–' : `${eur(v)} po st.`),
-    range: (a, b) => `${num(a)} – ${num(b)} € po st.`,
+    format: (v) => (v == null ? '–' : `${eur(v)} po stanovniku`),
+    range: (a, b) => `${num(a)} – ${num(b)} € po stanovniku`,
   },
   {
     key: 'udio_tekucih_pomoci',
