@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, ExternalLink, Info, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ExternalLink, Info, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
@@ -21,12 +21,16 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
   const [openSrc, setOpenSrc] = useState<string | null>(null)
   const [src, setSrc] = useState<SourceFile | null>(null)
   const [srcFailed, setSrcFailed] = useState(false)
+  // the list of every number in the explanation with its fact and source (badge "N/N brojki provjereno")
+  const [checkOpen, setCheckOpen] = useState(false)
   const showSources = (k: string, scroll = false) => {
     setOpenSrc((cur) => (cur === k && !scroll ? null : k))
-    if (!src)
+    if (!src) {
+      setSrcFailed(false)
       loadSource(slug)
         .then(setSrc)
         .catch(() => setSrcFailed(true))
+    }
     if (scroll) setTimeout(() => document.getElementById(`src-${k}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
   }
 
@@ -37,6 +41,11 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
         setUnit(u)
         setGroups(g)
         document.title = `${u.naziv} · Fiskalna karta`
+        // izvor.json (about 8 KB) gives the cells behind the numbers of the explanation; without it
+        // the numbers still show their facts
+        loadSource(slug)
+          .then(setSrc)
+          .catch(() => {})
       })
       .catch((e) =>
         setError(e instanceof HttpError && e.status === 404 ? 'Jedinica nije pronađena.' : 'Podaci se nisu učitali. Provjeri vezu i pokušaj ponovno.'),
@@ -146,7 +155,13 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
               {/* the badge drops to its own line on narrow screens, and the model name is shown from sm up */}
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <Eyebrow>Ukratko</Eyebrow>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-page px-2.5 py-1 text-xs whitespace-nowrap text-ink-2">
+                <button
+                  type="button"
+                  onClick={() => setCheckOpen((o) => !o)}
+                  aria-expanded={checkOpen}
+                  aria-controls="provjera-brojki"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-page px-2.5 py-1 text-xs whitespace-nowrap text-ink-2 transition hover:border-ink hover:text-ink"
+                >
                   {unit.objasnjenje.izvor === 'ai' ? <Sparkles className="h-3.5 w-3.5 shrink-0" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
                   <span>
                     {unit.objasnjenje.izvor === 'ai' ? 'AI tekst' : 'Predložak'}
@@ -158,18 +173,27 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                         ? ` · ${unit.objasnjenje.provjera.n_brojki}/${unit.objasnjenje.provjera.n_brojki} brojki provjereno`
                         : ` · provjera nije prošla (${unit.objasnjenje.provjera.n_brojki - unit.objasnjenje.provjera.nepoznate.length}/${unit.objasnjenje.provjera.n_brojki})`)}
                   </span>
-                </span>
+                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${checkOpen ? 'rotate-180' : ''}`} aria-hidden />
+                </button>
               </div>
               <CheckedText
                 text={unit.objasnjenje.tekst}
                 facts={facts}
                 onOpen={(k) => showSources(k, true)}
+                src={src}
+                unknown={unit.objasnjenje.provjera?.nepoznate ?? []}
+                listId="provjera-brojki"
+                listOpen={checkOpen}
                 className="mt-3 font-serif text-xl leading-relaxed"
               />
-              <p className="mt-3 text-xs text-muted">
-                Svaka brojka u tekstu je iz paketa činjenica koji je izračunao Python. Prijeđi mišem preko brojke, dodirni je ili
-                je odaberi tipkom Tab za njezin izvor; klik na brojku sastavnice otvara konta i retke u datotekama Ministarstva
-                financija.
+              <p className="mt-3 text-sm text-ink-2">
+                {unit.objasnjenje.izvor === 'ai'
+                  ? 'Model nije smio izmisliti nijednu brojku: svaka brojka u tekstu mora biti u paketu činjenica koji je izračunao Python, inače se tekst odbacuje i prikazuje se predložak.'
+                  : 'Tekst je složen iz predloška, bez jezičnog modela. AI tekst prikazuje se samo kad prođe istu provjeru: model ne smije izmisliti nijednu brojku.'}
+              </p>
+              <p className="mt-1.5 text-xs text-muted">
+                Prijeđi mišem preko brojke, dodirni je ili je odaberi tipkom Tab za njezin izvor; klik na brojku sastavnice otvara
+                konta i retke u datotekama Ministarstva financija. Popis svih brojki otvara oznaka iznad teksta.
               </p>
             </Card>
           )}
