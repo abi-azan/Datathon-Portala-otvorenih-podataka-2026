@@ -80,6 +80,15 @@ export function Reforma({ index }: { index: IndexFile }) {
     return c
   }, [file])
   const merged = useMemo(() => (file?.jedinice ?? []).filter((u) => u.clanice.length > 1), [file])
+  // merged units by county name, for the list next to the map
+  const byCounty = useMemo(() => {
+    const m = new Map<string, ReformUnit[]>()
+    for (const u of merged) {
+      const z = bySifra.get(u.clanice[0])?.zupanija ?? ''
+      m.set(z, [...(m.get(z) ?? []), u])
+    }
+    return [...m.entries()].sort(([a], [b]) => a.localeCompare(b, 'hr'))
+  }, [merged, bySifra])
   const savingsAbove10k = merged.filter((u) => u.usteda?.iznad_10000).reduce((a, u) => a + (u.usteda?.realno_do ?? 0), 0)
   const unit = file?.jedinice.find((u) => keyOf(u) === selected)
   const i = REFORM_THRESHOLDS.indexOf(prag as (typeof REFORM_THRESHOLDS)[number])
@@ -187,6 +196,32 @@ export function Reforma({ index }: { index: IndexFile }) {
               </div>
             </div>
           </Card>
+        )}
+
+        {file && (
+          <div>
+            {/* keyboard and screen-reader alternative to clicking a merged unit on the map */}
+            <label htmlFor="skupina" className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+              Spojene jedinice ({num(merged.length)})
+            </label>
+            <select
+              id="skupina"
+              value={unit && unit.clanice.length > 1 ? selected : ''}
+              onChange={(e) => select(e.target.value)}
+              className="mt-2 w-full rounded-xl border border-axis bg-card px-3 py-2.5 text-sm"
+            >
+              <option value="">Odaberi spojenu jedinicu…</option>
+              {byCounty.map(([zupanija, us]) => (
+                <optgroup key={zupanija} label={zupanija}>
+                  {us.map((u) => (
+                    <option key={keyOf(u)} value={keyOf(u)}>
+                      {u.naziv} ({num(u.stanovnici)} st.)
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
         )}
 
         {unit && <Selected u={unit} bySifra={bySifra} year={year} onClose={() => select('')} />}
