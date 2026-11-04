@@ -18,3 +18,7 @@ __pycache__/
 # Podaci: preuzeto i izračunato (regenerira se pipelineom)
 data/raw/
 data/build/
+
+# Batch skripta (oko 1 MB) generira se s `python -m pipeline.explain --kaggle-batch`;
+# data/ai/manifest-2025.json čuva sha256 svakog paketa i prompta
+kaggle/gemma_batch.py

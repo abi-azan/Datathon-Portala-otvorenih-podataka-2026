@@ -1,16 +1,20 @@
 """Gemma 4 on a Kaggle GPU: AI explanations with a number check (Fiskalna karta JLS).
 
-Generated from kaggle/gemma_runner.py by `python -m pipeline.explain --kaggle-test N`.
-Do not edit kaggle/gemma_test.py by hand.
+Generated from kaggle/gemma_runner.py by `python -m pipeline.explain --kaggle-test N` (test,
+kaggle/gemma_test.py) or `--kaggle-batch` (all units, kaggle/gemma_batch.py). Do not edit
+the generated scripts by hand.
 
 - Models: every attached Gemma 4 QAT Q4_0 GGUF (Kaggle model data sources, Apache-2.0), smallest
   first. A model larger than one T4 is split by layers across both T4s.
 - Runtime: llama.cpp (MIT), built from source for the T4 (CUDA arch 75), served by llama-server.
 - Every text is checked: each number must appear in the unit's fact pack. A failed text is
   generated again with feedback, at most __MAX_RETRIES__ times, and then the template is used.
-Output: /kaggle/working/gemma_test_output.json
+- The output is written after every unit, so a stopped run can be resumed with --skip.
+Output: /kaggle/working/__OUT_NAME__
 """
+import base64
 import glob
+import gzip
 import json
 import os
 import subprocess
@@ -26,13 +30,16 @@ import urllib.request
 # __PROMPT__
 # ---- end of prompt ----
 
-PACKS = json.loads("__PACKS__")
+# Fact packs as gzip + base64 JSON: Kaggle refuses a script of 1 MB or more, and all 576
+# packs are about 1 MB as plain JSON.
+PACKS = json.loads(gzip.decompress(base64.b64decode("__PACKS_GZ__")).decode("utf-8"))
+RUN_META = json.loads("__RUN_META__")     # what the script was generated from (batch: prompt hash, model)
 MAX_RETRIES = __MAX_RETRIES__
 HF_MODELS = __HF_MODELS__                 # [[repo, file], ...] downloaded from Hugging Face in the session
 HF_DIR = "/tmp/hf-models"                 # not /kaggle/working: the 20 GB output would keep the file
 SRC = "/tmp/llama.cpp"
 SERVER = f"{SRC}/build/bin/llama-server"
-OUT = "/kaggle/working/gemma_test_output.json"
+OUT = "/kaggle/working/__OUT_NAME__"
 LOG = "/kaggle/working/llama_server.log"
 PORT = 8080
 
@@ -172,7 +179,7 @@ def main():
     commit = build_llama_cpp()
     gpu = sh("nvidia-smi --query-gpu=name --format=csv,noheader").strip()
     out = {"partial": True, "meta": {"llama_cpp_commit": commit, "gpu": gpu, "max_retries": MAX_RETRIES,
-                                     "hf_models": HF_MODELS}, "models": {}}
+                                     "hf_models": HF_MODELS, **RUN_META}, "models": {}}
     t_dl = time.time()
     download_hf_models()
     out["meta"]["hf_download_seconds"] = round(time.time() - t_dl)
@@ -189,7 +196,23 @@ def main():
                                "gpu_memory": sh("nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader")}
         results = []
         for i, pack in enumerate(PACKS, 1):
-            r = run_job(pack)
+            try:
+                r = run_job(pack)
+            except Exception as e:             # a hung or crashed server: restart it once, try again
+                print(f"[{name} {i}/{len(PACKS)}] {pack['naziv']['nom']}: {e!r}, restarting server", flush=True)
+                proc.terminate()
+                try:
+                    proc.wait(timeout=60)
+                    proc = start_server(model)
+                    r = run_job(pack)
+                except BaseException as e2:    # SystemExit from start_server too: keep the output
+                    r = {"oib": pack["oib"], "naziv": pack["naziv"]["nom"], "error": repr(e2)}
+                    results.append(r)
+                    out["models"][name]["results"] = results
+                    json.dump(out, open(OUT, "w"), ensure_ascii=False, indent=1)
+                    if proc.poll() is not None:
+                        raise SystemExit(f"llama-server is down after {i - 1} units")
+                    continue
             results.append(r)
             print(f"[{name} {i}/{len(PACKS)}] {r['naziv']}: {r['source']}, {len(r['attempts'])} pokušaja, "
                   f"{r['check']['n_brojki']} brojki, nepoznate {r['check']['nepoznate']}", flush=True)
@@ -198,7 +221,7 @@ def main():
         proc.terminate()
         proc.wait(timeout=60)
         out["models"][name]["seconds"] = round(time.time() - t1)
-        ok = sum(r["source"] == "ai" for r in results)
+        ok = sum(r.get("source") == "ai" for r in results)
         print(f"{name}: {ok}/{len(results)} tekstova prošlo provjeru u {out['models'][name]['seconds']} s", flush=True)
     out["partial"] = False
     out["meta"]["seconds_total"] = round(time.time() - t0)
