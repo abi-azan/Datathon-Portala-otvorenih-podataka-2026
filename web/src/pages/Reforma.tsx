@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { REFORM_THRESHOLDS, canMerge, loadReform, type IndexFile, type ReformFile, type ReformUnit } from '../lib/data'
-import { GRADES, VRSTA, eur, num, pct } from '../lib/format'
+import { GRADES, VRSTA, eur, num } from '../lib/format'
 import { simulatorHref, unitHref } from '../lib/router'
 
 const ReformMap = lazy(() =>
@@ -254,13 +254,24 @@ export function Reforma({ index }: { index: IndexFile }) {
                 <div className="text-xs text-muted">pet godina; prijenos iz proračuna, ne ušteda</div>
               </dt>
               <dd className="tabular text-right">{mil(file.poticaj_godisnje_zbroj)} godišnje</dd>
-              {file.izravnanje_promjena_zbroj != null && (
+              {file.izravnanje_isplata_spojene_promjena != null && file.izravnanje_isplata_ostale_promjena != null && (
                 <>
                   <dt className="text-ink-2">
-                    Fiskalno izravnanje
-                    <div className="text-xs text-muted">promjena punog iznosa prema zakonskoj formuli</div>
+                    Fiskalno izravnanje, spojene jedinice
+                    <div className="text-xs text-muted">promjena godišnje isplate</div>
                   </dt>
-                  <dd className="tabular text-right">{file.izravnanje_promjena_zbroj < 0 ? '−' : ''}{mil(Math.abs(file.izravnanje_promjena_zbroj))}</dd>
+                  <dd className="tabular text-right">
+                    {file.izravnanje_isplata_spojene_promjena < 0 ? '−' : '+'}
+                    {mil(Math.abs(file.izravnanje_isplata_spojene_promjena))}
+                  </dd>
+                  <dt className="text-ink-2">
+                    Fiskalno izravnanje, ostale jedinice
+                    <div className="text-xs text-muted">iznos u proračunu je fiksan; državni proračun bez promjene</div>
+                  </dt>
+                  <dd className="tabular text-right">
+                    {file.izravnanje_isplata_ostale_promjena < 0 ? '−' : '+'}
+                    {mil(Math.abs(file.izravnanje_isplata_ostale_promjena))}
+                  </dd>
                 </>
               )}
             </dl>
@@ -434,10 +445,11 @@ function Selected({
             )}
             {e && (
               <>
-                <dt className="text-ink-2">Fiskalno izravnanje (puni iznos)</dt>
+                <dt className="text-ink-2">Fiskalno izravnanje (isplata)</dt>
                 <dd className="tabular text-right">
-                  {Math.abs(e.promjena) < 1 ? 'bez promjene' : `${e.promjena < 0 ? '−' : '+'}${eur(Math.abs(e.promjena))}`}
-                  {e.promjena_udio != null && Math.abs(e.promjena) >= 1 && ` (${pct(e.promjena_udio)})`}
+                  {e.isplata_promjena == null || Math.abs(e.isplata_promjena) < 1
+                    ? 'bez promjene'
+                    : `${e.isplata_promjena < 0 ? '−' : '+'}${eur(Math.abs(e.isplata_promjena))}`}
                 </dd>
               </>
             )}

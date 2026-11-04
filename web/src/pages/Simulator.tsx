@@ -687,7 +687,8 @@ function Result({
 /** Fiscal equalization under the statutory formula (pipeline/merge.py equalization, N5b). */
 function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] }) {
   const e = r.izravnanje
-  const own = (sifra: string) => e?.puni_po_clanici[r.clanice.indexOf(sifra)]
+  const own = (sifra: string) => e?.isplata_po_clanici?.[r.clanice.indexOf(sifra)]
+  const change = e?.isplata_promjena ?? 0
   const why = !e
     ? ''
     : e.oznake.includes('clanica_iznad_referentne')
@@ -698,7 +699,7 @@ function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] })
   return (
     <Card>
       <Eyebrow>Fiskalno izravnanje</Eyebrow>
-      {!e ? (
+      {!e || e.isplata_clanice == null || e.isplata_spojena == null ? (
         <p className="mt-3 text-sm leading-relaxed text-ink-2">
           Spajanje može smanjiti fiskalno izravnanje: kad jedna članica ima porezni kapacitet iznad referentne vrijednosti,
           kapacitet spojene jedinice raste. Procjena za ovu skupinu nije dostupna.
@@ -711,20 +712,26 @@ function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] })
       ) : (
         <>
           <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="tabular font-serif text-2xl font-semibold">{eur(e.puni_clanice)}</span>
+            <span className="tabular font-serif text-2xl font-semibold">{eur(e.isplata_clanice)}</span>
             <ArrowRight className="h-4 w-4 self-center text-muted" aria-label="nakon spajanja" />
-            <span className="tabular font-serif text-2xl font-semibold">{eur(e.puni_spojena)}</span>
+            <span className="tabular font-serif text-2xl font-semibold">{eur(e.isplata_spojena)}</span>
             <span className="tabular text-sm text-ink-2">
-              {Math.abs(e.promjena) < 1 ? 'bez promjene' : `${e.promjena < 0 ? '−' : '+'}${eur(Math.abs(e.promjena))}`}
-              {e.promjena_udio != null && Math.abs(e.promjena) >= 1 && ` (${pct(e.promjena_udio)})`}
+              {Math.abs(change) < 1 ? 'bez promjene' : `${change < 0 ? '−' : '+'}${eur(Math.abs(change))} godišnje`}
             </span>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-ink-2">
-            Puni godišnji iznos prema zakonskoj formuli, za članice zajedno i za spojenu jedinicu.
-            {Math.abs(e.promjena) < 1
-              ? ' Sve članice su ispod referentne vrijednosti, pa se zbroj ne mijenja.'
-              : e.promjena < 0 && why}
+            Procjena godišnje isplate iz državnog proračuna, za članice zajedno i za spojenu jedinicu.
+            {Math.abs(change) < 1 ? ' Sve članice su ispod referentne vrijednosti, pa se iznos ne mijenja.' : change < 0 && why}
           </p>
+          {change < -1 && (
+            <div className="mt-3 flex gap-2.5 rounded-xl bg-page p-3 text-sm">
+              <Scale className="mt-0.5 h-4 w-4 shrink-0 text-ink-2" aria-hidden />
+              <p>
+                <strong className="font-semibold">Državni proračun se ne mijenja.</strong> Iznos za izravnanje je fiksan, pa{' '}
+                {eur(Math.abs(change))} koje spojena jedinica gubi dobivaju ostale jedinice s pravom na izravnanje.
+              </p>
+            </div>
+          )}
           <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">
             {members.map((m) => (
               <div key={m.sifra} className="contents">
@@ -736,10 +743,11 @@ function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] })
         </>
       )}
       <p className="mt-3 text-xs text-muted">
-        Zakon o financiranju jedinica lokalne i područne (regionalne) samouprave, čl. 8. i 9.; kapacitet i referentne
-        vrijednosti iz tablice Ministarstva financija{e ? ` za ${e.godina}.` : '.'} Formula na toj tablici daje iste pune
-        iznose kao Ministarstvo za svih 576 jedinica. Isplata je udio u iznosu iz državnog proračuna (2026. oko 63 % punog
-        iznosa), a promjena udjela ostalih jedinica nije uključena.
+        Zakon o financiranju jedinica lokalne i područne (regionalne) samouprave, čl. 8. i 9. Isplata je udio jedinice u zbroju
+        punih iznosa po zakonskoj formuli puta iznos u državnom proračunu
+        {e?.iznos_proracuna != null && ` (${eur(e.iznos_proracuna)} za 2026.; za ${e.godina}. još nije utvrđen, pa se uzima isti)`}.
+        {e &&
+          ` Puni iznosi iz tablice Ministarstva financija za ${e.godina}.: ${eur(e.puni_clanice)} prije i ${eur(e.puni_spojena)} poslije; formula ih daje jednako kao Ministarstvo za svih 576 jedinica.`}
       </p>
     </Card>
   )

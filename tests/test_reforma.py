@@ -185,3 +185,15 @@ def test_units_show_the_members_before_and_the_merged_result_after(data, res, do
                (m["zadnja"]["ocjena"], m["zadnja"]["bodovi"], m["zadnja"]["rang"], m["usteda"])
         assert j["vrsta"] == m["vrsta"] and j["skupina"] == m["skupina"] and j["stanovnici"] == m["stanovnici"]
         assert " + " in j["naziv"] and not j["naziv"].startswith(("Grad ", "Općina "))
+
+
+@needs_build
+def test_karta_reforme_payout_moves_money_but_saves_nothing(docs):
+    """The payout of the whole scenario: merged groups lose what the units that stay alone gain."""
+    for p, d in docs.items():
+        if "izravnanje_isplata_spojene_promjena" not in d:
+            continue
+        assert abs(d["izravnanje_isplata_spojene_promjena"] + d["izravnanje_isplata_ostale_promjena"]) < 1e-6
+        merged = [j for j in d["jedinice"] if len(j["clanice"]) > 1 and j.get("izravnanje")]
+        assert abs(sum(j["izravnanje"]["isplata_promjena"] for j in merged) - d["izravnanje_isplata_spojene_promjena"]) < 1.0
+        assert all(j["izravnanje"]["omjer_poslije"] == d["izravnanje_omjer_poslije"] for j in merged)

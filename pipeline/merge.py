@@ -225,10 +225,9 @@ def incentive(data, oibs, fi):
     eligible = [i for i, u in enumerate(units)
                 if u is not annexing and not _missing(u["razvojna_skupina"])
                 and int(u["razvojna_skupina"]) in INCENTIVE_GROUPS]
-    # paid = share in the table (full amount / sum of all full amounts) x the budget line, which
-    # for the table's year is not set yet, so the last one with an amount (2026) is used
-    ratio = izravnanje.ISPLATA_2026 / data.fi["puni_ukupno"] if fi else None
-    paid = sum(fi["puni_po_clanici"][i] for i in eligible) * ratio if fi else None
+    # the annexed member's equalization of the year before the merger: its payout (payout())
+    ratio = fi["omjer_prije"] if fi else None
+    paid = sum(fi["isplata_po_clanici"][i] for i in eligible) if fi else None
     yearly = None if paid is None else INCENTIVE_FACTOR * paid
     return {"pripaja": annexing["sifra"], "s_pravom": [units[i]["sifra"] for i in eligible],
             "izravnanje_isplata": paid, "godisnje": yearly,
@@ -236,17 +235,37 @@ def incentive(data, oibs, fi):
             "kapitalni_do": INCENTIVE_CAPITAL if eligible else 0.0, "omjer_isplate": ratio}
 
 
-# what the simulator file keeps of izravnanje.za_spajanje
+# what the simulator file keeps of izravnanje.za_spajanje, plus the payout estimate (payout())
 FI_KEYS = ["godina", "puni_po_clanici", "puni_clanice", "puni_spojena", "promjena", "promjena_udio",
-           "kapacitet_pc", "referentna_pc", "oznake"]
+           "kapacitet_pc", "referentna_pc", "oznake",
+           "iznos_proracuna", "omjer_prije", "omjer_poslije", "isplata_po_clanici", "isplata_clanice",
+           "isplata_spojena", "isplata_promjena"]
+
+
+def payout(full_members, full_merged, total, budget=izravnanje.ISPLATA_2026):
+    """What is actually paid (čl. 9. st. 7.): share of the sum of all full amounts x the budget line.
+    The line is fixed, so a merger that lowers the full amount raises everyone else's share: the
+    merged unit's loss goes to the other units and the state budget does not change.
+    full_members: the members' full amounts; total: the sum over all units before the merger.
+    The line for the table's year is not set yet, so the last one with an amount (2026) is used."""
+    before = budget / total
+    after_total = total - sum(full_members) + full_merged
+    after = budget / after_total if after_total > 0 else None
+    paid_members = [p * before for p in full_members]
+    paid_merged = full_merged * after if after is not None else 0.0
+    return {"iznos_proracuna": budget, "omjer_prije": before, "omjer_poslije": after,
+            "isplata_po_clanici": paid_members, "isplata_clanice": sum(paid_members),
+            "isplata_spojena": paid_merged, "isplata_promjena": paid_merged - sum(paid_members)}
 
 
 def equalization(data, oibs, vrsta):
-    """Full equalization of the members and of the merged unit, or None without the MF table."""
+    """Fiscal equalization of the members and of the merged unit, full amount and payout,
+    or None without the MF table."""
     if not data.fi or not all(o in data.fi["clanice"] for o in oibs):
         return None
     out = izravnanje.za_spajanje([data.fi["clanice"][o] for o in oibs], vrsta == "grad", referentne=data.fi["ref"])
     out["godina"] = data.fi["godina"]
+    out.update(payout(out["puni_po_clanici"], out["puni_spojena"], data.fi["puni_ukupno"]))
     return {k: out[k] for k in FI_KEYS}
 
 

@@ -276,6 +276,18 @@ SCHEMAS = {
             "promjena": {"type": "number", "description": "puni_spojena − puni_clanice, €. S tablicom za 2027. nikad nije pozitivna, "
                                                          "jer je referentna vrijednost za gradove niža od one za općine; zakon to ne jamči."},
             "promjena_udio": NUM,
+            "iznos_proracuna": {"type": "number", "description": "Iznos za izravnanje u državnom proračunu, €; za godinu "
+                                                                 "tablice još nije utvrđen, pa se uzima zadnji poznati (2026.)."},
+            "omjer_prije": {"type": "number", "description": "iznos_proracuna / zbroj punih iznosa svih jedinica u tablici."},
+            "omjer_poslije": {**NUM, "description": "Isto, sa zbrojem punih iznosa nakon spajanja (u Karti reforme: nakon "
+                                                    "svih spajanja scenarija)."},
+            "isplata_po_clanici": {"type": "array", "items": {"type": "number", "minimum": 0},
+                                   "description": "Procjena godišnje isplate svake članice prije spajanja, €: puni iznos × omjer_prije."},
+            "isplata_clanice": {"type": "number", "minimum": 0, "description": "Zbroj isplata članica prije spajanja, €."},
+            "isplata_spojena": {"type": "number", "minimum": 0, "description": "puni_spojena × omjer_poslije, €."},
+            "isplata_promjena": {"type": "number",
+                                 "description": "isplata_spojena − isplata_clanice, €. Iznos u proračunu je fiksan, pa "
+                                                "toliko (s obrnutim predznakom) dobivaju ostale jedinice; država ne štedi."},
             "kapacitet_pc": {"type": "number", "description": "Porezni kapacitet spojene jedinice po stanovniku, €."},
             "referentna_pc": {"type": "number", "description": "Referentna vrijednost za vrstu spojene jedinice, €."},
             "oznake": {"type": "array", "items": {"type": "string"},
@@ -410,6 +422,13 @@ SCHEMAS = {
                                        "description": "Zbroj godišnjeg poticaja po NN 88/2022 svih spojenih skupina, €."},
             "izravnanje_promjena_zbroj": {"type": "number",
                                           "description": "Zbroj promjena punog iznosa fiskalnog izravnanja spojenih skupina, €."},
+            "izravnanje_omjer_prije": {"type": "number", "description": "Isplata / zbroj punih iznosa prije reforme."},
+            "izravnanje_omjer_poslije": {"type": "number", "description": "Isto nakon svih spajanja scenarija."},
+            "izravnanje_isplata_spojene_promjena": {"type": "number",
+                                                    "description": "Promjena godišnje isplate izravnanja spojenih skupina, €."},
+            "izravnanje_isplata_ostale_promjena": {"type": "number",
+                                                   "description": "Promjena isplate jedinica koje se nisu spajale, €: "
+                                                                  "uvijek suprotna prethodnoj, jer je iznos u proračunu fiksan."},
             "jedinice": {"type": "array", "items": {"$ref": "#/components/schemas/ReformaJedinica"}},
         },
     },

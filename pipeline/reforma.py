@@ -125,6 +125,7 @@ def reforma(data, prag, res=None):
     jedinice.sort(key=lambda j: (j["zup_id"], j["clanice"][0]))
     merged = [j for j in jedinice if len(j["clanice"]) > 1]
     blocks = [j["usteda"] for j in merged if j["usteda"]]
+    fi = payout_all(data, merged)
     return merge._compact({
         "prag": prag, "godina": year, "napomena": NAPOMENA,
         "n_prije": sum(len(j["clanice"]) for j in jedinice),
@@ -137,8 +138,29 @@ def reforma(data, prag, res=None):
         "jaz_bez_spajanja_zbroj": sum(b["jaz_bez_spajanja"] or 0.0 for b in blocks),
         "poticaj_godisnje_zbroj": sum((j["poticaj"] or {}).get("godisnje") or 0.0 for j in merged),
         "izravnanje_promjena_zbroj": sum(j["izravnanje"]["promjena"] for j in merged if j.get("izravnanje")),
+        **fi,
         "jedinice": jedinice,
     })
+
+
+def payout_all(data, merged):
+    """Payout of equalization for the whole scenario (merge.payout): all merged groups change the
+    sum of full amounts together, so each group's payout after the reform uses that one new sum,
+    and the units that stay alone gain what the merged ones lose. Rewrites each group's
+    isplata_spojena / isplata_promjena / omjer_poslije; returns the header fields ({} without the MF table)."""
+    blocks = [j["izravnanje"] for j in merged if j.get("izravnanje")]
+    if not data.fi or not blocks:
+        return {}
+    budget, total = merge.izravnanje.ISPLATA_2026, data.fi["puni_ukupno"]
+    after_total = total + sum(b["puni_spojena"] - b["puni_clanice"] for b in blocks)
+    after = budget / after_total
+    for b in blocks:
+        b["omjer_poslije"] = after
+        b["isplata_spojena"] = b["puni_spojena"] * after
+        b["isplata_promjena"] = b["isplata_spojena"] - b["isplata_clanice"]
+    change = sum(b["isplata_promjena"] for b in blocks)
+    return {"izravnanje_omjer_prije": budget / total, "izravnanje_omjer_poslije": after,
+            "izravnanje_isplata_spojene_promjena": change, "izravnanje_isplata_ostale_promjena": -change}
 
 
 def write_all(data, res, out_dir, pragovi=PRAGOVI):

@@ -111,10 +111,12 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
                        f"{_int(round(merge.INCENTIVE_CAPITAL))} € za kapitalne projekte; podmiruju se i njezine dospjele obveze "
                        "i krediti sa stanjem 30.6.2022. Isplatu izravnanja procjenjujemo kao udio u zbroju punih iznosa "
                        "tablice MF-a puta stavku proračuna za 2026. Poticaj je prijenos iz državnog proračuna, ne ušteda.",
-            "izravnanje": "Fiskalno izravnanje po čl. 8. i 9. Zakona o financiranju JLP(R)S: puni iznos = max(0, (referentna "
-                          "vrijednost − kapacitet) × stanovnici), s kapacitetima i referentnim vrijednostima iz tablice "
-                          "Ministarstva financija. Formula na toj tablici daje iste pune iznose za svih 576 jedinica. Isplata "
-                          "je udio u stavci državnog proračuna.",
+            "izravnanje": "Fiskalno izravnanje po čl. 8. i 9. Zakona o financiranju JLP(R)S. Puni iznos (pravo) = max(0, "
+                          "(referentna vrijednost − kapacitet) × stanovnici), s kapacitetima i referentnim vrijednostima iz "
+                          "tablice Ministarstva financija; formula na toj tablici daje iste pune iznose za svih 576 jedinica. "
+                          "Prikazuje se isplata: udio jedinice u zbroju svih punih iznosa puta iznos u državnom proračunu "
+                          "(za 2026. 280,4 mil. €; za 2027. još nije utvrđen, pa se uzima isti). Iznos u proračunu je fiksan, "
+                          "pa spajanje državi ne štedi: što spojena jedinica izgubi, dobivaju ostale jedinice.",
             "reforma": "Unutar županije najmanja jedinica ispod praga spaja se s najmanjim susjedom dok sve "
                        "ne dosegnu prag (2.500, 5.000 ili 10.000 stanovnika). Scenarij, ne prijedlog granica.",
         },

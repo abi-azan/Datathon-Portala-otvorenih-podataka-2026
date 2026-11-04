@@ -217,3 +217,21 @@ def test_equalization_block(data):
     for g in rng.sample(merge.groups(data), 300):
         e = merge.merge(data, [data.oib_of[s] for s in g])["izravnanje"]
         assert e["promjena"] <= 0.01 and abs(sum(e["puni_po_clanici"]) - e["puni_clanice"]) < 0.05
+
+
+@pytest.mark.skipif(not merge.izravnanje.XLSX.exists(), reason="MF equalization table not downloaded")
+def test_equalization_payout_is_a_share_of_a_fixed_budget(data):
+    """Odluka 4.11.: the product shows the payout. It is the share of the sum of all full amounts
+    times the budget line, so a merger moves money between units and the state budget is unchanged."""
+    budget, total = merge.izravnanje.ISPLATA_2026, data.fi["puni_ukupno"]
+    jv = merge.merge(data, [by_name(data, "Općina Jelenje"), by_name(data, "Općina Viškovo")])["izravnanje"]
+    assert abs(jv["isplata_clanice"] - jv["puni_clanice"] * budget / total) < 1e-6
+    after_total = total - jv["puni_clanice"] + jv["puni_spojena"]
+    assert abs(jv["isplata_spojena"] - jv["puni_spojena"] * budget / after_total) < 1e-6
+    assert -320_000 < jv["isplata_promjena"] < -300_000           # about -312.500 € (docs: explanation 4.11.)
+    # what the other units receive after the merger is exactly what the merged one loses
+    others_before = budget - jv["isplata_clanice"]
+    others_after = budget - jv["isplata_spojena"]
+    assert abs((others_after - others_before) + jv["isplata_promjena"]) < 1e-6
+    bt = merge.merge(data, [by_name(data, "Općina Barilović"), by_name(data, "Općina Tounj")])["izravnanje"]
+    assert abs(bt["isplata_promjena"]) < 0.01                       # linear case: nothing moves

@@ -166,6 +166,14 @@ export interface Equalization {
   promjena: number
   promjena_udio: number | null
   oznake: string[]
+  /** Payout estimate (pipeline/merge.py payout): share of all full amounts x the budget line. */
+  iznos_proracuna?: number
+  omjer_prije?: number
+  omjer_poslije?: number | null
+  isplata_po_clanici?: number[]
+  isplata_clanice?: number
+  isplata_spojena?: number
+  isplata_promjena?: number
   [k: string]: unknown
 }
 
@@ -340,6 +348,8 @@ export interface ReformFile {
   jaz_bez_spajanja_zbroj: number
   poticaj_godisnje_zbroj: number
   izravnanje_promjena_zbroj?: number
+  izravnanje_isplata_spojene_promjena?: number
+  izravnanje_isplata_ostale_promjena?: number
   jedinice: ReformUnit[]
 }
 
