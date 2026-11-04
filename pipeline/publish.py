@@ -4,6 +4,8 @@
     .venv/Scripts/python -m pipeline.publish --ai other.json   # publish AI texts from another file
 
   jedinice.json            index of all 576 units: names, codes, grade and points per year
+  jedinice/<slug>/izvor.json  where the numbers come from: formula of I1-I5, auxiliary quantities
+                           and every input with its sheet and row in the MF files (provenance.py)
   jedinice/<slug>.json     full profile: every year's results, fact pack, peer medians,
                            neighbours, openness layer, explanation (AI text from
                            data/ai/objasnjenja-<year>.json when it still matches, else template)
@@ -37,7 +39,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 
-from . import config, explain, facts, openapi, verify
+from . import config, explain, facts, openapi, provenance, verify
 
 API = config.ROOT / "web" / "public" / "api" / "v1"
 DATASETS = config.REFERENCE / "skupovi.csv"
@@ -280,6 +282,13 @@ def main():
             "objasnjenje": explanation(pack, ai_texts.get(u["oib"])),
         })
         write(API / "jedinice" / f"{u['slug']}.json", detail)
+
+    # visible number check: formula and inputs behind each indicator (pipeline/provenance.py)
+    sources_by_oib = provenance.build(units, pd.read_parquet(config.BUILD / "prras_long.parquet"),
+                                      pd.read_parquet(config.BUILD / "wide.parquet"), res)
+    for u in units.to_dict("records"):
+        if u["oib"] in sources_by_oib:
+            write(API / "jedinice" / u["slug"] / "izvor.json", sources_by_oib[u["oib"]])
 
     (API / "geo").mkdir(parents=True, exist_ok=True)
     shutil.copy(config.BUILD / "geo" / "jls.topo.json", API / "geo" / "jls.topo.json")

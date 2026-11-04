@@ -232,6 +232,39 @@ SCHEMAS = {
                        "description": "Pretpostavke izračuna, npr. kapacitet_preracunat_na_stope_spojene, bez_prava_na_izravnanje."},
         },
     },
+    "Izvor": {
+        "type": "object",
+        "description": "Vidljiva provjera brojki (PLAN §5, pipeline/provenance.py): za zadnju godinu formula svakog "
+                       "pokazatelja I1-I5, pomoćne veličine po godinama i svi ulazni iznosi s mjestom u datotekama "
+                       "Ministarstva financija (PR-RAS: radna knjiga u ZIP-u, list i redak; Bilanca: list i redak i "
+                       "stupac). Iz samih ulaza dobivaju se objavljeni pokazatelji (tests/test_provenance.py).",
+        "required": ["godina", "prozor", "pokazatelji", "velicine", "izvori", "konta", "ulazi"],
+        "properties": {
+            "godina": {"type": "integer"},
+            "prozor": {"type": "object", "required": ["godine", "ponderi"], "properties": {
+                "godine": {"type": "array", "items": {"type": "integer"}},
+                "ponderi": {"type": "array", "items": {"type": "integer"}}}},
+            "pokazatelji": {"type": "object", "propertyNames": {"enum": ["I1", "I2", "I3", "I4", "I5"]},
+                            "additionalProperties": {"type": "object", "required": ["naziv", "formula", "vrijednost", "velicine"],
+                                                     "properties": {"naziv": {"type": "string"}, "formula": {"type": "string"},
+                                                                    "vrijednost": NUM, "bodovi": NUM,
+                                                                    "velicine": {"type": "array", "items": {"type": "string"}}}}},
+            "velicine": {"type": "object", "additionalProperties": {
+                "type": "object", "required": ["formula", "godine"],
+                "properties": {"formula": {"type": "string"}, "godine": {"type": "object", "additionalProperties": NUM}}}},
+            "izvori": {"type": "object", "additionalProperties": {"type": "object", "properties": {
+                "datoteka": STR, "list": STR}}},
+            "konta": {"type": "object", "additionalProperties": {"type": "object", "required": ["izvor", "za"], "properties": {
+                "naziv": STR, "izvor": {"enum": ["PR-RAS", "Bilanca"]},
+                "za": {"type": "array", "items": {"type": "string"}, "description": "Veličine i pokazatelji koji koriste konto."}}}},
+            "ulazi": {"type": "array", "items": {"type": "object", "required": ["konto", "godina", "iznos", "redak"], "properties": {
+                "konto": {"type": "string"}, "godina": {"type": "integer"}, "iznos": {"type": "number"},
+                "redak": {"type": ["integer", "null"], "description": "Redak u Excelu."},
+                "stupac": {"type": ["string", "null"], "description": "Stupac u Excelu (Bilanca)."}}},
+                      "description": "Ulazni iznosi u eurima; konta s iznosom 0 nisu navedena."},
+            "napomena": {"type": "string"},
+        },
+    },
     "SimulatorZupanija": {
         "type": "object",
         "required": ["zup_id", "zupanija", "skupine"],
@@ -346,6 +379,13 @@ def spec(generated):
                                 "description": "Slug jedinice iz jedinice.json, npr. grad-zagreb."}],
                 **_get("Svjedodžba jedinice", "Sve godine, paket činjenica, objašnjenje i susjedi jedne jedinice.",
                        "Jedinica"),
+            },
+            "/jedinice/{slug}/izvor.json": {
+                "parameters": [{"name": "slug", "in": "path", "required": True, "schema": {"type": "string"},
+                                "description": "Slug jedinice iz jedinice.json."}],
+                **_get("Odakle su brojke",
+                       "Formula pokazatelja I1-I5, pomoćne veličine i ulazni iznosi s listom i retkom u datotekama MF-a.",
+                       "Izvor"),
             },
             "/skupine.json": _get("Medijani usporednih skupina", "Medijani po skupini i godini.", "Skupine"),
             "/sifrarnik.csv": _get("Šifrarnik jedinica",

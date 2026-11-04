@@ -128,6 +128,18 @@ def test_dataset_list_matches_schema_and_csv(spec):
     assert list(v.iter_errors(data))
 
 
+def test_every_unit_has_a_source_file(spec):
+    """Visible number check: jedinice/<slug>/izvor.json for every unit, valid against the schema."""
+    v = validator(spec, "Izvor")
+    index = load("jedinice.json")["jedinice"]
+    bad = []
+    for u in index:
+        errs = list(v.iter_errors(load(f"jedinice/{u['slug']}/izvor.json")))
+        if errs:
+            bad.append((u["slug"], errs[0].message))
+    assert not bad, bad[:5]
+
+
 def test_simulator_files_match_schema(spec):
     v = validator(spec, "SimulatorZupanija")
     files = sorted((API / "simulator").glob("zup-*.json"))
