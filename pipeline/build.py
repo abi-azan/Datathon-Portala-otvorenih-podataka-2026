@@ -10,6 +10,8 @@ Outputs in data/build/:
   results.json       the same, nested per unit
   geo/jls.topo.json  simplified boundaries (layers jls, zupanije) for the map
   geo/susjedi.json   land neighbours and sea links per unit (merger simulator, Karta reforme)
+  simulator/         merger simulator, every group of 2-4 neighbours (pipeline/merge.py)
+  reforma/           Karta reforme, one file per threshold (pipeline/reforma.py)
 """
 import argparse
 import json
@@ -18,7 +20,7 @@ import sys
 
 import pandas as pd
 
-from . import config, geo, merge, methodology, mf, openness, population, sources, units
+from . import config, geo, merge, methodology, mf, openness, population, reforma, sources, units
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -145,8 +147,11 @@ def main():
 
     print("Simulator spajanja: sve skupine od 2-4 susjedne jedinice iste županije ...")
     susjedi = json.loads((config.BUILD / "geo" / "susjedi.json").read_text(encoding="utf-8"))
-    n_groups = merge.precompute(merge.Data(reg, wide, res_df, susjedi), config.BUILD / "simulator")
+    sim = merge.Data(reg, wide, res_df, susjedi)
+    n_groups = merge.precompute(sim, config.BUILD / "simulator")
     print(f"  {n_groups} skupina")
+    print("Karta reforme: pohlepno spajanje do praga 2.500, 5.000 i 10.000 stanovnika ...")
+    reforma.report(reforma.write_all(sim, res_df, config.BUILD / "reforma"))
 
     last = res_df[res_df.year == config.LAST_YEAR]
     print(f"\nOcjene {config.LAST_YEAR} (5 = najbolje):")

@@ -10,6 +10,8 @@
   skupine.json             peer-group medians per year (points and the five indicators)
   geo/jls.topo.json        boundaries (layers jls, zupanije)
   simulator/zup-<id>.json  merger simulator: every group of 2-4 neighbouring units in the county
+  reforma/prag-<N>.json    Karta reforme: every unit after the greedy merger scenario for the
+                           threshold N = 2500, 5000, 10000 inhabitants (pipeline/reforma.py)
   sifrarnik.csv            unit register: OIB, RKP, DGU/DZS code, name, type, county, slug
   rezultati.csv            one row per unit and year: grade, points, I1-I5, S1-S5, flags
   izvori.json              provenance of every download: URL, time, ETag, sha256, CKAN metadata
@@ -285,6 +287,13 @@ def main():
     # merger simulator, precomputed by build.py (pipeline/merge.py): one file per county
     shutil.rmtree(API / "simulator", ignore_errors=True)
     shutil.copytree(config.BUILD / "simulator", API / "simulator")
+
+    # Karta reforme, precomputed by build.py (pipeline/reforma.py): one file per threshold
+    reforma_dir = config.BUILD / "reforma"
+    if reforma_dir.exists():
+        shutil.copytree(reforma_dir, API / "reforma")
+    else:
+        print(f"Karta reforme: nema {reforma_dir}, preskačem (pokreni python -m pipeline.reforma)")
 
     reg_cols = ["oib", "rkp", "sifra", "naziv", "vrsta", "zup_id", "zupanija", "slug", "stanovnici_2021"]
     units[reg_cols].to_csv(API / "sifrarnik.csv", index=False, encoding="utf-8")

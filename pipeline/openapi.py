@@ -222,6 +222,63 @@ SCHEMAS = {
             },
         },
     },
+    "ReformaJedinica": {
+        "type": "object",
+        "description": "Jedinica nakon reforme: spojena skupina (2 ili više članica) ili jedinica koja se nije spajala. "
+                       "Rezultat spojene skupine računa se istom funkcijom kao u simulatoru spajanja (pipeline/merge.py), "
+                       "bez gornje granice broja članica.",
+        "required": ["clanice", "naziv", "vrsta", "zup_id", "stanovnici", "skupina", "ocjene_prije", "ocjena",
+                     "ocjena_rijec", "bodovi", "rang", "n_skupine", "usteda"],
+        "properties": {
+            "clanice": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[0-9]{5}$"},
+                        "description": "Šifre DGU članica, poredane; jedna šifra za jedinicu koja se nije spajala."},
+            "naziv": {"type": "string", "description": "Za skupinu kratki nazivi članica (bez \"Grad\"/\"Općina\") po broju "
+                                                       "stanovnika silazno, npr. \"Pag + Povljana\"; inače puni naziv."},
+            "vrsta": {"enum": ["grad", "opcina"], "description": "Grad ako je barem jedna članica grad."},
+            "zup_id": {"type": "integer", "minimum": 1, "maximum": 20},
+            "stanovnici": {"type": "integer", "minimum": 1, "description": "Popis 2021., zbroj članica."},
+            "skupina": {"type": "string", "description": "Usporedna skupina po vrsti i ukupnom broju stanovnika."},
+            "ocjene_prije": {"type": "object", "description": "Ocjena svake članice u zadnjoj godini (ključ je šifra).",
+                             "propertyNames": {"pattern": "^[0-9]{5}$"},
+                             "additionalProperties": {"type": ["integer", "null"], "minimum": 1, "maximum": 5}},
+            "ocjena": {"type": ["integer", "null"], "minimum": 1, "maximum": 5,
+                       "description": "Ocjena poslije reforme u zadnjoj godini; za jedinicu bez spajanja njezina vlastita."},
+            "ocjena_rijec": STR,
+            "bodovi": NUM,
+            "rang": {**INT, "description": "Rang u usporednoj skupini postojećih jedinica (za skupinu bez njezinih članica)."},
+            "n_skupine": INT,
+            "usteda": {"$ref": "#/components/schemas/Spajanje/properties/usteda",
+                       "description": "Ušteda na općoj upravi kao u simulatoru; null za jedinicu koja se nije spajala."},
+        },
+    },
+    "Reforma": {
+        "type": "object",
+        "description": "Karta reforme za jedan prag stanovnika (PLAN §5, odluka 17): scenarij, ne prijedlog granica. "
+                       "Unutar svake županije, bez županija i Grada Zagreba, jedinica ili skupina s najmanje stanovnika "
+                       "ispod praga spaja se sa susjedom (kopno ili veza preko mora) koji ima najmanje stanovnika; kod "
+                       "izjednačenja odlučuje najniža šifra. Ponavlja se dok sve skupine ne dosegnu prag ili skupina "
+                       "ispod praga nema više susjeda u županiji.",
+        "required": ["prag", "godina", "n_prije", "n_poslije", "stanovnika_u_spojenima", "n_spojenih_skupina",
+                     "n_ispod_praga", "usteda_realno_do_zbroj", "strukturni_jaz_zbroj", "jedinice"],
+        "properties": {
+            "prag": {"type": "integer", "enum": [2500, 5000, 10000], "description": "Prag stanovnika (Popis 2021.)."},
+            "godina": {"type": "integer", "description": "Godina ocjena i uštede."},
+            "napomena": {"type": "string"},
+            "n_prije": {"type": "integer", "description": "Broj općina i gradova prije reforme, bez Grada Zagreba."},
+            "n_poslije": {"type": "integer", "description": "Broj jedinica poslije reforme (duljina popisa jedinice)."},
+            "stanovnika_u_spojenima": {"type": "integer", "description": "Stanovnici u skupinama s 2 ili više članica."},
+            "n_spojenih_skupina": {"type": "integer"},
+            "n_ispod_praga": {"type": "integer",
+                              "description": "Jedinice koje su ostale ispod praga jer im je cijela povezana cjelina "
+                                             "županije ispod praga."},
+            "usteda_realno_do_zbroj": {"type": "number", "minimum": 0,
+                                       "description": "Zbroj realno_do svih spojenih skupina, €: gornji kraj "
+                                                      "realističnog raspona uštede (donji je 0)."},
+            "strukturni_jaz_zbroj": {"type": "number", "minimum": 0,
+                                     "description": "Zbroj strukturnih jazova spojenih skupina, €: gornja granica."},
+            "jedinice": {"type": "array", "items": {"$ref": "#/components/schemas/ReformaJedinica"}},
+        },
+    },
 }
 
 
@@ -284,6 +341,15 @@ def spec(generated):
                 **_get("Simulator spajanja za jednu županiju",
                        "Unaprijed izračunati rezultati svih skupina od 2-4 susjedne jedinice unutar županije "
                        "(bez županija i Grada Zagreba).", "SimulatorZupanija"),
+            },
+            "/reforma/prag-{prag}.json": {
+                "parameters": [{"name": "prag", "in": "path", "required": True,
+                                "schema": {"type": "string", "enum": ["2500", "5000", "10000"]},
+                                "description": "Prag stanovnika: 2500, 5000 ili 10000."}],
+                **_get("Karta reforme za jedan prag",
+                       "Scenarij spajanja svih općina i gradova (bez Grada Zagreba) pohlepnim pravilom do praga "
+                       "stanovnika: sve jedinice poslije reforme s ocjenama članica prije, ocjenom poslije i "
+                       "uštedom na upravi. Scenarij, ne prijedlog granica.", "Reforma"),
             },
             "/geo/jls.topo.json": _get("Granice (TopoJSON)",
                                        "Slojevi jls (556 općina i gradova, svojstva sifra, naziv, slug, oib, zup_id) "

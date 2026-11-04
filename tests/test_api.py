@@ -137,3 +137,16 @@ def test_simulator_files_match_schema(spec):
         errors = list(v.iter_errors(doc))
         assert not errors, (f.name, errors[0].message)
         assert f.name == f"zup-{doc['zup_id']:02d}.json"
+
+
+def test_reforma_files_match_schema(spec):
+    v = validator(spec, "Reforma")
+    files = sorted((API / "reforma").glob("prag-*.json"))
+    assert [f.name for f in files] == ["prag-10000.json", "prag-2500.json", "prag-5000.json"]
+    for f in files:
+        doc = json.loads(f.read_text(encoding="utf-8"))
+        errors = list(v.iter_errors(doc))
+        assert not errors, (f.name, errors[0].message)
+        assert f.name == f"prag-{doc['prag']}.json"
+    doc["jedinice"][0]["clanice"] = []                      # the check really looks inside the references
+    assert list(v.iter_errors(doc))
