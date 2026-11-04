@@ -454,7 +454,7 @@ function Result({
       <Card>
         <Eyebrow>Prije i poslije, {year}.</Eyebrow>
         <div className="mt-3 -mx-2 overflow-x-auto">
-          <table className="w-full min-w-[600px] text-sm">
+          <table className="w-full min-w-[480px] text-sm">
             <thead>
               <tr className="border-b border-hairline text-left text-xs text-muted">
                 <th scope="col" className="px-2 py-2 font-medium">Jedinica</th>
@@ -462,7 +462,6 @@ function Result({
                 <th scope="col" className="px-2 py-2 text-right font-medium">Stanovnici</th>
                 <th scope="col" className="px-2 py-2 text-right font-medium">Dospjele obveze</th>
                 <th scope="col" className="px-2 py-2 text-right font-medium">Opća uprava</th>
-                <th scope="col" className="px-2 py-2 text-right font-medium">Kriterij 10 %</th>
               </tr>
             </thead>
             <tbody>
@@ -485,10 +484,6 @@ function Result({
                     {eur(x.uprava)}
                     <div className="text-xs text-muted">{num(x.u.uprava_pc)} € po stanovniku</div>
                   </td>
-                  <td className="px-2 py-2.5 text-right">
-                    {x.z5 ? x.z5.value : '–'}
-                    {x.z5 && <div className="tabular text-xs text-muted">manjak {pct(x.d_udio)}{x.z5.approx && ', približno'}</div>}
-                  </td>
                 </tr>
               ))}
               <tr className="align-top font-semibold">
@@ -505,25 +500,34 @@ function Result({
                   {eur(u?.uprava_zbroj)}
                   <div className="text-xs font-normal text-muted">{num(z.uprava_pc)} € po stanovniku</div>
                 </td>
-                <td className="px-2 py-2.5 text-right">
-                  {z5 ? z5.value : '–'}
-                  {z5 && (
-                    <div className="tabular text-xs font-normal text-muted">
-                      manjak {pct(z.z5_manjak_udio)}
-                      {z5.approx && ', približno'}
-                    </div>
-                  )}
-                </td>
               </tr>
             </tbody>
           </table>
         </div>
         <p className="mt-3 text-xs text-muted">
           Dospjele obveze su neplaćene obveze kojima je prošao rok, kao udio u rashodima poslovanja. Opća uprava je funkcija 01
-          bez transfera (017 i 018). Kriterij od 10 % je iz zaključka Vlade od 16.4.2026.: manjak prihoda nad rashodima bez EU
-          izvora smije biti najviše 10 % prihoda bez EU izvora, inače jedinica ne dobiva pomoći iz državnog proračuna koje se
-          dodjeljuju putem poziva (naš izračun).
+          bez transfera (017 i 018).
         </p>
+        {(z5 || rows.some((x) => x.z5)) && (
+          <div className="mt-4 border-t border-hairline pt-4">
+            <div className="text-sm font-medium">Kriterij od 10 % za pomoći iz državnog proračuna</div>
+            <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
+              {rows.map((x) => (
+                <div key={x.u.sifra} className="contents">
+                  <dt className="text-ink-2">{short(x.u.naziv)}</dt>
+                  <dd className="tabular text-right">{x.z5 ? `${x.z5.value} · manjak ${pct(x.d_udio)}` : '–'}</dd>
+                </div>
+              ))}
+              <dt className="font-semibold">Spojena</dt>
+              <dd className="tabular text-right font-semibold">{z5 ? `${z5.value} · manjak ${pct(z.z5_manjak_udio)}` : '–'}</dd>
+            </dl>
+            <p className="mt-2 text-xs text-muted">
+              Zaključak Vlade od 16.4.2026.: manjak prihoda nad rashodima bez EU izvora smije biti najviše 10 % prihoda bez EU
+              izvora, inače jedinica ne dobiva pomoći iz državnog proračuna koje se dodjeljuju putem poziva. Naš izračun
+              {(z5?.approx || rows.some((x) => x.z5?.approx)) && '; približan kod jedinica s velikim EU projektima'}.
+            </p>
+          </div>
+        )}
         {diluted && worst && (
           <div className="mt-4 flex gap-2.5 rounded-xl bg-page p-3 text-sm">
             <Scale className="mt-0.5 h-4 w-4 shrink-0 text-ink-2" aria-hidden />
@@ -766,9 +770,9 @@ function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }
             </div>
           )}
           <p className="mt-2 text-sm leading-relaxed text-ink-2">
-            Ako {name(p.pripaja)} pripoji {list(p.s_pravom.map(name))}, po Vladinoj odluci (NN 88/2022) pet godina dobiva
-            godišnje dvostruki iznos fiskalnog izravnanja pripojene jedinice, do {eur(p.kapitalni_do)} za kapitalne projekte te
-            podmirenje dospjelih obveza i kredita pripojene jedinice sa stanjem 30.6.2022.
+            Jedinica koja pripaja ({name(p.pripaja)}) po Vladinoj odluci (NN 88/2022) pet godina dobiva godišnje dvostruki
+            iznos fiskalnog izravnanja pripojenih jedinica iz razvojnih skupina I.-V. ({list(p.s_pravom.map(name))}), do{' '}
+            {eur(p.kapitalni_do)} za kapitalne projekte te podmirenje njihovih dospjelih obveza i kredita sa stanjem 30.6.2022.
           </p>
           {p.izravnanje_isplata != null && (
             <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">

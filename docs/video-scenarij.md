@@ -44,15 +44,15 @@ Naracija ima oko 400 riječi, što je oko 2:50 uz smirenu brzinu (oko 140 riječ
 
 ## 1:25-2:15 Spoji pa vidi (simulator i Karta reforme)
 
-**Kadar:** s Povljanine svjedodžbe "Simuliraj spajanje sa susjedima", pa klik na Pag na karti (`#/simulator?j=05738,03166`). Ploča prije i poslije: ocjena 5 i "9. od 21 u skupini gradovi 2.000-5.000", tablica u eurima, poruka "Dug ne nestaje spajanjem…", ušteda "0 – 266.062 € godišnje".
+**Kadar:** s Povljanine svjedodžbe "Simuliraj spajanje sa susjedima", pa klik na Pag na karti (`#/simulator?j=05738,03166`). Ploča prije i poslije: ocjena 5 i "9. od 21 u skupini gradovi 2.000-5.000", tablica u eurima, poruka "Dug ne nestaje spajanjem…", ušteda "0 – 18.045 € godišnje" i okvir "Jaz koji postoji i bez spajanja: 1.400.511 €".
 
 **Naracija:**
-> Hrvatska raspravlja o spajanju općina, ali bez brojki. Ovdje se može probati. Povljana i Pag zajedno dobivaju ocjenu pet. Ali dug ne nestaje: milijun i sto šezdeset tisuća eura ostaje, samo je sada petnaest posto rashoda umjesto pola. Ušteda na upravi je iskren raspon, od nule do dvjesto šezdeset šest tisuća eura godišnje.
+> Hrvatska raspravlja o spajanju općina, ali bez brojki. Ovdje se može probati. Povljana i Pag zajedno dobivaju ocjenu pet. Ali dug ne nestaje: milijun i sto šezdeset tisuća eura ostaje, samo je sada petnaest posto rashoda umjesto pola. Ušteda od veličine je mala, do osamnaest tisuća eura godišnje. Pag na upravu troši milijun i četiristo tisuća više od sličnih gradova, ali taj trošak postoji i bez spajanja.
 
 **Kadar:** Karta reforme (`#/reforma?prag=5000`), klizač s 2.500 na 5.000 pa na 10.000; brojka "555 → 239"; klik na skupinu "Pag + Nin + Vrsi + Kolan + Povljana".
 
 **Naracija:**
-> Karta reforme pokazuje scenarij u kojem se, unutar svake županije, najmanje jedinice spajaju sa susjedima dok ne dosegnu pet tisuća stanovnika. Od 555 općina i gradova ostaje 239. Ušteda na upravi je do trideset dva milijuna eura godišnje, a fiskalno izravnanje po zakonskoj formuli palo bi za dvanaest milijuna. To je scenarij za raspravu, ne prijedlog granica.
+> Karta reforme pokazuje scenarij u kojem se, unutar svake županije, najmanje jedinice spajaju sa susjedima dok ne dosegnu pet tisuća stanovnika. Od 555 općina i gradova ostaje 239. Ušteda na upravi je do trideset šest milijuna eura godišnje. Vladin poticaj za takva spajanja stajao bi sto šezdeset osam milijuna godišnje, pet godina. To je scenarij za raspravu, ne prijedlog granica.
 
 ## 2:15-2:45 Podaci i arhitektura
 

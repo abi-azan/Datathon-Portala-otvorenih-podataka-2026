@@ -216,7 +216,7 @@ export function Home({ index }: { index: IndexFile }) {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 lg:sticky lg:top-24 lg:self-start">
+      <div className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-24 lg:self-start">
         <div className="flex justify-end">
           <div className="grid grid-cols-2 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Karta ili tablica">
             {(['karta', 'tablica'] as const).map((m) => (
