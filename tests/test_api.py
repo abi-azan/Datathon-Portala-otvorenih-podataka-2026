@@ -128,6 +128,14 @@ def test_dataset_list_matches_schema_and_csv(spec):
     assert list(v.iter_errors(data))
 
 
+def test_methodology_file_matches_the_code(spec):
+    from pipeline import explain, methodology
+    doc = load("metodologija.json")
+    assert not list(validator(spec, "Metodologija").iter_errors(doc))
+    assert {p["oznaka"]: p["ponder"] for p in doc["pokazatelji"]} == methodology.SCENARIOS["osnovni"]
+    assert doc["ai"]["prompt_sha256"] == explain.prompt_sha256() and doc["ai"]["sustav"] == explain.SYSTEM
+
+
 def test_every_unit_has_a_source_file(spec):
     """Visible number check: jedinice/<slug>/izvor.json for every unit, valid against the schema."""
     v = validator(spec, "Izvor")

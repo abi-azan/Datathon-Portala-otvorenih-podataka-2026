@@ -232,6 +232,19 @@ SCHEMAS = {
                        "description": "Pretpostavke izračuna, npr. kapacitet_preracunat_na_stope_spojene, bez_prava_na_izravnanje."},
         },
     },
+    "Metodologija": {
+        "type": "object",
+        "description": "Metodologija kako je kod primjenjuje (pipeline/metodologija.py): pomoćne veličine, pokazatelji s "
+                       "formulom, ponderom i pragovima, granice ocjena, scenariji pondera, pravila, zastavice, usporedne "
+                       "skupine, AI prompt i opis provjere, simulator i ograničenja.",
+        "required": ["godina", "prozor", "velicine", "pokazatelji", "ocjene", "scenariji", "pravila", "zastavice", "ai",
+                     "simulator", "ogranicenja"],
+        "properties": {
+            "godina": {"type": "integer"},
+            "pokazatelji": {"type": "array", "items": {"type": "object", "required": ["oznaka", "formula", "ponder", "pragovi"]}},
+            "ai": {"type": "object", "required": ["opis", "sustav", "pravila", "primjer", "prompt_sha256"]},
+        },
+    },
     "Izvor": {
         "type": "object",
         "description": "Vidljiva provjera brojki (PLAN §5, pipeline/provenance.py): za zadnju godinu formula svakog "
@@ -388,6 +401,8 @@ def spec(generated):
                        "Izvor"),
             },
             "/skupine.json": _get("Medijani usporednih skupina", "Medijani po skupini i godini.", "Skupine"),
+            "/metodologija.json": _get("Metodologija", "Formule, pragovi, ponderi, pravila, AI prompt i provjera, "
+                                       "kako ih kod primjenjuje.", "Metodologija"),
             "/sifrarnik.csv": _get("Šifrarnik jedinica",
                                    "OIB, RKP, šifra DGU/DZS, naziv, vrsta, županija i slug (UTF-8, zarez).",
                                    media="text/csv"),

@@ -208,6 +208,49 @@ function get<T>(path: string): Promise<T> {
 
 export const loadIndex = () => get<IndexFile>('jedinice.json')
 export const loadUnit = (slug: string) => get<UnitDetail>(`jedinice/${slug}.json`)
+/** api/v1/metodologija.json (pipeline/metodologija.py). */
+export interface MethodologyDoc {
+  godina: number
+  prozor: { ponderi: number[]; opis: string }
+  velicine: { oznaka: string; formula: string }[]
+  pokazatelji: { oznaka: string; naziv: string; formula: string; ponder: number; pragovi: { vrijednost: number; bodovi: number }[] }[]
+  ocjene: { ocjena: number; rijec: string; od_bodova: number }[]
+  scenariji: Record<string, Record<string, number>>
+  pravila: { oznaka: string; tekst: string }[]
+  zastavice: { oznaka: string; tekst: string }[]
+  skupine: { razredi: string[]; opis: string }
+  ai: {
+    opis: string
+    model: string
+    sustav: string
+    pravila: string
+    primjer: string
+    prompt_sha256: string
+    kod: Record<string, string>
+    batch: { modeli: string[]; jedinica: number; tekstova: number; ai: number; uvezeno: string; llama_cpp_commit: string | null } | null
+  }
+  simulator: Record<string, string>
+  ogranicenja: string[]
+}
+
+/** api/v1/skupovi.json: every dataset the project uses (data/reference/skupovi.csv + download log). */
+export interface Dataset {
+  kljuc: string
+  naziv: string
+  izdavatelj: string
+  url: string
+  portal_url: string | null
+  licenca: string
+  licenca_url: string | null
+  pristup: string
+  uloga: string
+  koristi_se: boolean
+  zadnja_izmjena: string | null
+  zadnje_preuzimanje?: string | null
+}
+
+export const loadMethodology = () => get<MethodologyDoc>('metodologija.json')
+export const loadDatasets = () => get<Dataset[]>('skupovi.json')
 export const loadSource = (slug: string) => get<SourceFile>(`jedinice/${slug}/izvor.json`)
 export const loadGroups = () => get<GroupMedians>('skupine.json')
 /** One unit after the Karta reforme scenario: a merged group or a unit that stayed alone. */

@@ -10,6 +10,8 @@
                            neighbours, openness layer, explanation (AI text from
                            data/ai/objasnjenja-<year>.json when it still matches, else template)
   skupine.json             peer-group medians per year (points and the five indicators)
+  metodologija.json        the methodology as the code applies it: formulas, thresholds, weights,
+                           rules, flags, the AI prompt and the verifier (pipeline/metodologija.py)
   geo/jls.topo.json        boundaries (layers jls, zupanije)
   simulator/zup-<id>.json  merger simulator: every group of 2-4 neighbouring units in the county
   reforma/prag-<N>.json    Karta reforme: every unit after the greedy merger scenario for the
@@ -39,7 +41,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 
-from . import config, explain, facts, openapi, provenance, verify
+from . import config, explain, facts, metodologija, openapi, provenance, verify
 
 API = config.ROOT / "web" / "public" / "api" / "v1"
 DATASETS = config.REFERENCE / "skupovi.csv"
@@ -267,6 +269,7 @@ def main():
     generated = datetime.now(timezone.utc).isoformat(timespec="seconds")
     write(API / "jedinice.json", {"generirano": generated, "zadnja_godina": config.LAST_YEAR, "jedinice": index})
     write(API / "skupine.json", group_medians(res))
+    write(API / "metodologija.json", metodologija.doc(AI_TEXTS))
 
     for u in units.to_dict("records"):
         n = nested[u["oib"]]
