@@ -351,3 +351,10 @@ Korisnik je 2.11. potvrdio plan i nalaze Fable reviewa (neovisni pregled modelom
     - Pravilo 1: kredit iskazan kao cijeli dospio, a redovno otplaćivan, ne ulazi u DO i dobiva oznaku kvalitete.
     - Pravilo 2: DO ≥ 30% rashoda poslovanja daje ocjenu najviše 2.
 15. **Odlučeno 3.11.:** repozitorij postaje javan odmah. Ime ostaje.
+16. **Odlučeno 4.11.** (odgovori na O1-O8, `docs/plan-srijeda-4-11.md`):
+    - AI model u proizvodu: **Gemma 4 31B-it QAT Q4_0** (v6 i v7: 40/40 na jedinicama koje model nije vidio). U proizvodu se koristi samo AI otvorenog koda, a Claude Code je razvojni alat.
+    - Simulator se **računa unaprijed** u Pythonu, bez TypeScripta: sve povezane skupine od 2-4 jedinice unutar županije.
+    - Pravila za `merge()`: samo ista županija; bez županija i Grada Zagreba; vrsta je grad ako je barem jedna članica grad; pravilo 1 primjenjuje se po članici prije zbrajanja.
+    - **Statistički blizanci su izbačeni** (§3.5 i §6 MUST 3 vrijede bez blizanaca). MCP ostaje SHOULD, na kraju ako bude vremena.
+    - Tablica kao alternativa karti dolazi nakon MUST-a, kao prekidač ispod karte.
+    - Rečenica "Ocjena nije službena" maknuta je iz sučelja (§1).

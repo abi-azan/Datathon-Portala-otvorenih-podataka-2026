@@ -82,10 +82,10 @@ Kriterij gotovosti za svaki zadatak s kodom: `pytest` prolazi, a za web i `tsc`,
 | # | Odgovor | Stanje |
 |---|---|---|
 | O1 | Bolji model: **Gemma 4 31B** (v6: 20/20 iz prvog pokušaja). Provjeriti postoji li još bolji. | riješeno: istraživanje nije našlo bolji model; Unsloth UD-Q4_K_XL daje iste tekstove (v7), pa batch radi 31B Q4_0 s Kaggla (40/40); predložak s oznakom ostaje za rijetke tekstove koji ne prođu provjeru |
-| O2 | Simulator **ne u TypeScriptu**; treba istražiti najbolji način. | prijedlog: unaprijed izračunati 13.353 povezane skupine od 2-4 jedinice (Python, ista funkcija kao Karta reforme); alternativa je Pyodide (`methodology.py` je čisti Python) |
-| O3 | Nejasno, traži objašnjenje. | objašnjeno; čeka potvrdu |
-| O4 | MCP ne rezati, nego ostaviti za kraj ako bude vremena. Za ostale rezove traži argumente. | argumenti dani; čeka potvrdu |
-| O5 | Karta ostaje glavni prikaz. | objašnjeno: tablica je dodatni prekidač za pristupačnost, ne zamjena; čeka potvrdu |
+| O2 | Simulator **ne u TypeScriptu**. **Odluka 4.11.: izračun unaprijed.** | sve povezane skupine od 2-4 jedinice unutar županije (13.353) računa Python istom funkcijom kao Karta reforme |
+| O3 | **Odluka 4.11.: pravila prihvaćena.** | samo ista županija; bez županija i Zagreba; grad ako je barem jedna članica grad; pravilo 1 po članici prije zbrajanja |
+| O4 | MCP ostaje za kraj, ako bude vremena. **Odluka 4.11.: blizanci se režu.** | spopt, klizač, izravnanje i dodatni prikazi karte: prijedlog u odgovoru od 4.11. (pohlepno pravilo, klizač s tri praga, izravnanje kao napomena, dva prikaza karte ostaju) |
+| O5 | Karta ostaje glavni prikaz. **Odluka 4.11.: tablica kao prekidač, kasnije.** | abecedno, rang samo unutar skupine; nakon MUST-a |
 | O6 | Riješeno. | `main` pushan, Pages uključen, stranica uživo; tjedni cron ostaje |
 | O7 | **Konačno (4.11.):** rečenica "Ocjena nije službena" je nepotrebna jer se podrazumijeva. | maknuta iz sučelja, README-a i scenarija videa; ostaje samo opis "ocjenjuje se financijska održivost, a ne kvaliteta upravljanja" i izjava o izvoru u licencnim dokumentima |
 | O8 | Licence riješiti preko subagenta. | gotovo (`ea96e98`); otvorena pitanja za korisnika u odgovoru od 4.11. |
