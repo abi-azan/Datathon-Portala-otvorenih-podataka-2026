@@ -7,6 +7,7 @@
                            neighbours, openness layer, template explanation
   skupine.json             peer-group medians per year (points and the five indicators)
   geo/jls.topo.json        boundaries (layers jls, zupanije)
+  simulator/zup-<id>.json  merger simulator: every group of 2-4 neighbouring units in the county
   sifrarnik.csv            unit register: OIB, RKP, DGU/DZS code, name, type, county, slug
   rezultati.csv            one row per unit and year: grade, points, I1-I5, S1-S5, flags
   izvori.json              provenance of every download: URL, time, ETag, sha256, CKAN metadata
@@ -256,6 +257,10 @@ def main():
 
     (API / "geo").mkdir(parents=True, exist_ok=True)
     shutil.copy(config.BUILD / "geo" / "jls.topo.json", API / "geo" / "jls.topo.json")
+
+    # merger simulator, precomputed by build.py (pipeline/merge.py): one file per county
+    shutil.rmtree(API / "simulator", ignore_errors=True)
+    shutil.copytree(config.BUILD / "simulator", API / "simulator")
 
     reg_cols = ["oib", "rkp", "sifra", "naziv", "vrsta", "zup_id", "zupanija", "slug", "stanovnici_2021"]
     units[reg_cols].to_csv(API / "sifrarnik.csv", index=False, encoding="utf-8")

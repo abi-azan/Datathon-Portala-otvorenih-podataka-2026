@@ -18,13 +18,9 @@ import sys
 
 import pandas as pd
 
-from . import config, geo, methodology, mf, openness, population, sources, units
+from . import config, geo, merge, methodology, mf, openness, population, sources, units
 
 sys.stdout.reconfigure(encoding="utf-8")
-
-SIZE_CLASSES = [(0, 2000, "do 2.000"), (2000, 5000, "2.000-5.000"), (5000, 10000, "5.000-10.000"),
-                (10000, 35000, "10.000-35.000"), (35000, 10**9, "35.000+")]
-
 
 def fetch_all(offline):
     mf_dir = config.RAW / "mf"
@@ -58,21 +54,7 @@ def load_prras(zip_path):
     return df, national
 
 
-def size_class(pop):
-    for lo, hi, label in SIZE_CLASSES:
-        if lo <= pop < hi:
-            return label
-    return None
-
-
-def peer_group(u):
-    if u.vrsta == "zupanija":
-        return "županije"
-    if u.zagreb:
-        return "Grad Zagreb"
-    if u.vrsta == "grad" and u.stanovnici_2021 >= 35000:
-        return "veliki gradovi"
-    return f"{'općine' if u.vrsta == 'opcina' else 'gradovi'} {size_class(u.stanovnici_2021)}"
+peer_group = methodology.peer_group
 
 
 def clean(x):
@@ -155,10 +137,16 @@ def main():
     config.BUILD.mkdir(parents=True, exist_ok=True)
     reg.to_csv(config.BUILD / "units.csv", index=False, encoding="utf-8")
     res_df.to_parquet(config.BUILD / "results.parquet", index=False)
+    wide.to_parquet(config.BUILD / "wide.parquet", index=False)   # unit-year inputs, for merge.py
     nested = []
     for u in reg.to_dict("records"):
         nested.append({**u, "godine": {str(y): r for y, r in results[u["oib"]].items()}})
     (config.BUILD / "results.json").write_text(json.dumps(clean(nested), ensure_ascii=False), encoding="utf-8")
+
+    print("Simulator spajanja: sve skupine od 2-4 susjedne jedinice iste županije ...")
+    susjedi = json.loads((config.BUILD / "geo" / "susjedi.json").read_text(encoding="utf-8"))
+    n_groups = merge.precompute(merge.Data(reg, wide, res_df, susjedi), config.BUILD / "simulator")
+    print(f"  {n_groups} skupina")
 
     last = res_df[res_df.year == config.LAST_YEAR]
     print(f"\nOcjene {config.LAST_YEAR} (5 = najbolje):")

@@ -45,6 +45,33 @@ LOAN_REPAID_SHARE = 0.03       # principal repaid in the year, as a share of the
 DO_CAP_SHARE = 0.30
 DO_CAP_POINTS = 39.9
 
+# A merged unit (pipeline/merge.py) carries the overdue loan amount that rule 1 removed
+# from each member under this key. Rule 1 is then not tested again on the sums, because
+# a sum can pass or fail where no member does (PLAN §11, decision 16).
+RULE1_EXCLUDED = "pravilo1_iskljuceno"
+
+# Peer groups (PLAN §3.5): type and size class; each group has at least 15 units.
+SIZE_CLASSES = [(0, 2000, "do 2.000"), (2000, 5000, "2.000-5.000"), (5000, 10000, "5.000-10.000"),
+                (10000, 35000, "10.000-35.000"), (35000, 10**9, "35.000+")]
+
+
+def size_class(pop):
+    for lo, hi, label in SIZE_CLASSES:
+        if lo <= pop < hi:
+            return label
+    return None
+
+
+def peer_group(u):
+    """u has vrsta, zagreb and stanovnici_2021 (a units.csv row as a namedtuple)."""
+    if u.vrsta == "zupanija":
+        return "županije"
+    if u.zagreb:
+        return "Grad Zagreb"
+    if u.vrsta == "grad" and u.stanovnici_2021 >= 35000:
+        return "veliki gradovi"
+    return f"{'općine' if u.vrsta == 'opcina' else 'gradovi'} {size_class(u.stanovnici_2021)}"
+
 
 def _num(r, k):
     """Value from a unit-year dict; missing, None and NaN count as 0."""
@@ -61,6 +88,14 @@ def loan_reported_all_due_but_repaid(r, prev):
     if opening is None or (isinstance(opening, float) and math.isnan(opening)):
         opening = loan                      # first year of the series: use the closing balance
     return _num(r, "p_54") >= LOAN_REPAID_SHARE * opening   # opening 0 = new loan, passes
+
+
+def rule1_excluded(r, prev):
+    """Overdue loan amount that rule 1 takes out of DO: the whole b_26_D when the rule holds,
+    else 0. A merged unit brings the sum over its members instead (RULE1_EXCLUDED)."""
+    if RULE1_EXCLUDED in r:
+        return _num(r, RULE1_EXCLUDED)
+    return _num(r, "b_26_D") if loan_reported_all_due_but_repaid(r, prev) else 0.0
 
 
 def interp(x, anchors):
@@ -97,7 +132,7 @@ def aux(r, prev=None):
     principal_adj = max(0.0, principal - g("p_84")) if refinancing else principal
     zo = g("p_6") + g("p_7") - g("p_63") + g("p_6353") - g("p_663") - g("p_dio611")
     do_reported = _num(r, "b_23_D") + _num(r, "b_24_D") + _num(r, "b_26_D")
-    loan_fix = loan_reported_all_due_but_repaid(r, prev)
+    excluded = rule1_excluded(r, prev)
     return {
         "KP": kp,
         "PO": po,
@@ -107,9 +142,9 @@ def aux(r, prev=None):
         "glavnica_adj": principal_adj,
         "refinanciranje": refinancing,
         "ZO": zo,
-        "DO": do_reported - (_num(r, "b_26_D") if loan_fix else 0.0),
+        "DO": do_reported - excluded,
         "DO_iskazano": do_reported,
-        "kredit_iskazan_dospio": loan_fix,
+        "kredit_iskazan_dospio": excluded > 0,
     }
 
 

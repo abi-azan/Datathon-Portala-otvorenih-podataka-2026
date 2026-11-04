@@ -49,6 +49,11 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
 - `pipeline/methodology.py` holds PLAN §3 as pure functions: auxiliary quantities, windowed indicators I1-I5, 0-100 scores, grades, four weight scenarios, flags Z1-Z4 and context measures. It also holds the two overdue-liability rules, decided 2026-11-03 (background in `docs/research/05`):
   - A loan reported as entirely overdue, while its principal is repaid at 3% a year or more, does not count toward DO. The unit gets the quality note `kredit_iskazan_kao_dospio`.
   - DO ≥ 30% of operating spending caps points at 39.9, so the grade is at most 2. `bodovi_bez_ogranicenja` keeps the uncapped points.
+- `pipeline/merge.py` is the merger simulator (PLAN §4, rules decided 2026-11-04 in PLAN §11 decision 16).
+  - It sums 2-4 neighbouring units of one county (no counties, no Zagreb) per year and runs `methodology.evaluate_unit` on the sums. The merged unit is a city if any member is one.
+  - Rule 1 is applied per member before summing; the merged row carries the excluded amount under `methodology.RULE1_EXCLUDED`.
+  - `build.py` saves the unit-year inputs as `data/build/wide.parquet` and precomputes all 13,353 groups into `data/build/simulator/zup-XX.json`; `publish.py` copies them to the API (`simulator/zup-{id}.json`).
+  - Peer groups (`SIZE_CLASSES`, `peer_group`) now live in `methodology.py`.
 - `pipeline/facts.py`, `verify.py` and `explain.py` produce the AI explanation (PLAN §5).
   - Facts are pre-formatted Croatian strings. Python picks the story: the weakest component, the strengths and the comparison with the peer median.
   - The verifier fails a text when it contains a number not in the facts, or a grade other than this year's or last year's. A failed text is retried with feedback, at most twice, and then the template is used.

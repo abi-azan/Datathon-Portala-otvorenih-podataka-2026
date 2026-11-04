@@ -33,7 +33,7 @@ def load(path):
 def test_spec_is_openapi_31_and_documents_every_file(spec):
     assert spec["openapi"].startswith("3.1")
     for path in spec["paths"]:
-        if "{slug}" in path:
+        if "{" in path:                                     # templated paths are checked below
             continue
         assert (API / path.lstrip("/")).exists(), path
     Draft202012Validator.check_schema(spec["components"]["schemas"]["Jedinica"])
@@ -115,3 +115,14 @@ def test_dataset_list_matches_schema_and_csv(spec):
     assert isinstance(ckan["sha256"], list) and ckan["stranica"] == len(ckan["sha256"]) > 1
     del data[0]["licenca"]                                  # the check really enforces the required fields
     assert list(v.iter_errors(data))
+
+
+def test_simulator_files_match_schema(spec):
+    v = validator(spec, "SimulatorZupanija")
+    files = sorted((API / "simulator").glob("zup-*.json"))
+    assert len(files) == 20
+    for f in files:
+        doc = json.loads(f.read_text(encoding="utf-8"))
+        errors = list(v.iter_errors(doc))
+        assert not errors, (f.name, errors[0].message)
+        assert f.name == f"zup-{doc['zup_id']:02d}.json"

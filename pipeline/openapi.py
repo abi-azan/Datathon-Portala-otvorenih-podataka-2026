@@ -150,6 +150,55 @@ SCHEMAS = {
         },
     },
     "Skupovi": {"type": "array", "minItems": 1, "items": {"$ref": "#/components/schemas/Skup"}},
+    "Spajanje": {
+        "type": "object",
+        "description": "Zamišljena jedinica nastala spajanjem 2-4 susjedne jedinice iste županije (pipeline/merge.py). "
+                       "Tokovi i stanja zbrajaju se po godini, a ocjena se računa istom metodologijom kao za "
+                       "postojeće jedinice. Pravilo 1 primjenjuje se po članici prije zbrajanja.",
+        "required": ["clanice", "vrsta", "skupina", "stanovnici", "godina", "ocjene", "bodovi", "zadnja"],
+        "properties": {
+            "clanice": {"type": "array", "minItems": 2, "maxItems": 4,
+                        "items": {"type": "string", "pattern": "^[0-9]{5}$"},
+                        "description": "Šifre DGU članica, poredane."},
+            "vrsta": {"enum": ["grad", "opcina"], "description": "Grad ako je barem jedna članica grad."},
+            "skupina": {"type": "string", "description": "Usporedna skupina po vrsti i ukupnom broju stanovnika."},
+            "stanovnici": {"type": "integer", "minimum": 1},
+            "godina": {"type": "integer", "description": "Zadnja godina koju imaju sve članice."},
+            "ocjene": BY_YEAR_INT,
+            "bodovi": BY_YEAR_NUM,
+            "zadnja": {
+                "type": "object",
+                "description": "Rezultat za zadnju godinu: bodovi, ocjena, pokazatelji I1-I5, bodovi S1-S5, zastavice, "
+                             "kontekst i rang u skupini bez samih članica.",
+                "required": ["ocjena", "bodovi", "rang", "n_skupine"],
+                "properties": {
+                    "ocjena": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "bodovi": {"type": "number"},
+                    "rang": {"type": "integer", "minimum": 1},
+                    "n_skupine": {"type": "integer", "minimum": 1},
+                    "percentil": NUM,
+                    "zastavice": {"type": "array", "items": {"type": "string"}},
+                    "kvaliteta": {"type": "array", "items": {"type": "string"}},
+                    **{f"I{i}": NUM for i in range(1, 6)}, **{f"S{i}": NUM for i in range(1, 6)},
+                },
+            },
+        },
+    },
+    "SimulatorZupanija": {
+        "type": "object",
+        "required": ["zup_id", "zupanija", "skupine"],
+        "properties": {
+            "zup_id": {"type": "integer", "minimum": 1, "maximum": 21},
+            "zupanija": {"type": "string"},
+            "skupine": {
+                "type": "object",
+                "description": "Sve dopuštene skupine u županiji. Ključ su šifre članica, poredane i spojene crticom "
+                               "(npr. \"05738-05746\").",
+                "propertyNames": {"pattern": "^[0-9]{5}(-[0-9]{5}){1,3}$"},
+                "additionalProperties": {"$ref": "#/components/schemas/Spajanje"},
+            },
+        },
+    },
 }
 
 
@@ -205,6 +254,14 @@ def spec(generated):
                                   "Svi skupovi podataka koje projekt koristi: naziv, izdavatelj, poveznica, licenca, "
                                   "način pristupa i uloga. Uz izvore koje ETL preuzima sam stoje vrijeme zadnjeg "
                                   "preuzimanja i sha256.", "Skupovi"),
+            "/simulator/zup-{id}.json": {
+                "parameters": [{"name": "id", "in": "path", "required": True,
+                                "schema": {"type": "string", "pattern": "^[0-9]{2}$"},
+                                "description": "Dvoznamenkasti zup_id, npr. 13 za Zadarsku županiju."}],
+                **_get("Simulator spajanja za jednu županiju",
+                       "Unaprijed izračunati rezultati svih skupina od 2-4 susjedne jedinice unutar županije "
+                       "(bez županija i Grada Zagreba).", "SimulatorZupanija"),
+            },
             "/geo/jls.topo.json": _get("Granice (TopoJSON)",
                                        "Slojevi jls (556 općina i gradova, svojstva sifra, naziv, slug, oib, zup_id) "
                                        "i zupanije (21). Izvor: DZS INSPIRE WFS, Otvorena dozvola; pojednostavljeno "
