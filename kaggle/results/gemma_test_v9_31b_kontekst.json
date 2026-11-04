@@ -1,0 +1,660 @@
+{
+ "partial": false,
+ "meta": {
+  "llama_cpp_commit": "2cbca389f515df455412dafa07e2b1359cc72a6d",
+  "gpu": "Tesla T4\nTesla T4",
+  "max_retries": 2,
+  "hf_models": [],
+  "hf_download_seconds": 0,
+  "seconds_total": 672
+ },
+ "models": {
+  "gemma-4-31B_q4_0-it.gguf": {
+   "load_seconds": 148,
+   "results": [
+    {
+     "oib": "89238941129",
+     "naziv": "Općina Kloštar Podravski",
+     "text": "Općina Kloštar Podravski za 2025. godinu ima ocjenu 2 (pod pritiskom) i 36,9 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju godine iznose 1.767.926 €, što je 80,9 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda, otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice) te novca na računu manje nego za mjesec dana rashoda poslovanja. U Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 5.420 €, što je ispod medijana skupine (7.284 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 13,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Kloštar Podravski za 2025. godinu ima ocjenu 2 (pod pritiskom) i 36,9 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju godine iznose 1.767.926 €, što je 80,9 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda, otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice) te novca na računu manje nego za mjesec dana rashoda poslovanja. U Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 5.420 €, što je ispod medijana skupine (7.284 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 13,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 29.7,
+       "usage": {
+        "completion_tokens": 299,
+        "prompt_tokens": 1534,
+        "total_tokens": 1833,
+        "prompt_tokens_details": {
+         "cached_tokens": 0
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "61106276570",
+     "naziv": "Grad Senj",
+     "text": "Grad Senj za 2025. godinu ima ocjenu 2 (pod pritiskom) i 28,6 boda od 100. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 12,5 % tekućih prihoda, dok je medijan skupine višak 8,1 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga, servis duga. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Senj za 2025. godinu ima ocjenu 2 (pod pritiskom) i 28,6 boda od 100. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 12,5 % tekućih prihoda, dok je medijan skupine višak 8,1 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga, servis duga. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice).",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 21.4,
+       "usage": {
+        "completion_tokens": 170,
+        "prompt_tokens": 1427,
+        "total_tokens": 1597,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "47207249296",
+     "naziv": "Općina Povljana",
+     "text": "Općina Povljana za 2025. godinu ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju godine iznose 1.045.908 €, što je 49,4 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jake strane jedinice su: operativni saldo, slobodni saldo nakon otplate glavnice, servis duga. Upozorenje: otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 7,7 %, što je iznad medijana skupine (−3,9 %).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 15,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Povljana za 2025. godinu ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju godine iznose 1.045.908 €, što je 49,4 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jake strane jedinice su: operativni saldo, slobodni saldo nakon otplate glavnice, servis duga. Upozorenje: otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 7,7 %, što je iznad medijana skupine (−3,9 %).",
+       "check": {
+        "ok": true,
+        "n_brojki": 15,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 30.5,
+       "usage": {
+        "completion_tokens": 270,
+        "prompt_tokens": 1484,
+        "total_tokens": 1754,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "78755598868",
+     "naziv": "Grad Split",
+     "text": "Grad Split za 2025. godinu ima ocjenu 3 (umjereno) i 46,1 boda od 100, dok je medijan usporedne skupine 81,9 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita nedostaje 5,2 % tekućih prihoda, uz medijan skupine od 7,7 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Split za 2025. godinu ima ocjenu 3 (umjereno) i 46,1 boda od 100, dok je medijan usporedne skupine 81,9 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita nedostaje 5,2 % tekućih prihoda, uz medijan skupine od 7,7 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 20.9,
+       "usage": {
+        "completion_tokens": 157,
+        "prompt_tokens": 1347,
+        "total_tokens": 1504,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "90811277065",
+     "naziv": "Općina Primorski Dolac",
+     "text": "Općina Primorski Dolac za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 5 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 20,6 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Primorski Dolac za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 5 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 20,6 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Napomena o podacima: u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 9,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 29.1,
+       "usage": {
+        "completion_tokens": 256,
+        "prompt_tokens": 1473,
+        "total_tokens": 1729,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "90017522601",
+     "naziv": "Istarska županija",
+     "text": "Istarska županija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 91,2 boda od 100. Ocjenu najviše spušta sastavnica „servis duga”: otplata kredita i kamata iznosi 4,8 % zakonske osnovice, uz medijan skupine od 3,5 % zakonske osnovice. Jake strane jedinice su: operativni saldo, godine otplate neto duga. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 6,1 %, što je iznad medijana skupine (−0,9 %), a neto dohodak po stanovniku u 2025. iznosio je 10.792 €, što je iznad medijana skupine (8.618 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 13,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Istarska županija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 91,2 boda od 100. Ocjenu najviše spušta sastavnica „servis duga”: otplata kredita i kamata iznosi 4,8 % zakonske osnovice, uz medijan skupine od 3,5 % zakonske osnovice. Jake strane jedinice su: operativni saldo, godine otplate neto duga. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 6,1 %, što je iznad medijana skupine (−0,9 %), a neto dohodak po stanovniku u 2025. iznosio je 10.792 €, što je iznad medijana skupine (8.618 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 13,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 25.0,
+       "usage": {
+        "completion_tokens": 206,
+        "prompt_tokens": 1440,
+        "total_tokens": 1646,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "33141736361",
+     "naziv": "Općina Sveta Marija",
+     "text": "Općina Sveta Marija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 97,2 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „servis duga”: otplata kredita i kamata iznosi 5,7 % zakonske osnovice, uz medijan skupine od 2,4 % zakonske osnovice. Jake strane jedinice su: operativni saldo, slobodni saldo nakon otplate glavnice, dospjele neplaćene obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Sveta Marija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 97,2 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „servis duga”: otplata kredita i kamata iznosi 5,7 % zakonske osnovice, uz medijan skupine od 2,4 % zakonske osnovice. Jake strane jedinice su: operativni saldo, slobodni saldo nakon otplate glavnice, dospjele neplaćene obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 19.7,
+       "usage": {
+        "completion_tokens": 142,
+        "prompt_tokens": 1407,
+        "total_tokens": 1549,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "61817894937",
+     "naziv": "Grad Zagreb",
+     "text": "Grad Zagreb za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”, za koju jedinica nema usporedive skupine pa se ocjenjuje samo prema pragovima. Jake strane jedinice su: godine otplate neto duga, dospjele neplaćene obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 4,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Zagreb za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”, za koju jedinica nema usporedive skupine pa se ocjenjuje samo prema pragovima. Jake strane jedinice su: godine otplate neto duga, dospjele neplaćene obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 4,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 15.8,
+       "usage": {
+        "completion_tokens": 103,
+        "prompt_tokens": 1230,
+        "total_tokens": 1333,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "97782176849",
+     "naziv": "Općina Krapinske Toplice",
+     "text": "Općina Krapinske Toplice za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 18,3 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 18,6 % tekućih prihoda, dok je medijan skupine višak 20,0 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 9.881 €, što je iznad medijana skupine (7.284 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 12,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Krapinske Toplice za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 18,3 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 18,6 % tekućih prihoda, dok je medijan skupine višak 20,0 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 9.881 €, što je iznad medijana skupine (7.284 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 12,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 28.7,
+       "usage": {
+        "completion_tokens": 249,
+        "prompt_tokens": 1483,
+        "total_tokens": 1732,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "37326349433",
+     "naziv": "Općina Skrad",
+     "text": "Općina Skrad za 2025. godinu ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju godine iznose 291.767 €, što je 30,9 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jake strane jedinice su: servis duga. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 9.379 €, što je iznad medijana skupine (7.227 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 15,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Skrad za 2025. godinu ima ocjenu 2 (pod pritiskom) i 39,9 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju godine iznose 291.767 €, što je 30,9 % rashoda poslovanja, uz medijan skupine od 2,0 % rashoda poslovanja. Jake strane jedinice su: servis duga. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 9.379 €, što je iznad medijana skupine (7.227 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 15,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 31.3,
+       "usage": {
+        "completion_tokens": 279,
+        "prompt_tokens": 1491,
+        "total_tokens": 1770,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "43219618605",
+     "naziv": "Općina Jagodnjak",
+     "text": "Općina Jagodnjak za 2025. godinu ima ocjenu 3 (umjereno) i 59,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 10,6 % tekućih prihoda, uz medijan skupine od viška 13,3 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga, servis duga, dospjele neplaćene obveze. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 10,4 %, što je ispod medijana skupine (−3,9 %), a neto dohodak po stanovniku u 2025. iznosio je 5.656 €, što je ispod medijana skupine (7.227 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 15,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Jagodnjak za 2025. godinu ima ocjenu 3 (umjereno) i 59,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 10,6 % tekućih prihoda, uz medijan skupine od viška 13,3 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga, servis duga, dospjele neplaćene obveze. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 10,4 %, što je ispod medijana skupine (−3,9 %), a neto dohodak po stanovniku u 2025. iznosio je 5.656 €, što je ispod medijana skupine (7.227 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 15,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 33.4,
+       "usage": {
+        "completion_tokens": 303,
+        "prompt_tokens": 1500,
+        "total_tokens": 1803,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "80621259595",
+     "naziv": "Općina Gunja",
+     "text": "Općina Gunja za 2025. godinu ima ocjenu 4 (stabilno) i 76,5 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju godine iznose 264.084 €, što je 20,1 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Jake strane jedinice su: operativni saldo, slobodni saldo nakon otplate glavnice. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 12,7 %, što je ispod medijana skupine (−2,7 %), a neto dohodak po stanovniku u 2025. iznosio je 4.422 €, što je ispod medijana skupine (7.284 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 17,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Gunja za 2025. godinu ima ocjenu 4 (stabilno) i 76,5 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju godine iznose 264.084 €, što je 20,1 % rashoda poslovanja, uz medijan skupine od 1,5 % rashoda poslovanja. Jake strane jedinice su: operativni saldo, slobodni saldo nakon otplate glavnice. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice). Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 12,7 %, što je ispod medijana skupine (−2,7 %), a neto dohodak po stanovniku u 2025. iznosio je 4.422 €, što je ispod medijana skupine (7.284 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 17,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 32.8,
+       "usage": {
+        "completion_tokens": 296,
+        "prompt_tokens": 1570,
+        "total_tokens": 1866,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "88983260227",
+     "naziv": "Općina Dvor",
+     "text": "Općina Dvor za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,5 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita ostaje 7,3 % tekućih prihoda, uz medijan skupine od 16,9 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga, servis duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 13,3 %, što je ispod medijana skupine (−2,7 %).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 12,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Dvor za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,5 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita ostaje 7,3 % tekućih prihoda, uz medijan skupine od 16,9 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga, servis duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 13,3 %, što je ispod medijana skupine (−2,7 %).",
+       "check": {
+        "ok": true,
+        "n_brojki": 12,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 25.8,
+       "usage": {
+        "completion_tokens": 215,
+        "prompt_tokens": 1429,
+        "total_tokens": 1644,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "89243140464",
+     "naziv": "Općina Dubravica",
+     "text": "Općina Dubravica za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 16,1 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 21,3 % tekućih prihoda, uz medijan skupine od viška 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 8.673 €, što je iznad medijana skupine (7.227 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 12,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Dubravica za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 16,1 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 21,3 % tekućih prihoda, uz medijan skupine od viška 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 8.673 €, što je iznad medijana skupine (7.227 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 12,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 28.5,
+       "usage": {
+        "completion_tokens": 247,
+        "prompt_tokens": 1516,
+        "total_tokens": 1763,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "70479631665",
+     "naziv": "Općina Zrinski Topolovac",
+     "text": "Općina Zrinski Topolovac za 2025. godinu ima ocjenu 2 (pod pritiskom) i 26,3 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „godine otplate neto duga”: neto dug mogao bi se otplatiti iz operativnog viška za 93,5 godine, dok većina jedinica u skupini nema neto duga. Jake strane jedinice su: servis duga. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 4.455 €, što je ispod medijana skupine (7.227 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 11,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Zrinski Topolovac za 2025. godinu ima ocjenu 2 (pod pritiskom) i 26,3 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „godine otplate neto duga”: neto dug mogao bi se otplatiti iz operativnog viška za 93,5 godine, dok većina jedinica u skupini nema neto duga. Jake strane jedinice su: servis duga. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice); rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 4.455 €, što je ispod medijana skupine (7.227 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 11,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 30.9,
+       "usage": {
+        "completion_tokens": 273,
+        "prompt_tokens": 1498,
+        "total_tokens": 1771,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "95603491861",
+     "naziv": "Grad Biograd na Moru",
+     "text": "Grad Biograd na Moru za 2025. godinu ima ocjenu 3 (umjereno) i 55,5 boda od 100. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita ostaje 2,2 % tekućih prihoda, uz medijan skupine od 4,5 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 10,5 %, što je iznad medijana skupine (−0,9 %).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 11,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Biograd na Moru za 2025. godinu ima ocjenu 3 (umjereno) i 55,5 boda od 100. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita ostaje 2,2 % tekućih prihoda, uz medijan skupine od 4,5 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 10,5 %, što je iznad medijana skupine (−0,9 %).",
+       "check": {
+        "ok": true,
+        "n_brojki": 11,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 24.4,
+       "usage": {
+        "completion_tokens": 198,
+        "prompt_tokens": 1430,
+        "total_tokens": 1628,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "67824103582",
+     "naziv": "Općina Popovac",
+     "text": "Općina Popovac za 2025. godinu ima ocjenu 4 (stabilno) i 61,9 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita nedostaje 7,1 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga, servis duga, dospjele neplaćene obveze. Upozorenje: rashodi poslovanja veći od tekućih prihoda dvije godine zaredom. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 12,8 %, što je ispod medijana skupine (−3,9 %).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 11,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Popovac za 2025. godinu ima ocjenu 4 (stabilno) i 61,9 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita nedostaje 7,1 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga, servis duga, dospjele neplaćene obveze. Upozorenje: rashodi poslovanja veći od tekućih prihoda dvije godine zaredom. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 12,8 %, što je ispod medijana skupine (−3,9 %).",
+       "check": {
+        "ok": true,
+        "n_brojki": 11,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 26.3,
+       "usage": {
+        "completion_tokens": 222,
+        "prompt_tokens": 1427,
+        "total_tokens": 1649,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "61513207365",
+     "naziv": "Općina Molve",
+     "text": "Općina Molve za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 12 bodova od 100. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 10,1 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda, otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice), rashodi poslovanja veći od tekućih prihoda dvije godine zaredom te novca na računu manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Molve za 2025. godinu ima ocjenu 1 (ozbiljan pritisak) i 12 bodova od 100. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 10,1 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda, otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice), rashodi poslovanja veći od tekućih prihoda dvije godine zaredom te novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 24.0,
+       "usage": {
+        "completion_tokens": 194,
+        "prompt_tokens": 1424,
+        "total_tokens": 1618,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "92770362982",
+     "naziv": "Grad Korčula",
+     "text": "Grad Korčula za 2025. godinu ima ocjenu 2 (pod pritiskom) i 33,6 boda od 100, dok je medijan usporedne skupine 70,9 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita nedostaje 8,1 % tekućih prihoda, uz medijan skupine od 4,5 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda i novca na računu manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Korčula za 2025. godinu ima ocjenu 2 (pod pritiskom) i 33,6 boda od 100, dok je medijan usporedne skupine 70,9 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita nedostaje 8,1 % tekućih prihoda, uz medijan skupine od 4,5 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda i novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 21.0,
+       "usage": {
+        "completion_tokens": 160,
+        "prompt_tokens": 1364,
+        "total_tokens": 1524,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "12928625880",
+     "naziv": "Bjelovarsko-bilogorska županija",
+     "text": "Bjelovarsko-bilogorska županija za 2025. godinu ima ocjenu 3 (umjereno) i 59,2 boda od 100, dok je medijan usporedne skupine 68,4 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita nedostaje 7,7 % tekućih prihoda, uz medijan skupine od nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Bjelovarsko-bilogorska županija za 2025. godinu ima ocjenu 3 (umjereno) i 59,2 boda od 100, dok je medijan usporedne skupine 68,4 boda. Ocjenu najviše spušta sastavnica „slobodni saldo nakon otplate glavnice”: nakon otplate glavnice kredita nedostaje 7,7 % tekućih prihoda, uz medijan skupine od nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 18.9,
+       "usage": {
+        "completion_tokens": 136,
+        "prompt_tokens": 1343,
+        "total_tokens": 1479,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "gpu_memory": "9523 MiB, 15360 MiB\n9969 MiB, 15360 MiB\n",
+   "seconds": 668
+  }
+ }
+}
