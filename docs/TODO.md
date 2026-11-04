@@ -24,8 +24,9 @@
 
 - [x] Konto 6353: izravnanje se za 2021.-2025. uzima iz odluka MF-a (opcija a, `pipeline/izravnanje_isplate.py`); 18 ocjena raste, Z2 se gasi kod 33 jedinice.
 - [x] S1: prikazano na pregledu 124 jedinice s nižom stopom, kratki tekst (`docs/research/11`).
-- [ ] Stanovništvo 31.12.2025.: postoji samo u DZS XLSX-u "Gradovi i općine u statistici" (30.9.2026.); PxWeb dobiva 2025. tek 30.11.2026. (`docs/research/12`). Opcija A (XLSX, oko 4 h) ili B (čekati).
-- [ ] Belišće knjiži izravnanje na 6352 (kapitalne pomoći), pa mu se izravnanje oduzima od tekućih prihoda.
+- [x] Stanovništvo 31.12.2025.: iz DZS XLSX-a "Gradovi i općine u statistici" za godine koje PxWeb još nema (opcija A); PxWeb ima prednost čim objavi 2025.
+- [x] Trend stanovništva i dohodak u paketu činjenica za AI (kontekst, 253 od 576 jedinica); generiranje kasnije.
+- [x] Belišće knjiži izravnanje na 6352: bez posebnog pravila (odluka 5.11.), poznato ograničenje.
 - [ ] Prijedlog 6 (silueta jedinice i brojke u praznom prostoru na vrhu pregleda jedinice).
 - [ ] Prijedlog 5 (vidljiva provjera AI teksta): samo ako stignemo.
 - [ ] Push na `main` i isključivanje tjednog crona prije zamrzavanja (cron pada u ponedjeljak 9.11. u 04:17 UTC).

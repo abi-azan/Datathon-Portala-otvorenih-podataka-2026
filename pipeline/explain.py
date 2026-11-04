@@ -33,6 +33,7 @@ import pandas as pd
 from . import config, facts, verify
 
 MAX_RETRIES = 2
+CONTEXT_OPENING = "Za kontekst, što ne ulazi u ocjenu:"    # rule 8, the example and the template
 
 AI_DIR = config.ROOT / "data" / "ai"      # committed: manifest and imported texts
 RESULTS_DIR = config.ROOT / "kaggle" / "results"   # committed: raw Kaggle outputs, byte for byte
@@ -47,18 +48,21 @@ SYSTEM = ("Ti si urednik javnog portala o financijama općina, gradova i župani
 RULES = """Pravila:
 1. Napiši 3 do 5 rečenica, najviše 100 riječi, u jednom odlomku. Bez naslova, natuknica i oznaka (markdown).
 2. Koristi samo činjenice s popisa. Svaku brojku prepiši točno kako je napisana, zajedno s riječju ili znakom uz nju (boda, %, €). Ne zaokružuj i ne računaj nove brojke ni razlike.
-3. Redoslijed: ocjena i bodovi; najslabija sastavnica s usporedbom s medijanom skupine; jake strane; upozorenja; pravilo i napomena o podacima. Dio za koji na popisu nema stavke izostavi.
+3. Redoslijed: ocjena i bodovi; najslabija sastavnica s usporedbom s medijanom skupine; jake strane; upozorenja; pravilo i napomena o podacima; kontekst. Dio za koji na popisu nema stavke izostavi.
 4. Najslabiju sastavnicu uvedi točno ovim riječima: 'Ocjenu najviše spušta sastavnica „…”.' Jake strane uvedi riječima: 'Jake strane jedinice su: …' Ne proglašavaj ništa drugo jakom ili slabom stranom.
 5. Upozorenja ne mijenjaju ocjenu: nikad ne piši da je ocjena zbog njih ograničena. O ograničenju ocjene piši samo ako na popisu postoji stavka "Pravilo".
 6. Ne dodaj rečenice o izvoru, obradi ili razdoblju podataka. Ton je neutralan i opisan; bez riječi "loše", "dobro", "uspjeh" i "neuspjeh", bez savjeta, nagađanja o uzrocima, političara i stranaka.
-7. Naziv jedinice piši samo u nominativu, kao subjekt rečenice ("{nom} ima ocjenu …"). Ne sklanjaj ga. U ostalim rečenicama piši "jedinica" ili naziv izostavi."""
+7. Naziv jedinice piši samo u nominativu, kao subjekt rečenice ("{nom} ima ocjenu …"). Ne sklanjaj ga. U ostalim rečenicama piši "jedinica" ili naziv izostavi.
+8. Stavke "Kontekst" ne ulaze u ocjenu. Ako ih ima, dodaj na kraj još jednu rečenicu koja počinje riječima 'Za kontekst, što ne ulazi u ocjenu:' i prepisuje njihove vrijednosti. Ne povezuj ih s ocjenom ni sa sastavnicama i ne navodi uzroke."""
 
 EXAMPLE = ("PRIMJER za izmišljenu jedinicu (samo za stil; njegove brojke ne koristi):\n"
            "Općina Primjerovo za 2025. godinu ima ocjenu 2 (pod pritiskom) i 31,4 boda od 100, dok je medijan "
            "usporedne skupine 78,8 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”: na kraju "
            "godine iznose 512.300 €, odnosno 41,2 % rashoda poslovanja, uz medijan skupine od 2,0 %. Jake strane "
            "jedinice su: servis duga. Upozorenje: novca na računu ima manje nego za mjesec dana rashoda poslovanja. "
-           "Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.")
+           "Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja. Za kontekst, što "
+           "ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 9,4 %, što je ispod medijana "
+           "skupine (−2,1 %).")
 
 
 def pack_sha256(pack):
@@ -137,7 +141,8 @@ def feedback(unknown, issues=()):
                      + ". Koristi samo brojke s popisa, prepisane točno.")
     if issues:
         parts.append("Tekst se ne slaže s činjenicama: " + "; ".join(issues)
-                     + ". Najslabiju sastavnicu, jake strane i ograničenje ocjene navedi samo kako piše na popisu.")
+                     + ". Najslabiju sastavnicu, jake strane, ograničenje ocjene i kontekst navedi samo kako piše na "
+                     "popisu, a kontekst ne povezuj s ocjenom.")
     return " ".join(parts) + " Napiši tekst ponovno."
 
 
@@ -154,6 +159,11 @@ def template(pack):
         parts.append(f"{f['Pravilo'][0].upper()}{f['Pravilo'][1:]}.")
     if f.get("Upozorenja", "nema upozorenja") != "nema upozorenja":
         parts.append(f"Upozorenja: {f['Upozorenja']}.")
+    # "Kontekst: broj stanovnika" + "od 2021. do 2025. smanjio se za 8,3 %, …" -> one closing sentence
+    ctx = [x for x in pack["facts"] if x.get("kontekst") and ": " in x["label"]]
+    if ctx:
+        parts.append(f"{CONTEXT_OPENING} "
+                     + ", a ".join(f"{x['label'].split(': ', 1)[1]} {x['value']}" for x in ctx) + ".")
     return " ".join(parts)
 
 

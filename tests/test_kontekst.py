@@ -6,7 +6,7 @@ import math
 import pandas as pd
 import pytest
 
-from pipeline import config, izravnanje, kontekst, merge, publish, pxweb
+from pipeline import config, dzs_xlsx, izravnanje, kontekst, merge, publish, pxweb
 
 NEEDED = [pxweb.OUT, pxweb.CODES_OUT, config.BUILD / "porezna_dohodak.parquet", config.BUILD / "porezna_stope.parquet",
           config.BUILD / "units.csv", izravnanje.XLSX]
@@ -79,14 +79,24 @@ def test_pag(ctx):
     p = b["pokazatelji"]
     assert b["skupina"] == "gradovi 2.000-5.000"
     assert b["procjene"]["2021"] == 3156 and b["procjene"]["2024"] == 3352      # research 09 §2.2
-    assert p["promjena_stanovnistva"]["vrijednost"] == pytest.approx(3352 / 3156 - 1)
+    assert b["procjene"]["2025"] == 3358                                        # research 12 §2.3 (publication)
+    assert p["promjena_stanovnistva"]["vrijednost"] == pytest.approx(3358 / 3156 - 1)
+    assert round(p["promjena_stanovnistva"]["vrijednost"], 3) == 0.064          # +6,4 %
+    assert (p["promjena_stanovnistva"]["od_godine"], p["promjena_stanovnistva"]["godina"]) == (2021, 2025)
+    assert b["izvor_po_godini"] == {"2021": "pxweb", "2022": "pxweb", "2023": "pxweb", "2024": "pxweb", "2025": "xlsx"}
+    assert {k: p[k]["izvor"] for k in kontekst.DEMO_IZVOR} == dict.fromkeys(kontekst.DEMO_IZVOR, "xlsx")
+    pub = [s for s in b["izvori"] if s["tablica"] == dzs_xlsx.SOURCE_ID]
+    assert len(pub) == 1 and pub[0]["godine"] == [2025] and pub[0]["url"] == dzs_xlsx.URL
     assert round(p["neto_dohodak_pc"]["vrijednost"]) == 9574                     # research 09 §2.1
-    assert p["neto_migracija"]["broj"] == 255 - 115                             # SM31 2024
+    assert p["neto_migracija"]["broj"] == 190 - 156                             # 2025, research 12 §2.3
+    assert p["neto_migracija"]["godina"] == p["prirodni_prirast"]["godina"] == 2025
+    assert p["prirodni_prirast"]["broj"] == 21 - 49
+    assert round(p["prirodni_prirast"]["vrijednost"], 1) == -8.8 and round(p["neto_migracija"]["vrijednost"], 1) == 10.7
     assert p["nocenja_po_stanovniku"]["broj"] == 776716                         # BS_TU19 2025
     assert p["dozvole_na_1000"]["broj"] == 41                                   # PX14 2025
     assert p["neto_dohodak_pc"]["n_medijan"] == 21
     q = b["uzivo"]
-    assert q["url"] == pxweb.table_url("SP31_2") and q["kod"] == "312"
+    assert q["url"] == pxweb.table_url("SP31_2") and q["kod"] == "312" and q["naziv"] == "Pag"
     assert {"filter": "item", "values": ["312"]} in [x["selection"] for x in q["upit"]["query"]]
     assert {"filter": "all", "values": ["*"]} in [x["selection"] for x in q["upit"]["query"]]
     e = k["izravnanje"][oib["grad-pag"]]
@@ -101,6 +111,8 @@ def test_bogdanovci(ctx):
     p = k["stanovnistvo_gospodarstvo"][oib["opcina-bogdanovci"]]["pokazatelji"]
     assert round(p["neto_dohodak_pc"]["vrijednost"]) == 6592
     assert round(p["udio_mirovina"]["vrijednost"], 3) == 0.365
+    assert p["promjena_stanovnistva"]["broj"] == 1427 - 1551                     # 2021 -> 2025, research 12 §2.3
+    assert round(p["promjena_stanovnistva"]["vrijednost"], 3) == -0.080          # −8,0 %
     assert p["nocenja_po_stanovniku"]["oznaka"] == "z" and p["nocenja_po_stanovniku"]["vrijednost"] is None
     e = k["izravnanje"][oib["opcina-bogdanovci"]]
     assert (e["kapacitet_pc"], e["referentna_pc"]) == (222.99, 699.84)
@@ -127,10 +139,16 @@ def test_zagreb_and_a_county(ctx):
     assert z["skupina"] is None
     assert all(v["medijan"] is None and v["n_medijan"] == 0 for v in z["pokazatelji"].values())
     assert all(v["vrijednost"] is not None for v in z["pokazatelji"].values())
+    zp = z["pokazatelji"]
+    assert z["procjene"]["2025"] == 778184 and zp["promjena_stanovnistva"]["broj"] == 778184 - 766824
+    assert round(zp["promjena_stanovnistva"]["vrijednost"], 3) == 0.015          # +1,5 %, research 12 §2.3
+    assert (zp["prirodni_prirast"]["broj"], zp["neto_migracija"]["broj"]) == (7036 - 8608, 21675 - 19278)
+    assert z["uzivo"]["naziv"] == "GRAD ZAGREB"                                  # SP31_2: county and city in one row
     ez = k["izravnanje"][oib["grad-zagreb"]]
     assert ez["vrsta_reference"] == "grad" and ez["referentna_pc"] == 686.33 and ez["isplata"] == 0.0
     c = k["stanovnistvo_gospodarstvo"][oib["vukovarsko-srijemska-zupanija"]]
     assert c["skupina"] == "županije" and c["pokazatelji"]["promjena_stanovnistva"]["n_medijan"] == 20
+    assert c["pokazatelji"]["promjena_stanovnistva"]["godina"] == 2025 and c["procjene"]["2025"] is not None
     ec = k["izravnanje"][oib["vukovarsko-srijemska-zupanija"]]
     assert ec["vrsta_reference"] == "zupanija" and ec["isplata"] > 0 and ec["stopa"] is None
     assert k["porezne_stope"].get(oib["vukovarsko-srijemska-zupanija"]) is None

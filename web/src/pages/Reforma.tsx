@@ -4,6 +4,7 @@ import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { REFORM_THRESHOLDS, canMerge, loadReform, type IndexFile, type ReformFile, type ReformUnit } from '../lib/data'
 import { GRADES, VRSTA, eur, num, pct } from '../lib/format'
+import { demographySource } from '../lib/dzs'
 import { simulatorHref, unitHref } from '../lib/router'
 
 const ReformMap = lazy(() =>
@@ -359,7 +360,9 @@ export function Reforma({ index }: { index: IndexFile }) {
           </p>
         )}
 
-        {unit && <Selected u={unit} bySifra={bySifra} year={year} onClose={close} />}
+        {unit && (
+          <Selected u={unit} bySifra={bySifra} year={year} demoSources={file?.demografija?.izvor_po_godini} onClose={close} />
+        )}
 
         <p className="text-xs leading-relaxed text-muted">
           Scenarij za raspravu, ne prijedlog granica. Pravilo je namjerno jednostavno, pa ponekad stvara velike jedinice: mala
@@ -402,11 +405,13 @@ function Selected({
   u,
   bySifra,
   year,
+  demoSources,
   onClose,
 }: {
   u: ReformUnit
   bySifra: Map<string, IndexFile['jedinice'][number]>
   year: string
+  demoSources?: NonNullable<ReformFile['demografija']>['izvor_po_godini']
   onClose: () => void
 }) {
   const members = u.clanice.map((s) => bySifra.get(s)).filter((m): m is NonNullable<typeof m> => !!m)
@@ -427,8 +432,7 @@ function Selected({
   )
   const demoNote = d && (
     <p className="mt-2 text-xs text-muted">
-      Kretanje stanovništva ne ulazi u ocjenu; na 1.000 stanovnika prema Popisu 2021. Izvor: Državni zavod za statistiku,
-      stanovništvo sredinom godine, rođeni, umrli i migracije.
+      Kretanje stanovništva ne ulazi u ocjenu; na 1.000 stanovnika prema Popisu 2021. {demographySource(demoSources)}
     </p>
   )
   return (

@@ -12,7 +12,8 @@ The rule works with inhabitants only (Popis 2021). Each final group of 2 or more
 computed once with merge.merge(max_members=None): the same sums, methodology and savings block as the merger
 simulator. It is a scenario, not a proposal for new borders.
 
-Every unit, merged or not, also carries the population trend of merge.demography (DZS, 2021-2024),
+Every unit, merged or not, also carries the population trend of merge.demography (DZS, 2021 to the
+last year, with the source of each year in the header's demografija.izvor_po_godini),
 and the header sums it for the merged groups and for the units that stay alone (demography_all).
 It never enters the grade.
 
@@ -143,12 +144,12 @@ def reforma(data, prag, res=None):
         "poticaj_godisnje_zbroj": sum((j["poticaj"] or {}).get("godisnje") or 0.0 for j in merged),
         "izravnanje_promjena_zbroj": sum(j["izravnanje"]["promjena"] for j in merged if j.get("izravnanje")),
         **fi,
-        "demografija": demography_all(jedinice),
+        "demografija": demography_all(jedinice, data.demo),
         "jedinice": jedinice,
     })
 
 
-def demography_all(jedinice):
+def demography_all(jedinice, demo=None):
     """Population change from the first to the last DZS year for all merged groups together and for
     the units that stay alone (merge.demography), or None without dzs.parquet. A part is None when
     one of its units has no estimate for either year. Nothing of it enters the score."""
@@ -165,6 +166,7 @@ def demography_all(jedinice):
         return {"stanovnici_od": a, "stanovnici_do": b, "promjena": round(b / a - 1, 3) if a > 0 else None}
 
     return {"od": blocks[0]["od"], "do": blocks[0]["do"],
+            **({"izvor_po_godini": demo["izvor_po_godini"]} if demo and demo.get("izvor_po_godini") else {}),
             "spojene": part([j for j in jedinice if len(j["clanice"]) > 1]),
             "ostale": part([j for j in jedinice if len(j["clanice"]) == 1])}
 

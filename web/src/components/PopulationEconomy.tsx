@@ -1,7 +1,7 @@
 import { Radio } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { ContextIndicator, PopulationEconomy } from '../lib/data'
-import { liveSeries } from '../lib/dzs'
+import { liveSeries, mergeSeries, PUBLICATION, yearSpan, yearsBySource } from '../lib/dzs'
 import { eur, num, pct } from '../lib/format'
 import { Card, Eyebrow } from './Layout'
 import { StatRow } from './StatRow'
@@ -50,7 +50,9 @@ function Sparkline({ points, label }: { points: [string, number][]; label: strin
 
 /** "Stanovništvo i gospodarstvo": context that does not enter the score (pipeline/kontekst.py).
  * Per-capita figures use Popis 2021; the population estimates only give the trend, and the
- * browser asks DZS for them live (lib/dzs.ts), keeping the static copy when that fails. */
+ * browser asks DZS for them live (lib/dzs.ts). Live and stored values are joined per year
+ * (mergeSeries): a live year always wins, and a stored year the live answer lacks (2025 from the DZS
+ * publication until PxWeb has it) stays. The badge says which years came live. */
 export function PopulationEconomyCard({ data }: { data: PopulationEconomy }) {
   const [live, setLive] = useState<Record<string, number | null> | null>(null)
   useEffect(() => {
@@ -64,18 +66,38 @@ export function PopulationEconomyCard({ data }: { data: PopulationEconomy }) {
 
   const p = data.pokazatelji
   const first = p.promjena_stanovnistva.od_godine ?? 2021
-  const fromStatic = Object.entries(data.procjene).filter((e): e is [string, number] => e[1] != null)
-  const fromLive = live ? Object.entries(live).filter((e): e is [string, number] => e[1] != null && Number(e[0]) >= first) : []
-  const isLive = fromLive.length >= 2 && fromLive.some(([y]) => Number(y) === first)
-  const series = (isLive ? fromLive : fromStatic).sort((a, b) => Number(a[0]) - Number(b[0]))
+  const merged = mergeSeries(data.procjene, live, first)
+  const series = merged.points
+  const isLive = merged.live.length > 0
   const [y0, v0] = series[0] ?? [String(first), null]
   const [y1, v1] = series[series.length - 1] ?? [String(p.promjena_stanovnistva.godina), null]
   const change = v0 && v1 != null ? v1 / v0 - 1 : null
   const med = (x: number | null, f: (v: number) => string) => (x == null ? undefined : f(x))
+  // the peer median is for the stored period; name it when the live series ends in another year
+  const medPeriod =
+    y1 !== String(p.promjena_stanovnistva.godina) || y0 !== String(first) ? ` ${first}.–${p.promjena_stanovnistva.godina}.` : ''
+
+  const bySource = data.izvor_po_godini ?? {}
+  const storedFrom = (years: string[]) => {
+    const pub = years.filter((y) => bySource[y] === 'xlsx')
+    const rest = years.filter((y) => bySource[y] !== 'xlsx')
+    return [
+      pub.length ? `${yearSpan(pub)} iz publikacije DZS-a „${PUBLICATION}”` : '',
+      rest.length ? `${yearSpan(rest)} iz zadnjeg preuzimanja s API-ja DZS-a` : '',
+    ].filter(Boolean)
+  }
+  const partial = isLive && merged.stored.length > 0
+  const badgeTitle = isLive
+    ? [`${yearSpan(merged.live)} uživo s API-ja DZS-a`, ...storedFrom(merged.stored)].join('; ')
+    : undefined
 
   const dzs = data.izvori.filter((s) => s.tablica)
   const updated = (t: string) => day(dzs.find((s) => s.tablica === t)?.azurirano)
   const pu = data.izvori.find((s) => !s.tablica)
+  const pub = data.izvori.find((s) => s.godine?.length)
+  // years of the card that come from the DZS publication (none once PxWeb has them)
+  const shownStored = new Set([...merged.stored, String(p.prirodni_prirast.godina), String(p.neto_migracija.godina)])
+  const pubYears = yearsBySource(bySource).xlsx.filter((y) => shownStored.has(y))
   const nights = p.nocenja_po_stanovniku
   const permits = p.dozvole_na_1000
 
@@ -84,8 +106,13 @@ export function PopulationEconomyCard({ data }: { data: PopulationEconomy }) {
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <Eyebrow>Stanovništvo i gospodarstvo</Eyebrow>
         {isLive && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-page px-2.5 py-1 text-xs whitespace-nowrap text-ink-2">
-            <Radio className="h-3.5 w-3.5 shrink-0" aria-hidden /> uživo s API-ja DZS-a
+          <span
+            title={badgeTitle}
+            className="inline-flex items-center gap-1.5 rounded-full bg-page px-2.5 py-1 text-xs whitespace-nowrap text-ink-2"
+          >
+            <Radio className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {partial ? `${yearSpan(merged.live)} uživo s API-ja DZS-a` : 'uživo s API-ja DZS-a'}
+            {partial && <span className="sr-only">; {storedFrom(merged.stored).join('; ')}</span>}
           </span>
         )}
       </div>
@@ -105,6 +132,7 @@ export function PopulationEconomyCard({ data }: { data: PopulationEconomy }) {
             <div className="tabular text-xs text-muted">
               medijan <span className="hidden sm:inline">usporedne skupine </span>
               <span className="whitespace-nowrap">{sPct(p.promjena_stanovnistva.medijan)}</span>
+              {medPeriod && <span className="whitespace-nowrap">{medPeriod}</span>}
             </div>
           )}
         </div>
@@ -169,7 +197,14 @@ export function PopulationEconomyCard({ data }: { data: PopulationEconomy }) {
       <p className="mt-4 text-xs leading-relaxed text-muted">
         Izvor: Državni zavod za statistiku, PxWeb (stanovništvo{updated('SP31_2') && `, ažurirano ${updated('SP31_2')}`}; turizam u
         komercijalnom smještaju{updated('BS_TU19') && `, ${updated('BS_TU19')}`}; građevinske dozvole
-        {updated('PX14') && `, ${updated('PX14')}`}) i Porezna uprava (neto dohodak stanovništva{pu?.azurirano && `, ${day(pu.azurirano)}`}).
+        {updated('PX14') && `, ${updated('PX14')}`})
+        {pub && pubYears.length > 0 && (
+          <>
+            , publikacija „{pub.naziv ?? PUBLICATION}” (stanovništvo, rođeni, umrli i migracije za {yearSpan(pubYears)}, koje
+            PxWeb još nema{pub.azurirano && `; ažurirano ${day(pub.azurirano)}`})
+          </>
+        )}{' '}
+        i Porezna uprava (neto dohodak stanovništva{pu?.azurirano && `, ${day(pu.azurirano)}`}).
         Iznosi po stanovniku računaju se s Popisom 2021.
         {data.skupina ? ` Medijan je za usporednu skupinu „${data.skupina}”.` : ' Grad Zagreb nema usporedne skupine.'}
       </p>

@@ -1,3 +1,5 @@
+import pytest
+
 from pipeline import explain, facts, verify
 
 PACK = {"ocjene": [5, 4], "facts": [
@@ -113,3 +115,91 @@ def test_content_claims_must_match_the_pack():
     assert r["sadrzaj"] == ["jaka strana „ovisnost o pomoćima”"]
     with_rule = {**pack, "facts": pack["facts"] + [{"label": "Pravilo", "value": "ocjena je ograničena na najviše 2"}]}
     assert verify.verify("Ocjena je 2, ograničena na najviše 2.", with_rule)["ok"]
+
+
+# --- context: population and income (facts.context_facts) ---------------------------------------
+
+FISCAL = [{"label": "Jedinica", "value": "Općina Bogdanovci (Vukovarsko-srijemska županija), 1.893 stanovnika (Popis 2021.)"},
+          {"label": "Ocjena financijske stabilnosti za 2025.", "value": "4 (stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno)"},
+          {"label": "Bodovi", "value": "72,5 boda od 100; medijan skupine 78,8 boda"},
+          {"label": "Najslabija sastavnica", "value": "dospjele neplaćene obveze"}]
+CONTEXT = [{"label": "Kontekst", "value": "ne ulazi u ocjenu i ne objašnjava je", "kontekst": True},
+           {"label": "Kontekst: broj stanovnika",
+            "value": "od 2021. do 2024. smanjio se za 8,3 %, što je ispod medijana skupine (−2,9 %)", "kontekst": True},
+           {"label": "Kontekst: neto dohodak po stanovniku",
+            "value": "u 2025. iznosio je 6.592 €, što je ispod medijana skupine (9.164 €)", "kontekst": True}]
+CTX_PACK = {"ocjene": [4], "facts": FISCAL + CONTEXT}
+NO_CTX_PACK = {"ocjene": [4], "facts": FISCAL}
+FIRST = "Općina Bogdanovci za 2025. godinu ima ocjenu 4 (stabilno) i 72,5 boda od 100, uz medijan skupine 78,8 boda."
+CTX = ("Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2024. smanjio se za 8,3 %, što je ispod "
+       "medijana skupine (−2,9 %), a neto dohodak po stanovniku u 2025. iznosio je 6.592 €, što je ispod medijana "
+       "skupine (9.164 €).")
+
+
+def check(text, pack=CTX_PACK):
+    r = verify.verify(text, pack)
+    return r["nepoznate"] + r["sadrzaj"]
+
+
+def test_a_copied_context_sentence_passes_in_every_spelling_of_its_sign():
+    assert check(f"{FIRST} {CTX}") == []
+    assert verify.claimed_grades(f"{FIRST} {CTX}") == ["4"]          # "ne ulazi u ocjenu" is not followed by a grade
+    for variant in ("promijenio se za −8,3 %", "promijenio se za -8,3 %", "pao je za 8,3 %", "smanjio se za 8,3 %"):
+        text = CTX.replace("smanjio se za 8,3 %", variant)
+        assert check(f"{FIRST} {text}") == [], variant
+    plus = {"ocjene": [4], "facts": FISCAL + [
+        {"label": "Kontekst: broj stanovnika", "kontekst": True,
+         "value": "od 2021. do 2024. povećao se za 6,2 %, što je iznad medijana skupine (+1,0 %)"}]}
+    assert check(f"{FIRST} Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2024. porastao je za "
+                 "+6,2 %, iznad medijana skupine (+1,0 %).", plus) == []
+
+
+def test_an_altered_context_number_fails():
+    assert check(f"{FIRST} {CTX.replace('8,3 %', '8,4 %')}") == ["8,4"]
+    assert check(f"{FIRST} {CTX.replace('6.592 €', '6.593 €')}") == ["6.593"]
+    assert check(f"{FIRST} {CTX.replace('od 2021.', 'od 2020.')}") == ["2020"]
+
+
+def test_a_flipped_sign_direction_or_side_of_the_median_fails():
+    assert check(f"{FIRST} {CTX.replace('smanjio se za 8,3 %', 'povećao se za 8,3 %')}") == \
+        ["smjer promjene „povećao se za 8,3” ne slaže se s činjenicama"]
+    assert check(f"{FIRST} {CTX.replace('(−2,9 %)', '(+2,9 %)')}") == ["smjer promjene „+2,9” ne slaže se s činjenicama"]
+    assert check(f"{FIRST} {CTX.replace('što je ispod medijana skupine (9.164', 'što je iznad medijana skupine (9.164')}") \
+        == ["„iznad medijana” ne slaže se s činjenicama"]
+
+
+def test_context_only_when_the_pack_has_it():
+    r = verify.verify(f"{FIRST} {CTX}", NO_CTX_PACK)
+    assert not r["ok"] and r["sadrzaj"] == ["kretanje stanovništva bez stavke u činjenicama",
+                                            "dohodak bez stavke u činjenicama"]
+    only_pop = {"ocjene": [4], "facts": FISCAL + CONTEXT[:2]}
+    assert "dohodak bez stavke u činjenicama" in check(f"{FIRST} {CTX}", only_pop)
+    assert check(f"{FIRST} Za kontekst, jedinica je mala.", NO_CTX_PACK) == ["kontekst bez stavke u činjenicama"]
+    assert check(f"{FIRST} Broj stanovnika se smanjuje.", NO_CTX_PACK) == ["kretanje stanovništva bez stavke u činjenicama"]
+    # the unit's census population (the first fact) is not the population trend
+    assert check(f"{FIRST[:-1]}, a ima 1.893 stanovnika.", NO_CTX_PACK) == []
+
+
+def test_context_tied_to_the_grade_or_mixed_with_fiscal_numbers_fails():
+    cause = f"{FIRST} Zbog pada stanovništva od 8,3 % ocjena je niža."
+    assert "kontekst povezan s ocjenom ili sastavnicama" in check(cause)
+    for link in ("što utječe na ocjenu", "pa je ocjena niža", "što objašnjava slabiju sastavnicu"):
+        assert "kontekst povezan s ocjenom ili sastavnicama" in check(f"{FIRST} {CTX[:-1]}, {link}."), link
+    for negated in ("što ne ulazi u ocjenu i ne objašnjava je", "koji nisu dio ocjene", "što ne utječe na ocjenu"):
+        assert check(f"{FIRST} {CTX.replace('što ne ulazi u ocjenu', negated)}") == [], negated
+    mixed = f"Jedinica ima 72,5 boda, a broj stanovnika od 2021. do 2024. smanjio se za 8,3 %."
+    assert check(mixed) == ["brojka „72,5” u rečenici o kontekstu nije iz stavki konteksta"]
+
+
+def test_the_committed_texts_raise_no_context_issue():
+    """None of the 576 accepted texts (written before context existed) trips a context rule, with or
+    without context items in the pack: the new rules add no false rejections."""
+    import json
+    from pipeline import config
+    path = config.ROOT / "data" / "ai" / "objasnjenja-2025.json"
+    if not path.exists():
+        pytest.skip("no imported texts")
+    texts = [t["tekst"] for t in json.loads(path.read_text(encoding="utf-8"))["tekstovi"].values()]
+    assert len(texts) >= 500
+    for pack in (CTX_PACK, NO_CTX_PACK):
+        assert [t for t in texts if verify.context_issues(t, pack)] == []

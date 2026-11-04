@@ -233,6 +233,7 @@ def test_codes_document(reg):
         var = next(v for v in meta["variables"] if v["code"] == t["varijabla"])
         label = dict(zip(var["values"], var["valueTexts"]))
         assert pxweb.name_key(label[pag[table]]) == "PAG", table
+        assert pag["nazivi"][table] == label[pag[table]], table        # the browser checks this label live
 
 
 @built

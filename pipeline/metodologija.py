@@ -6,7 +6,9 @@ from the computation. publish.py writes it to api/v1/metodologija.json.
 """
 import json
 
-from . import config, explain, facts, izravnanje, kontekst, merge, methodology, provenance, pxweb
+import pandas as pd
+
+from . import config, dzs_xlsx, explain, facts, izravnanje, kontekst, merge, methodology, provenance, pxweb
 
 REPO = "https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026"
 
@@ -21,12 +23,39 @@ def _int(n):
     return f"{n:,}".replace(",", ".")
 
 
+def _years(ys):
+    """[2021, 2022, 2023, 2024] -> "2021.–2024."; [2025] -> "2025."."""
+    ys = sorted(int(y) for y in ys)
+    if not ys:
+        return ""
+    if ys == list(range(ys[0], ys[-1] + 1)) and len(ys) > 1:
+        return f"{ys[0]}.–{ys[-1]}."
+    return ", ".join(f"{y}." for y in ys)
+
+
+def _dzs_sources():
+    """Sentence on where each population year comes from (PxWeb or the DZS workbook), read from
+    data/build/dzs.parquet; empty when it is not built or PxWeb has every year."""
+    if not pxweb.OUT.exists():
+        return ""
+    by_year = kontekst.year_sources(pd.read_parquet(pxweb.OUT))
+    xl = [y for y, s in by_year.items() if s == dzs_xlsx.IZVOR_XLSX]
+    px = [y for y, s in by_year.items() if s != dzs_xlsx.IZVOR_XLSX]
+    if not xl:
+        return ""
+    return (f" Godine koje PxWeb još nema ({_years(xl)}) uzimaju se iz publikacije DZS-a „{dzs_xlsx.TITLE}” "
+            f"(XLSX, listovi Tab-2. i Tab-3.); {_years(px)} su s PxWeba. Čim DZS objavi tu godinu i na PxWebu, "
+            "vrijedi PxWeb. Publikacija se koristi samo ako se za zajedničke godine podudara s PxWebom u svakoj "
+            "ćeliji i ako za svaku jedinicu vrijedi: promjena broja stanovnika = živorođeni − umrli + doseljeni − "
+            "odseljeni.")
+
+
 def _population_economy():
     """Card "Stanovništvo i gospodarstvo" (pipeline/kontekst.py); the symbol rule is read from pxweb."""
     nema = ("broji se kao 0, i u medijanu" if pxweb.NEMA_JE_NULA else "ostaje prazno")
     return ("Kretanje broja stanovnika od 2021. računa se iz procjena "
             "Državnog zavoda za statistiku (stanje 31.12.); preglednik niz pri otvaranju stranice traži i izravno "
-            "s API-ja DZS-a. Prirodni prirast (živorođeni − umrli), neto migracija (doseljeni − odseljeni) i "
+            "s API-ja DZS-a." + _dzs_sources() + " Prirodni prirast (živorođeni − umrli), neto migracija (doseljeni − odseljeni) i "
             "građevinske dozvole (broj zgrada) iskazuju se na 1.000 stanovnika, a noćenja turista u komercijalnom "
             "smještaju i neto dohodak stanovnika (Porezna uprava, po prebivalištu) po stanovniku. Nazivnik je "
             "uvijek Popis 2021., kao u ocjeni. Udio mirovina je neto dohodak umirovljenika u ukupnom neto dohotku. "
@@ -120,7 +149,10 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
                     "koja nije stvarna, ili najslabija sastavnica, jake strane i ograničenje ocjene drukčiji od paketa. "
                     f"Odbijeni tekst piše se ponovno uz povratnu informaciju, najviše {explain.MAX_RETRIES} puta, a zatim "
                     "se koristi predložak. Na stranici se AI tekst prikazuje samo ako je napisan iz istog paketa "
-                    "(sha256) i ako ga prihvaća trenutna verzija provjere, koja se ponovno pokreće pri uvozu i pri objavi.",
+                    "(sha256) i ako ga prihvaća trenutna verzija provjere, koja se ponovno pokreće pri uvozu i pri objavi. "
+                    "Kada se kretanje stanovništva ili neto dohodak po stanovniku jedinice izrazito razlikuju od medijana "
+                    "usporedne skupine, mogu se spomenuti u jednoj završnoj rečenici kao kontekst, koji ne ulazi u ocjenu "
+                    "i ne objašnjava je.",
             "model": (f"{', '.join(ai['modeli'])} ({', '.join(ai['gguf'] or [])}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"
                       if ai and ai.get("modeli") else
                       f"Gemma 4 ({explain.BATCH_MODEL_SOURCE}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"),
@@ -159,11 +191,11 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
                        "ne dosegnu prag (2.500, 5.000 ili 10.000 stanovnika). Scenarij, ne prijedlog granica.",
             "demografija": "Kretanje stanovništva prikazuje se uz rezultat, ali ne ulazi u ocjenu: ocjena i iznosi po "
                            "stanovniku i dalje koriste Popis 2021. Za spojenu jedinicu zbraja se broj stanovnika članica "
-                           "sredinom svake godine prema Državnom zavodu za statistiku, a promjena se računa od 2021. do "
-                           "zadnje godine; za svaku članicu prikazuje se njezina promjena. Prirodna promjena (živorođeni "
+                           "na kraju svake godine (31.12.) prema Državnom zavodu za statistiku, a promjena se računa od "
+                           "2021. do zadnje godine; za svaku članicu prikazuje se njezina promjena. Prirodna promjena (živorođeni "
                            "manje umrli) i migracijski saldo (doseljeni manje odseljeni) zbrajaju se za zadnju godinu i "
                            "prikazuju i na 1.000 stanovnika prema Popisu 2021. Oznaka DZS-a \"-\" (pojave nema) broji "
-                           "se kao 0, a skriveni podatak (\"z\") znači da zbroj nije poznat.",
+                           "se kao 0, a skriveni podatak (\"z\") znači da zbroj nije poznat." + _dzs_sources(),
         },
         "stanovnistvo_gospodarstvo": _population_economy(),
         "izravnanje_jedinice": _equalization_unit(),

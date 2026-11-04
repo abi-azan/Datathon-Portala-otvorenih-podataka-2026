@@ -10,7 +10,8 @@ Outputs in data/build/:
   results.json       the same, nested per unit
   geo/jls.topo.json  simplified boundaries (layers jls, zupanije) for the map
   geo/susjedi.json   land neighbours and sea links per unit (merger simulator, Karta reforme)
-  dzs.parquet, dzs_kodovi.json   DZS PxWeb tables by unit (pipeline/pxweb.py; profile context)
+  dzs.parquet, dzs_kodovi.json   DZS PxWeb tables by unit (pipeline/pxweb.py; profile context), plus the
+                     population years PxWeb does not have yet from the DZS workbook (pipeline/dzs_xlsx.py)
   porezna_dohodak.parquet, porezna_stope.parquet   Porezna uprava (pipeline/porezna.py; profile context)
   simulator/         merger simulator, every group of 2-4 neighbours (pipeline/merge.py)
   reforma/           Karta reforme, one file per threshold (pipeline/reforma.py)
@@ -24,8 +25,8 @@ import sys
 import pandas as pd
 import requests
 
-from . import (config, geo, izravnanje, merge, methodology, mf, openness, population, porezna, pxweb, reforma,
-               sources, units)
+from . import (config, dzs_xlsx, geo, izravnanje, merge, methodology, mf, openness, population, porezna, pxweb,
+               reforma, sources, units)
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -53,7 +54,16 @@ def context_layers(reg, offline):
             if not pxweb.have_raw():
                 raise
             _warn(f"DZS PxWeb nije odgovorio ({e}); koristim zadnju preuzetu kopiju iz data/raw/pxweb")
+        # population years PxWeb does not have yet (pipeline/dzs_xlsx.py); without it PxWeb alone is used
+        try:
+            dzs_xlsx.fetch()
+        except requests.RequestException as e:
+            _warn(f"DZS (Gradovi i općine u statistici) nije odgovorio ({e}); "
+                  + ("koristim zadnju preuzetu kopiju" if dzs_xlsx.have_raw() else "koristim samo PxWeb"))
     _, report = pxweb.build(reg)
+    rep = report.get(dzs_xlsx.LOG_KEY, {})
+    if dzs_xlsx.have_raw() and rep.get("razlog"):
+        _warn(f"publikacija DZS-a \"{dzs_xlsx.TITLE}\" nije korištena ({rep['razlog']}); koristim samo PxWeb")
     pxweb.print_report(report)
     print("Porezna uprava (neto dohodak, lokalne porezne stope; data.gov.hr) ...")
     if not offline:

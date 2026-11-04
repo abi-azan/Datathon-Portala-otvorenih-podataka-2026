@@ -17,9 +17,11 @@ PX14 (county + 1 town / 2 municipality + DGU code, e.g. 01101015; Grad Zagreb is
 5-digit DGU code. Counties take their own row; a county without one would be the sum of its units.
 
 Output (long): data/build/dzs.parquet with oib, sifra, godina, pokazatelj, vrijednost, plus oznaka
-(the DZS status symbol of an empty cell, e.g. "-") and tablica. An empty cell is NaN in the file;
-value() and with_symbols() apply the symbol rule (NEMA, TAJNO) for anyone reading it.
-Nothing here enters the score.
+(the DZS status symbol of an empty cell, e.g. "-"), tablica and izvor. An empty cell is NaN in the
+file; value() and with_symbols() apply the symbol rule (NEMA, TAJNO) for anyone reading it.
+izvor is "pxweb" for every row from the API. The population years PxWeb does not have yet (2025
+until DZS updates the tables on 30.11.2026) come from the DZS workbook "Gradovi i općine u
+statistici" with izvor "xlsx" (pipeline/dzs_xlsx.py; PxWeb always wins). Nothing here enters the score.
 
     python -m pipeline.pxweb             refresh all tables from the API, write the outputs
     python -m pipeline.pxweb --offline   re-parse data/raw/pxweb
@@ -411,10 +413,11 @@ def load_register():
     return pd.read_csv(config.BUILD / "units.csv", dtype={"oib": str, "sifra": str})
 
 
-def build(reg=None, tables=None):
-    """Parse data/raw/pxweb into dzs.parquet and dzs_kodovi.json. Returns (long frame, report)."""
+def build(reg=None, tables=None, xlsx=True):
+    """Parse data/raw/pxweb into dzs.parquet and dzs_kodovi.json, plus the population years PxWeb
+    does not have yet from the DZS workbook (xlsx=False: PxWeb only). Returns (long frame, report)."""
     reg = load_register() if reg is None else reg
-    parts, report, codes = [], {}, {}
+    parts, report, codes, names = [], {}, {}, {}
     for table in tables or TABLES:
         obs = observations(table, reg)
         keep = obs[obs.razina.isin(["jls", "zupanija"])]
@@ -422,6 +425,7 @@ def build(reg=None, tables=None):
         parts.append(keep)
         units_rows = obs[obs.razina.isin(["jls", "zupanija"])].drop_duplicates("sifra")
         codes[table] = units_rows.set_index("oib").kod.to_dict()
+        names[table] = units_rows.set_index("oib").naziv_dzs.to_dict()
         jls = keep[keep.razina == "jls"]
         report[table] = {
             "jls": jls.oib.nunique(), "zupanije": keep[keep.razina == "zupanija"].oib.nunique(),
@@ -432,18 +436,24 @@ def build(reg=None, tables=None):
         }
     df = pd.concat(parts, ignore_index=True)
     df = df[["oib", "sifra", "godina", "pokazatelj", "vrijednost", "oznaka", "tablica"]]
+    # population years PxWeb does not have yet, from the DZS workbook (PxWeb wins; pipeline/dzs_xlsx.py)
+    from . import dzs_xlsx
+    df, report[dzs_xlsx.LOG_KEY] = dzs_xlsx.extend(df, reg) if xlsx else (df.assign(izvor=dzs_xlsx.IZVOR_PXWEB), {
+        "ok": False, "razlog": "isključeno", "dodane_godine": []})
     df = df.sort_values(["oib", "pokazatelj", "godina"]).reset_index(drop=True)
     if df.duplicated(["oib", "godina", "pokazatelj"]).any():
         raise ValueError("duplicate (oib, godina, pokazatelj)")
     config.BUILD.mkdir(parents=True, exist_ok=True)
     df.to_parquet(OUT, index=False)
-    CODES_OUT.write_text(json.dumps(codes_document(reg, codes), ensure_ascii=False, indent=1), encoding="utf-8")
+    CODES_OUT.write_text(json.dumps(codes_document(reg, codes, names), ensure_ascii=False, indent=1), encoding="utf-8")
     return df, report
 
 
-def codes_document(reg, codes):
-    """dzs_kodovi.json: per unit its PxWeb value code in each table, and a query template per table.
-    The browser replaces "{kod}" in the template and POSTs it to the table URL (CORS: *)."""
+def codes_document(reg, codes, names=None):
+    """dzs_kodovi.json: per unit its PxWeb value code in each table (and, under "nazivi", the label
+    DZS gives that code), and a query template per table. The browser replaces "{kod}" in the template
+    and POSTs it to the table URL (CORS: *); it checks the label in the answer, so that a renumbering of
+    the rows on the DZS side cannot show another unit's numbers."""
     log = sources._log()
     tables = {}
     for table, spec in TABLES.items():
@@ -461,7 +471,8 @@ def codes_document(reg, codes):
     units = {}
     for r in reg.itertuples():
         units[r.oib] = {"sifra": r.sifra, "slug": r.slug,
-                        **{t: c[r.oib] for t, c in codes.items() if r.oib in c}}
+                        **{t: c[r.oib] for t, c in codes.items() if r.oib in c},
+                        "nazivi": {t: n[r.oib] for t, n in (names or {}).items() if r.oib in n}}
     return {
         "meta": {
             "opis": "PxWeb kod vrijednosti svake jedinice u tablicama DZS-a i predložak upita. "
@@ -476,7 +487,11 @@ def codes_document(reg, codes):
 
 
 def print_report(report):
+    from . import dzs_xlsx
     for t, r in report.items():
+        if t == dzs_xlsx.LOG_KEY:
+            dzs_xlsx.print_report(r)
+            continue
         print(f"  {t:8} JLS {r['jls']}/556  županije {r['zupanije']}/20  godine {r['godine'][0]}-{r['godine'][-1]}"
               f"  {', '.join(r['pokazatelji'])}")
         print(f"           spojeno: {r['nacin']}  prazno {r['prazno']}/{r['celija']} {r['oznake'] or ''}")
@@ -492,6 +507,8 @@ def main(argv=None):
     if not args.offline:
         print(f"DZS PxWeb: {len(TABLES)} tablica, pauza {PAUSE} s")
         refresh(stats=stats)
+        from . import dzs_xlsx
+        dzs_xlsx.fetch()
     fetched = time.monotonic() - t0
     df, report = build()
     print_report(report)

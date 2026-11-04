@@ -115,9 +115,15 @@ export interface UnitDetail {
 }
 
 /** One context indicator with its peer-group median. oznaka: DZS symbol, "-" none (counted as 0), "z" confidential (null). */
+/** Where a demographic year comes from: the DZS PxWeb API, or the DZS publication "Gradovi i općine u
+ * statistici" for the years PxWeb does not have yet (pipeline/dzs_xlsx.py; izvor_po_godini). */
+export type DzsSource = 'pxweb' | 'xlsx'
+
 export interface ContextIndicator {
   godina: number
   od_godine?: number
+  /** only the three demographic indicators: the source of the last year */
+  izvor?: DzsSource | null
   vrijednost: number | null
   oznaka: '-' | 'z' | null
   broj: number | null
@@ -138,6 +144,8 @@ export type ContextKey =
 export interface LiveQuery {
   tablica: string
   kod: string
+  /** DZS's label for kod in the table's metadata; the browser rejects an answer with another label */
+  naziv?: string | null
   url: string
   upit: { query: unknown[]; response: { format: string } }
 }
@@ -147,8 +155,19 @@ export interface PopulationEconomy {
   pokazatelji: Record<ContextKey, ContextIndicator>
   /** Population estimate at 31.12. by year (SP31_2): only for the trend. */
   procjene: Record<string, number | null>
+  /** Source of the demographic numbers per year: PxWeb, or the DZS publication for the years PxWeb lacks. */
+  izvor_po_godini?: Record<string, DzsSource>
   uzivo: LiveQuery | null
-  izvori: { izdavatelj: string; naziv: string | null; tablica: string | null; url: string; azurirano: string | null; preuzeto?: string | null }[]
+  izvori: {
+    izdavatelj: string
+    naziv: string | null
+    tablica: string | null
+    url: string
+    azurirano: string | null
+    preuzeto?: string | null
+    /** only for the DZS publication: the years taken from it */
+    godine?: number[]
+  }[]
 }
 
 export interface UnitEqualization {
@@ -339,6 +358,8 @@ export interface MergeSummary {
 export interface SimulatorFile {
   zup_id: number
   zupanija: string
+  /** Source of the demographic numbers per year (pipeline/merge.py load_demography). */
+  demografija_izvor_po_godini?: Record<string, DzsSource> | null
   skupine: Record<string, MergeSummary>
 }
 
@@ -476,6 +497,7 @@ export interface ReformFile {
   demografija?: {
     od: number
     do: number
+    izvor_po_godini?: Record<string, DzsSource>
     spojene: { stanovnici_od: number; stanovnici_do: number; promjena: number | null } | null
     ostale: { stanovnici_od: number; stanovnici_do: number; promjena: number | null } | null
   } | null

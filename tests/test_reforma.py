@@ -213,9 +213,10 @@ def test_demography_of_units_and_header(data, docs):
     assert len(pag["clanice"]) > 1
     assert pag["demografija"] == merge._compact(merge.demography(data, [data.oib_of[s] for s in pag["clanice"]]))
     vukovar = by_code["05185"]
-    assert vukovar["clanice"] == ["05185"] and vukovar["demografija"]["promjena"] == -0.017   # Vukovar −1,7 %
+    assert vukovar["clanice"] == ["05185"] and vukovar["demografija"]["promjena"] == -0.018   # Vukovar −1,8 % (2021-2025)
     for p, doc in docs.items():
         h = doc["demografija"]
+        assert h["izvor_po_godini"] == data.demo["izvor_po_godini"], p
         for part, js in (("spojene", [j for j in doc["jedinice"] if len(j["clanice"]) > 1]),
                          ("ostale", [j for j in doc["jedinice"] if len(j["clanice"]) == 1])):
             assert h[part]["stanovnici_od"] == sum(j["demografija"]["stanovnici"][0] for j in js), (p, part)

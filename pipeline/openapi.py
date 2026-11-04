@@ -15,6 +15,11 @@ BY_YEAR_INT = {"type": "object", "description": "Po godini (ključ je godina, np
                "additionalProperties": INT}
 BY_YEAR_NUM = {"type": "object", "description": "Po godini (ključ je godina, npr. \"2025\").",
                "additionalProperties": NUM}
+DZS_IZVOR = {"enum": ["pxweb", "xlsx"]}
+IZVOR_PO_GODINI = {"type": "object", "propertyNames": {"pattern": "^[0-9]{4}$"}, "additionalProperties": DZS_IZVOR,
+                   "description": "Izvor demografskih brojki po godini: \"pxweb\" (DZS PxWeb API, glavni izvor) ili "
+                                  "\"xlsx\" (publikacija DZS-a \"Gradovi i općine u statistici\", samo za godine koje "
+                                  "PxWeb još nema; pipeline/dzs_xlsx.py)."}
 
 SCHEMAS = {
     "Vrsta": {"type": "string", "enum": ["opcina", "grad", "zupanija"]},
@@ -80,7 +85,10 @@ SCHEMAS = {
         },
     },
     "Cinjenica": {"type": "object", "required": ["label", "value"],
-                  "properties": {"label": {"type": "string"}, "value": {"type": "string"}}},
+                  "properties": {"label": {"type": "string"}, "value": {"type": "string"},
+                                 "kontekst": {"type": "boolean",
+                                              "description": "true za kontekst (kretanje stanovništva, neto dohodak) "
+                                                             "koji ne ulazi u ocjenu; izostaje kod ostalih činjenica."}}},
     "Jedinica": {
         "type": "object",
         "description": "Pregled jedinice: šifre, struktura, sve godine, paket činjenica i objašnjenje.",
@@ -128,7 +136,9 @@ SCHEMAS = {
                     "ok": {"type": "boolean"}, "n_brojki": {"type": "integer"},
                     "nepoznate": {"type": "array", "items": {"type": "string"}},
                     "sadrzaj": {"type": "array", "items": {"type": "string"},
-                                "description": "Neslaganja sa činjenicama: najslabija sastavnica, jake strane, ograničenje ocjene."}}}}},
+                                "description": "Neslaganja sa činjenicama: najslabija sastavnica, jake strane, ograničenje "
+                                               "ocjene. Činjenice s \"kontekst\": true (stanovništvo, dohodak) ne ulaze u "
+                                               "ocjenu."}}}}},
             "stanovnistvo_gospodarstvo": {"$ref": "#/components/schemas/StanovnistvoGospodarstvo"},
             "izravnanje": {"$ref": "#/components/schemas/IzravnanjeJedinice"},
             "porezne_stope": {
@@ -151,13 +161,16 @@ SCHEMAS = {
                                            "doseljenih minus odseljenih, noćenja, zgrada s dozvolom, neto dohodak ili mirovine (€)."},
             "medijan": {**NUM, "description": "Medijan usporedne skupine; null za Grad Zagreb, koji skupinu nema."},
             "n_medijan": {"type": "integer", "minimum": 0, "description": "Broj jedinica skupine s vrijednošću."},
+            "izvor": {**DZS_IZVOR, "description": "Samo za promjenu stanovništva, prirodni prirast i neto migraciju: izvor "
+                                                  "brojki zadnje godine (izvor_po_godini)."},
         },
     },
     "StanovnistvoGospodarstvo": {
         "type": "object",
-        "description": "Stanovništvo i gospodarstvo (pipeline/kontekst.py; DZS PxWeb i Porezna uprava). Ne ulazi u ocjenu. "
+        "description": "Stanovništvo i gospodarstvo (pipeline/kontekst.py; DZS PxWeb, za godine koje PxWeb još nema "
+                       "publikacija DZS-a \"Gradovi i općine u statistici\", i Porezna uprava). Ne ulazi u ocjenu. "
                        "Procjene stanovništva služe samo za kretanje; iznosi po stanovniku računaju se s Popisom 2021.",
-        "required": ["skupina", "pokazatelji", "procjene", "uzivo", "izvori"],
+        "required": ["skupina", "pokazatelji", "procjene", "izvor_po_godini", "uzivo", "izvori"],
         "properties": {
             "skupina": {**STR, "description": "Usporedna skupina medijana; null za Grad Zagreb."},
             "pokazatelji": {
@@ -166,17 +179,22 @@ SCHEMAS = {
                              "dozvole_na_1000", "neto_dohodak_pc", "udio_mirovina"],
                 "description": "promjena_stanovnistva: procjena zadnje godine / procjena 2021. − 1 (SP31_2); prirodni_prirast i "
                                "neto_migracija: (živorođeni − umrli) i (doseljeni − odseljeni) na 1.000 stanovnika (SV131, "
-                               "SV331, SM31); nocenja_po_stanovniku: noćenja u komercijalnom smještaju (BS_TU19); "
+                               "SV331, SM31), u zadnjoj godini; godine koje PxWeb još nema iz publikacije DZS-a (listovi "
+                               "Tab-2. i Tab-3.); nocenja_po_stanovniku: noćenja u komercijalnom smještaju (BS_TU19); "
                                "dozvole_na_1000: zgrade s izdanom građevinskom dozvolom (PX14); neto_dohodak_pc: neto dohodak "
                                "stanovnika (Porezna uprava); udio_mirovina: udio mirovina u njemu.",
                 "additionalProperties": {"$ref": "#/components/schemas/KontekstPokazatelj"}},
-            "procjene": {"type": "object", "description": "Procjena stanovništva 31.12. po godini (SP31_2), od 2021.",
+            "procjene": {"type": "object", "description": "Procjena stanovništva 31.12. po godini, od 2021. (SP31_2; "
+                                                         "godine koje PxWeb još nema iz publikacije, vidi izvor_po_godini).",
                          "additionalProperties": NUM},
+            "izvor_po_godini": IZVOR_PO_GODINI,
             "uzivo": {"type": ["object", "null"],
                       "description": "Upit koji preglednik šalje DZS-u za niz procjena (POST na url, tijelo je upit, "
                                      "Content-Type text/plain; odgovor json-stat2).",
-                      "required": ["tablica", "kod", "url", "upit"],
+                      "required": ["tablica", "kod", "naziv", "url", "upit"],
                       "properties": {"tablica": {"type": "string"}, "kod": {"type": "string"},
+                                     "naziv": {**STR, "description": "Naziv koji DZS daje kodu (metapodaci tablice); "
+                                                                     "preglednik odbacuje odgovor s drugim nazivom."},
                                      "url": {"type": "string", "pattern": "^https://web\\.dzs\\.hr/"},
                                      "upit": {"type": "object", "required": ["query", "response"]}}},
             "izvori": {"type": "array", "items": {
@@ -184,7 +202,9 @@ SCHEMAS = {
                 "properties": {"izdavatelj": {"type": "string"}, "naziv": STR, "tablica": STR,
                                "url": {"type": "string", "pattern": "^https://"},
                                "azurirano": {**STR, "description": "Datum ažuriranja prema izdavatelju (PxWeb ili Last-Modified)."},
-                               "preuzeto": STR}}},
+                               "preuzeto": STR,
+                               "godine": {"type": "array", "items": {"type": "integer"},
+                                          "description": "Samo za publikaciju DZS-a: godine koje dolaze iz nje."}}}},
         },
     },
     "IzravnanjeJedinice": {
@@ -384,8 +404,8 @@ SCHEMAS = {
                     "od": {"type": "integer", "description": "Prva godina niza (2021.)."},
                     "do": {"type": "integer", "description": "Zadnja godina niza; godina prirodne promjene i migracija."},
                     "stanovnici": {"type": "array", "minItems": 2, "items": {"type": ["integer", "null"], "minimum": 0},
-                                   "description": "Zbroj procjena stanovništva članica sredinom godine, za svaku godinu od "
-                                                  "od do do."},
+                                   "description": "Zbroj procjena stanovništva članica na dan 31.12., za svaku godinu od "
+                                                  "od do do (izvor po godini: demografija_izvor_po_godini datoteke)."},
                     "promjena": {**NUM, "description": "stanovnici[zadnja] / stanovnici[prva] − 1, udio, na 3 decimale."},
                     "prirodna": {**INT, "description": "Živorođeni − umrli u godini do, zbroj članica."},
                     "migracije": {**INT, "description": "Doseljeni − odseljeni u godini do, zbroj članica (unutarnje i "
@@ -506,6 +526,7 @@ SCHEMAS = {
         "properties": {
             "zup_id": {"type": "integer", "minimum": 1, "maximum": 21},
             "zupanija": {"type": "string"},
+            "demografija_izvor_po_godini": {**IZVOR_PO_GODINI, "type": ["object", "null"]},
             "skupine": {
                 "type": "object",
                 "description": "Sve dopuštene skupine u županiji. Ključ su šifre članica, poredane i spojene crticom "
@@ -596,6 +617,7 @@ SCHEMAS = {
                 "required": ["od", "do", "spojene", "ostale"],
                 "properties": {
                     "od": {"type": "integer"}, "do": {"type": "integer"},
+                    "izvor_po_godini": IZVOR_PO_GODINI,
                     "spojene": {"type": ["object", "null"], "required": ["stanovnici_od", "stanovnici_do", "promjena"],
                           "properties": {"stanovnici_od": {"type": "integer"}, "stanovnici_do": {"type": "integer"},
                                          "promjena": NUM},

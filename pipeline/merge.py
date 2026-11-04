@@ -41,8 +41,9 @@ capacities and reference values of the MF table. It is shown because the formula
 MF's full amounts for all 576 units. The block is null when the table is not downloaded.
 
 Demographic trend (decision P4, 4.11.; data/build/dzs.parquet from pipeline/pxweb.py): the members'
-population estimates are summed per year and the change is taken from the first year to the last
-(2021 -> 2024); natural change (live births - deaths) and net migration (in - out) are summed for
+population estimates (31.12.) are summed per year and the change is taken from the first year to the
+last (2021 -> 2025; the years PxWeb does not have yet come from the DZS workbook, pipeline/dzs_xlsx.py,
+and the file says which in demografija_izvor_po_godini); natural change (live births - deaths) and net migration (in - out) are summed for
 the last year. Rates per 1,000 inhabitants use Popis 2021 (the group's stanovnici) as the base; the
 pages divide the two published numbers, which keeps the 13,353 precomputed groups small. Shares are
 rounded to 3 decimals (0.1 %, the precision shown). Nothing of it enters the score: grades and
@@ -126,20 +127,23 @@ def dzs_value(vrijednost, oznaka):
 
 
 def load_demography(path=DZS_PARQUET):
-    """{"godine", "od", "do", "celije": {(oib, pokazatelj, godina): (number or None, symbol or None)}}
-    for DEMO_KEYS, or None when dzs.parquet has not been built (then demography() is None too)."""
+    """{"godine", "od", "do", "celije": {(oib, pokazatelj, godina): (number or None, symbol or None)},
+    "izvor_po_godini": {year: "pxweb" | "xlsx"}} for DEMO_KEYS, or None when dzs.parquet has not been built (then demography() is None too)."""
     if not path.exists():
         return None
-    df = pd.read_parquet(path, columns=["oib", "godina", "pokazatelj", "vrijednost", "oznaka"])
+    df = pd.read_parquet(path)
     df = df[df["pokazatelj"].isin(DEMO_KEYS) & df["oib"].notna()]
     years = sorted(int(y) for y in df.loc[df["pokazatelj"] == POPULATION, "godina"].unique())
     if len(years) < 2:
         return None
+    src = df["izvor"] if "izvor" in df else pd.Series("pxweb", index=df.index)
+    xlsx = set(df.loc[src == "xlsx", "godina"].astype(int))
+    izvor = {str(y): "xlsx" if y in xlsx else "pxweb" for y in years}
     cells = {}
     for r in df.to_dict("records"):
         mark = r["oznaka"] if isinstance(r["oznaka"], str) else None
         cells[(r["oib"], r["pokazatelj"], int(r["godina"]))] = (dzs_value(r["vrijednost"], mark), mark)
-    return {"godine": years, "od": years[0], "do": years[-1], "celije": cells}
+    return {"godine": years, "od": years[0], "do": years[-1], "celije": cells, "izvor_po_godini": izvor}
 
 
 class Data:
@@ -436,7 +440,8 @@ def precompute(data, out_dir):
             by_county.setdefault(res["zup_id"], {})["-".join(g)] = summary(res)
     names = {u["zup_id"]: u["zupanija"] for u in data.units.values()}
     for zup, skupine in by_county.items():
-        doc = {"zup_id": int(zup), "zupanija": names[zup], "skupine": skupine}
+        doc = {"zup_id": int(zup), "zupanija": names[zup],
+               "demografija_izvor_po_godini": (data.demo or {}).get("izvor_po_godini"), "skupine": skupine}
         (out_dir / f"zup-{int(zup):02d}.json").write_text(
             json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return sum(len(s) for s in by_county.values())

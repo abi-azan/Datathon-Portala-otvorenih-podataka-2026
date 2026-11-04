@@ -244,3 +244,52 @@ def test_verify_stays_standard_library_only():
     src = (config.ROOT / "pipeline" / "verify.py").read_text(encoding="utf-8")
     imports = {line.split()[1].split(".")[0] for line in src.splitlines() if line.startswith(("import ", "from "))}
     assert imports <= {"re", "decimal"}, imports
+
+
+# --- context (population, income): template, prompt and the Kaggle script ------------------------
+
+CTX_PACK = {"oib": "9", "year": 2025, "naziv": {"nom": "Općina Bogdanovci"}, "ocjena": 4, "ocjene": [4], "facts": [
+    {"label": "Ocjena financijske stabilnosti za 2025.",
+     "value": "4 (stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno)"},
+    {"label": "Najslabija sastavnica", "value": "dospjele neplaćene obveze"},
+    {"label": "Upozorenja", "value": "nema upozorenja"},
+    {"label": "Kontekst", "value": "ne ulazi u ocjenu i ne objašnjava je", "kontekst": True},
+    {"label": "Kontekst: broj stanovnika", "kontekst": True,
+     "value": "od 2021. do 2024. smanjio se za 8,3 %, što je ispod medijana skupine (−2,9 %)"},
+    {"label": "Kontekst: neto dohodak po stanovniku", "kontekst": True,
+     "value": "u 2025. iznosio je 6.592 €, što je ispod medijana skupine (9.164 €)"}]}
+
+
+def test_template_closes_with_one_context_sentence():
+    text = explain.template(CTX_PACK)
+    assert text == ("Općina Bogdanovci za 2025. godinu ima ocjenu 4 (stabilno). Najslabija sastavnica: dospjele "
+                    "neplaćene obveze. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2024. smanjio "
+                    "se za 8,3 %, što je ispod medijana skupine (−2,9 %), a neto dohodak po stanovniku u 2025. iznosio "
+                    "je 6.592 €, što je ispod medijana skupine (9.164 €).")
+    assert verify.verify(text, CTX_PACK)["ok"]
+    only_income = {**CTX_PACK, "facts": [f for f in CTX_PACK["facts"] if "broj stanovnika" not in f["label"]]}
+    assert explain.template(only_income).endswith(
+        "Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 6.592 €, "
+        "što je ispod medijana skupine (9.164 €).")
+    fiscal = {**CTX_PACK, "facts": [f for f in CTX_PACK["facts"] if not f.get("kontekst")]}
+    assert "kontekst" not in explain.template(fiscal)
+
+
+def test_prompt_puts_context_last_and_the_example_passes_the_check():
+    assert explain.CONTEXT_OPENING in explain.RULES and explain.EXAMPLE.count(explain.CONTEXT_OPENING) == 1
+    last = explain.EXAMPLE[explain.EXAMPLE.index(explain.CONTEXT_OPENING):]
+    assert verify.sentences(explain.EXAMPLE)[-1] == last                   # the closing sentence
+    pack = {"ocjene": [2], "facts": [{"label": "Kontekst: broj stanovnika", "kontekst": True,
+                                      "value": "od 2021. do 2025. smanjio se za 9,4 %, što je ispod medijana skupine (−2,1 %)"}]}
+    assert verify.verify(last, pack)["ok"]
+    assert "{" not in explain.RULES.replace("{nom}", "")          # RULES.format(**naziv) stays safe
+
+
+def test_kaggle_script_checks_context_like_the_pipeline(tmp_path):
+    mod = load_script(explain.write_kaggle_script([CTX_PACK], tmp_path / "c.py"))
+    assert mod.RULES == explain.RULES and mod.EXAMPLE == explain.EXAMPLE
+    good = explain.template(CTX_PACK)
+    assert mod.verify(good, mod.PACKS[0]) == verify.verify(good, CTX_PACK) and mod.verify(good, mod.PACKS[0])["ok"]
+    flipped = good.replace("smanjio se za 8,3 %", "povećao se za 8,3 %")
+    assert mod.verify(flipped, mod.PACKS[0])["sadrzaj"] == ["smjer promjene „povećao se za 8,3” ne slaže se s činjenicama"]
+    assert "kontekst" in mod.feedback([], ["x"])

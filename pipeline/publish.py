@@ -241,6 +241,11 @@ def datasets_markdown(recs):
         "pc-axis vodi na PxWeb API DZS-a, koji ETL zove izravno (GET metapodataka, POST upita, odgovor json-stat2). "
         "Procjene stanovništva služe samo za kretanje broja stanovnika; iznosi po stanovniku računaju se s "
         "Popisom 2021. Oznaka \"-\" (pojava ne postoji) broji se kao 0, a \"z\" (tajnost) ostaje prazno.",
+        "- **DZS (Gradovi i općine u statistici):** XLSX iz skupa `statistika-u-nizu-gradovi-u-statistici` (Otvorena "
+        "dozvola) služi kao most samo za godine koje PxWeb još nema: DZS 2025. objavljuje u ovoj publikaciji 30.9., a u "
+        "PxWebu tek 30.11.2026. PxWeb uvijek ima prednost i ETL nikad ne zamjenjuje njegovu brojku; kada PxWeb dobije "
+        "godinu, most za nju nestaje sam. Publikacija se koristi samo ako se za zajedničke godine slaže s PxWebom u "
+        "svakoj ćeliji i ako vrijedi jednadžba stanovništva (`pipeline/dzs_xlsx.py`).",
         "- **Porezna uprava:** oba skupa imaju u CKAN-u Otvorenu dozvolu. Portal na uvjetni GET uvijek odgovara "
         "200, pa ETL datoteke preuzima pri svakom pokretanju. Ništa od toga ne ulazi u ocjenu.",
         "- **Katalog portala:** metapodaci su uvijek pod Otvorenom dozvolom, bez obzira na licencu skupa na koji "
@@ -275,7 +280,11 @@ def main():
     res = pd.read_parquet(config.BUILD / "results.parquet")
     nested = {u["oib"]: u for u in json.loads((config.BUILD / "results.json").read_text(encoding="utf-8"))}
     susjedi = json.loads((config.BUILD / "geo" / "susjedi.json").read_text(encoding="utf-8"))
-    packs = {p["oib"]: p for p in facts.build_all(units, res, config.LAST_YEAR)}
+    # context blocks (DZS PxWeb, Porezna uprava, MF equalization table; pipeline/kontekst.py), not in the score;
+    # loaded once: the fact packs read the same stanovnistvo_gospodarstvo block
+    ctx = kontekst.load(units)
+    packs = {p["oib"]: p for p in facts.build_all(units, res, config.LAST_YEAR,
+                                                  context=ctx["stanovnistvo_gospodarstvo"])}
     by_code = units.set_index("sifra")
     if API.exists():
         shutil.rmtree(API)
@@ -299,8 +308,6 @@ def main():
     write(API / "jedinice.json", {"generirano": generated, "zadnja_godina": config.LAST_YEAR, "jedinice": index})
     write(API / "skupine.json", group_medians(res))
 
-    # context blocks (DZS PxWeb, Porezna uprava, MF equalization table; pipeline/kontekst.py), not in the score
-    ctx = kontekst.load(units)
     audit_doc = json.loads(AUDITS.read_text(encoding="utf-8")) if AUDITS.exists() else None
     audits = audit_doc["jedinice"] if audit_doc else None
     shown_ai = 0

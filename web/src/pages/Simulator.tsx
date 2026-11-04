@@ -17,6 +17,7 @@ import {
   type UnitIndex,
 } from '../lib/data'
 import { COMPONENTS, FLAGS, QUALITY, VRSTA, criterion10, eur, num, pct } from '../lib/format'
+import { demographySource } from '../lib/dzs'
 import { parseSelection, simulatorHref, unitHref } from '../lib/router'
 
 // Same lazy chunk as the home page: MapLibre is about 1 MB.
@@ -361,7 +362,16 @@ export function Simulator({ index }: { index: IndexFile }) {
           </Card>
         )}
 
-        {result && <Result r={result} members={members} details={details} groups={groups} year={year} />}
+        {result && (
+          <Result
+            r={result}
+            members={members}
+            details={details}
+            groups={groups}
+            year={year}
+            demoSources={current?.data?.demografija_izvor_po_godini}
+          />
+        )}
       </div>
 
       <div className="h-[55vh] min-h-[380px] lg:sticky lg:top-24 lg:h-[min(80vh,860px)] lg:min-h-[520px]">
@@ -388,12 +398,14 @@ function Result({
   details,
   groups,
   year,
+  demoSources,
 }: {
   r: MergeSummary
   members: UnitIndex[]
   details: Record<string, UnitDetail>
   groups: GroupMedians | null
   year: string
+  demoSources?: SimulatorFile['demografija_izvor_po_godini']
 }) {
   const z = r.zadnja
   const med = groups?.[r.skupina]?.[String(r.godina)]
@@ -545,7 +557,7 @@ function Result({
             </p>
           </div>
         )}
-        {r.demografija && <Demography d={r.demografija} r={r} members={members} />}
+        {r.demografija && <Demography d={r.demografija} r={r} members={members} sources={demoSources} />}
       </Card>
 
       {/* savings on general administration: economy of scale only (research/08 §7.1) */}
@@ -694,7 +706,17 @@ function Result({
 
 /** Population trend of the members and the merged unit (pipeline/merge.py demography, decision P4).
  *  Only the change is shown, never the yearly estimate next to the Popis 2021 figure in the table. */
-function Demography({ d, r, members }: { d: GroupDemography; r: MergeSummary; members: UnitIndex[] }) {
+function Demography({
+  d,
+  r,
+  members,
+  sources,
+}: {
+  d: GroupDemography
+  r: MergeSummary
+  members: UnitIndex[]
+  sources?: SimulatorFile['demografija_izvor_po_godini']
+}) {
   return (
     <div className="mt-4 border-t border-hairline pt-4">
       <div className="text-sm font-medium">
@@ -718,8 +740,7 @@ function Demography({ d, r, members }: { d: GroupDemography; r: MergeSummary; me
       </dl>
       <p className="mt-2 text-xs text-muted">
         Zbroj za sve članice; na 1.000 stanovnika prema Popisu 2021. Kretanje stanovništva ne ulazi u ocjenu: ocjena i
-        iznosi po stanovniku računaju se s Popisom 2021. Izvor: Državni zavod za statistiku, stanovništvo sredinom godine,
-        rođeni, umrli i migracije po općinama i gradovima.
+        iznosi po stanovniku računaju se s Popisom 2021. {demographySource(sources)}
       </p>
     </div>
   )

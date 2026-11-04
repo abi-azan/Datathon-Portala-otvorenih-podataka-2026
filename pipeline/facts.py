@@ -6,10 +6,16 @@ The language model only writes sentences around these facts. pipeline/verify.py 
 that every number in the text appears here.
 
 Numbers are written the Croatian way (1.625,85; 27,6 %), so the model can copy them.
+
+Context (population change and residents' net income, from the profile's stanovnistvo_gospodarstvo
+block, pipeline/kontekst.py) does not enter the score. It joins the pack only when the unit stands
+out from its peer group (context_facts), and every context item carries "kontekst": true.
 """
 import math
 
 import pandas as pd
+
+from . import kontekst
 
 GRADE_WORDS = {5: "vrlo stabilno", 4: "stabilno", 3: "umjereno", 2: "pod pritiskom", 1: "ozbiljan pritisak"}
 
@@ -41,6 +47,17 @@ def pct(share, dec=1):
 
 def eur(x):
     return f"{num(x)} €"
+
+
+MINUS = "−"         # U+2212, as on the profile card (PopulationEconomy.tsx)
+
+
+def signed_pct(share, dec=1):
+    """Percentage change with its sign, as the profile shows it: +6,2 %, −8,3 %, 0,0 %."""
+    s = pct(abs(share), dec)
+    if float(s.split()[0].replace(".", "").replace(",", ".")) == 0:
+        return s
+    return ("+" if share > 0 else MINUS) + s
 
 
 def plural(n, one, few, many):
@@ -138,8 +155,52 @@ def peer_medians(results):
     return results.groupby(["skupina", "year"])[cols].median()
 
 
-def fact_pack(unit, history, med, year):
-    """unit: row of units.csv; history: {year: results row}; med: peer_medians()."""
+# Context: population and income, only when the unit stands out from its peer group (the aim: a third
+# to a half of the units). Calibrated on all 576 units on 4.11. (population 2021-2025, income 2025):
+# 160 pass the population rule, 175 the income rule, 253 (44 %) at least one, 82 both; Grad Zagreb has
+# no peer median. The population rule is per year of the window, so a longer series does not by itself
+# make more units notable (2021-2024: 182, 175 and 269).
+CONTEXT_POP_PP_PER_YEAR = 1.5     # population change at least 1,5 percentage points a year from the peer median
+CONTEXT_INCOME_REL = 0.20         # net income per inhabitant at least 20 % above or below the peer median
+CONTEXT_LABEL = "Kontekst"
+CONTEXT_NOTE = "ne ulazi u ocjenu i ne objašnjava je"
+
+
+def _relation(value, median, fmt):
+    return f"što je {'iznad' if value > median else 'ispod'} medijana skupine ({fmt(median)})"
+
+
+def context_facts(block):
+    """[(label, value)] for the unit's stanovnistvo_gospodarstvo block (pipeline/kontekst.py): the
+    population change and the net income per inhabitant, each only when it is notable against the
+    peer median, plus the framing line when there is any. Grad Zagreb has no peer median, so none."""
+    ind = (block or {}).get("pokazatelji") or {}
+    out = []
+    p = ind.get("promjena_stanovnistva") or {}
+    v, m = p.get("vrijednost"), p.get("medijan")
+    span = (p.get("godina") or 0) - (p.get("od_godine") or 0)
+    if v is not None and m is not None and span >= 1 and abs(v - m) * 100 >= CONTEXT_POP_PP_PER_YEAR * span:
+        change = pct(abs(v))
+        verb = ("ostao je gotovo isti (0,0 %)" if signed_pct(v) == change
+                else f"povećao se za {change}" if v > 0 else f"smanjio se za {change}")
+        out.append((f"{CONTEXT_LABEL}: broj stanovnika",
+                     f"od {p['od_godine']}. do {p['godina']}. {verb}, {_relation(v, m, signed_pct)}"))
+    d = ind.get("neto_dohodak_pc") or {}
+    v, m = d.get("vrijednost"), d.get("medijan")
+    if v is not None and m and abs(v / m - 1) >= CONTEXT_INCOME_REL:
+        out.append((f"{CONTEXT_LABEL}: neto dohodak po stanovniku",
+                    f"u {d['godina']}. iznosio je {eur(v)}, {_relation(v, m, eur)}"))
+    return [(CONTEXT_LABEL, CONTEXT_NOTE)] + out if out else []
+
+
+def load_context(units):
+    """{oib: stanovnistvo_gospodarstvo block}, the very block the profile shows (kontekst.load)."""
+    return kontekst.load(units)["stanovnistvo_gospodarstvo"]
+
+
+def fact_pack(unit, history, med, year, context=None):
+    """unit: row of units.csv; history: {year: results row}; med: peer_medians(); context: the unit's
+    stanovnistvo_gospodarstvo block (pipeline/kontekst.py) or None."""
     r = history[year]
     prev = history.get(year - 1)
     m = med.loc[(r["skupina"], year)]
@@ -193,15 +254,21 @@ def fact_pack(unit, history, med, year):
     if r.get("kredit_iskazan_dospio"):
         facts.append(("Napomena o podacima", "u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, "
                                               "pa se ne broji u dospjele obveze"))
-    # Context (grants, administration cost) is on the profile page, not in the pack: in the Gemma
-    # test it only produced filler and invented phrases ("kućne pomoći").
+    # Fiscal context (grants, administration cost) is on the profile page, not in the pack: in the
+    # Gemma test it only produced filler and invented phrases ("kućne pomoći"). Population and income
+    # come last, only when notable, and marked, so the check can hold the context sentence to them.
     grades = [int(r["ocjena"])] + ([int(prev["ocjena"])] if prev is not None and pd.notna(prev.get("ocjena")) else [])
+    items = [{"label": k, "value": v} for k, v in facts]
+    items += [{"label": k, "value": v, "kontekst": True} for k, v in context_facts(context)]
     return {"oib": unit["oib"], "naziv": names, "year": year, "ocjena": int(r["ocjena"]), "ocjene": grades,
-            "facts": [{"label": k, "value": v} for k, v in facts]}
+            "facts": items}
 
 
-def build_all(units, results, year):
-    """Fact packs for every unit in one year."""
+def build_all(units, results, year, context=None):
+    """Fact packs for every unit in one year. context: {oib: stanovnistvo_gospodarstvo block}; by
+    default read with kontekst.load, so publish and the batch build the same packs."""
     med = peer_medians(results)
+    ctx = load_context(units) if context is None else context
     by_oib = {oib: {int(x["year"]): x for x in g.to_dict("records")} for oib, g in results.groupby("oib")}
-    return [fact_pack(u, by_oib[u["oib"]], med, year) for u in units.to_dict("records") if u["oib"] in by_oib]
+    return [fact_pack(u, by_oib[u["oib"]], med, year, ctx.get(u["oib"]))
+            for u in units.to_dict("records") if u["oib"] in by_oib]

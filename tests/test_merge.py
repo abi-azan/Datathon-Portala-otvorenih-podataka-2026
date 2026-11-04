@@ -250,17 +250,20 @@ def test_dzs_symbols():
 
 @needs_dzs
 def test_demography_pag_povljana(data):
-    """#/simulator?j=05738,03166: estimates summed per year, change 2021 -> 2024, births - deaths and
-    in - out migration for 2024 summed; each member keeps only its own change (Pag 3.156 -> 3.352)."""
+    """#/simulator?j=05738,03166: estimates summed per year, change 2021 -> 2025, births - deaths and
+    in - out migration for 2025 summed; each member keeps only its own change (Pag 3.156 -> 3.358).
+    2021-2024 are PxWeb, 2025 the DZS publication (docs/research/12 §2.3)."""
     m = merge.merge(data, [by_name(data, "Općina Povljana"), by_name(data, "Grad Pag")])
     d = merge.summary(m)["demografija"]
     assert m["clanice"] == ["03166", "05738"]
-    assert (d["od"], d["do"]) == (2021, 2024)
-    assert d["stanovnici"] == [3156 + 674, 3176 + 661, 3238 + 666, 3352 + 690]
-    assert d["promjena"] == round(4042 / 3830 - 1, 3) == 0.055
-    assert d["prirodna"] == (23 + 5) - (49 + 15)
-    assert d["migracije"] == (255 + 47) - (115 + 13)
-    assert d["clanice"] == [round(3352 / 3156 - 1, 3), round(690 / 674 - 1, 3)]
+    assert (d["od"], d["do"]) == (2021, 2025)
+    assert d["stanovnici"] == [3156 + 674, 3176 + 661, 3238 + 666, 3352 + 690, 3358 + 726]
+    assert d["promjena"] == round(4084 / 3830 - 1, 3) == 0.066
+    assert d["prirodna"] == (21 + 4) - (49 + 12)
+    assert d["migracije"] == (190 + 70) - (156 + 26)
+    assert d["clanice"] == [round(3358 / 3156 - 1, 3), round(726 / 674 - 1, 3)] == [0.064, 0.077]
+    assert data.demo["izvor_po_godini"] == {"2021": "pxweb", "2022": "pxweb", "2023": "pxweb", "2024": "pxweb",
+                                            "2025": "xlsx"}
     assert "oznake" not in d
     assert m["stanovnici"] == 669 + 3175                     # the score still uses Popis 2021
 
@@ -272,24 +275,27 @@ def test_demography_matches_the_long_table(data):
     oibs = [by_name(data, "Grad Vukovar"), by_name(data, "Općina Bogdanovci")]
     d = merge.merge(data, oibs)["demografija"]
     x = df[df.oib.isin(oibs)].groupby(["pokazatelj", "godina"]).vrijednost.sum()
-    assert d["stanovnici"] == [int(x[("stanovnici_procjena", y)]) for y in range(2021, 2025)]
-    assert d["prirodna"] == x[("zivorodeni", 2024)] - x[("umrli", 2024)]
-    assert d["migracije"] == x[("doseljeni", 2024)] - x[("odseljeni", 2024)]
+    last = d["do"]
+    assert d["stanovnici"] == [int(x[("stanovnici_procjena", y)]) for y in range(2021, last + 1)]
+    assert d["prirodna"] == x[("zivorodeni", last)] - x[("umrli", last)]
+    assert d["migracije"] == x[("doseljeni", last)] - x[("odseljeni", last)]
     bogdanovci = data.units[oibs[1]]["sifra"]
     i = merge.merge(data, oibs)["clanice"].index(bogdanovci)
-    assert d["clanice"][i] == -0.083                          # Bogdanovci −8,3 %
+    assert d["clanice"][i] == round(1427 / 1551 - 1, 3) == -0.08   # Bogdanovci −8,0 % (2021 -> 2025)
 
 
 @needs_dzs
 def test_demography_dash_counts_as_zero_and_is_kept(data):
-    """Sućuraj reports '-' live births in 2024: 0 in the sum, the symbol listed in oznake."""
-    sucuraj, jelsa = by_name(data, "Općina Sućuraj"), by_name(data, "Općina Jelsa")
-    d = merge.merge(data, [sucuraj, jelsa])["demografija"]
+    """Žumberak reports '-' live births in the last year (2025, DZS publication): 0 in the sum, the
+    symbol listed in oznake. Its neighbour Samobor has births, so only one symbol."""
+    last = data.demo["do"]
     cells = data.demo["celije"]
-    assert cells[(sucuraj, "zivorodeni", 2024)] == (0.0, "-")
-    want = cells[(jelsa, "zivorodeni", 2024)][0] - cells[(jelsa, "umrli", 2024)][0] - cells[(sucuraj, "umrli", 2024)][0]
+    zumberak, samobor = by_name(data, "Općina Žumberak"), by_name(data, "Grad Samobor")
+    assert cells[(zumberak, "zivorodeni", last)] == (0.0, "-")
+    d = merge.merge(data, [zumberak, samobor])["demografija"]
+    want = cells[(samobor, "zivorodeni", last)][0] - cells[(samobor, "umrli", last)][0] - cells[(zumberak, "umrli", last)][0]
     assert d["prirodna"] == want
-    assert d["oznake"] == ["04235:zivorodeni:2024:-"]
+    assert d["oznake"] == [f"05401:zivorodeni:{last}:-"]
 
 
 @needs_dzs
@@ -298,12 +304,13 @@ def test_demography_hidden_value_makes_the_sum_null(data, monkeypatch):
     member's change and the sums that do not use that cell stay."""
     pag, povljana = by_name(data, "Grad Pag"), by_name(data, "Općina Povljana")
     cells = dict(data.demo["celije"])
-    cells[(povljana, "stanovnici_procjena", 2024)] = (merge.dzs_value(float("nan"), "z"), "z")
+    last = data.demo["do"]
+    cells[(povljana, "stanovnici_procjena", last)] = (merge.dzs_value(float("nan"), "z"), "z")
     monkeypatch.setattr(data, "demo", {**data.demo, "celije": cells})
     d = merge.merge(data, [pag, povljana])["demografija"]
     assert d["stanovnici"][-1] is None and d["promjena"] is None
-    assert d["clanice"] == [0.062, None]
-    assert d["prirodna"] == -36 and "05738:stanovnici_procjena:2024:z" in d["oznake"]
+    assert d["clanice"] == [0.064, None]
+    assert d["prirodna"] == (21 + 4) - (49 + 12) and f"05738:stanovnici_procjena:{last}:z" in d["oznake"]
 
 
 def test_demography_missing_is_none(data, monkeypatch):

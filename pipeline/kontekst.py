@@ -1,7 +1,9 @@
 """Context blocks of the unit profile: population and economy, fiscal equalization, local tax rates.
 
-publish.py adds three keys to every jedinice/<slug>.json. Nothing here enters the score, the
-fact packs (facts.py) or the AI texts. Methodology texts: metodologija.py
+publish.py adds three keys to every jedinice/<slug>.json. Nothing here enters the score. The fact
+packs (facts.py) read stanovnistvo_gospodarstvo through load(): a notable population trend or income
+(facts.CONTEXT_POP_PP_PER_YEAR, CONTEXT_INCOME_REL) joins the AI pack as a context item
+("kontekst": true), never as a reason for the grade. Methodology texts: metodologija.py
 ("stanovnistvo_gospodarstvo", "izravnanje_jedinice").
 
 stanovnistvo_gospodarstvo (DZS PxWeb, pipeline/pxweb.py; Porezna uprava, pipeline/porezna.py)
@@ -10,6 +12,10 @@ stanovnistvo_gospodarstvo (DZS PxWeb, pipeline/pxweb.py; Porezna uprava, pipelin
     score, stays on Popis 2021 (stanovnici_2021).
   - prirodni_prirast, neto_migracija: (živorođeni - umrli), (doseljeni - odseljeni) per 1,000
     inhabitants of Popis 2021, in the last year all four tables have.
+  The population years PxWeb does not have yet come from the DZS workbook "Gradovi i općine u
+  statistici" (pipeline/dzs_xlsx.py, PxWeb wins). izvor_po_godini says, per year, which of the two
+  each demographic number comes from ("pxweb" or "xlsx"), each of the three indicators carries the
+  source of its last year in izvor, and izvori lists the workbook when it is used.
   - nocenja_po_stanovniku: tourist nights in commercial accommodation (BS_TU19) / Popis 2021.
   - dozvole_na_1000: buildings with a building permit issued (PX14) per 1,000 inhabitants.
   - neto_dohodak_pc: residents' net income (vrsta_dohotka "ukupno") / Popis 2021, and
@@ -32,14 +38,18 @@ izravnanje (MF equalization table, pipeline/izravnanje.py)
 porezne_stope (Porezna uprava): the unit's local tax rates per year, as published.
 """
 import json
+from email.utils import parsedate_to_datetime
 
 import pandas as pd
 
-from . import config, izravnanje, porezna, pxweb
+from . import config, dzs_xlsx, izravnanje, porezna, pxweb
 
 PRORACUN_GODINA = 2026          # the year of izravnanje.ISPLATA_2026, the last budget line with an amount
 PER_1000 = 1000.0
 DEMOGRAFIJA = ["zivorodeni", "umrli", "doseljeni", "odseljeni"]
+# demographic indicator of the card -> the dzs.parquet indicators it is computed from
+DEMO_IZVOR = {"promjena_stanovnistva": ["stanovnici_procjena"], "prirodni_prirast": ["zivorodeni", "umrli"],
+              "neto_migracija": ["doseljeni", "odseljeni"]}
 KLJUCEVI = ["promjena_stanovnistva", "prirodni_prirast", "neto_migracija", "nocenja_po_stanovniku",
             "dozvole_na_1000", "neto_dohodak_pc", "udio_mirovina"]
 
@@ -127,10 +137,12 @@ def medians(units, ind):
 
 def live_query(kodovi, oib, table="SP31_2"):
     """The POST the browser sends to DZS for the unit's population series: the query template of
-    dzs_kodovi.json with the unit's code and every year (so a new year shows up live). None when
-    the unit has no code in the table."""
+    dzs_kodovi.json with the unit's code and every year (so a new year shows up live), and naziv, the
+    label DZS gives that code, which the browser checks in the answer. None when the unit has no
+    code in the table."""
     meta = kodovi["meta"]["tablice"].get(table)
-    code = kodovi["jedinice"].get(oib, {}).get(table)
+    unit = kodovi["jedinice"].get(oib, {})
+    code = unit.get(table)
     if not meta or code is None:
         return None
     body = json.loads(json.dumps(meta["upit"]))
@@ -139,22 +151,42 @@ def live_query(kodovi, oib, table="SP31_2"):
             q["selection"] = {"filter": "item", "values": [code]}
         elif q["code"] == pxweb.YEAR_VAR:
             q["selection"] = {"filter": "all", "values": ["*"]}
-    return {"tablica": table, "kod": code, "url": meta["url"], "upit": body}
+    return {"tablica": table, "kod": code, "naziv": (unit.get("nazivi") or {}).get(table), "url": meta["url"],
+            "upit": body}
 
 
-def sources(kodovi, log):
+def _modified(e):
+    return parsedate_to_datetime(e["last_modified"]).date().isoformat() if e.get("last_modified") else None
+
+
+def year_sources(dzs):
+    """{year: "pxweb" | "xlsx"} over the five demographic indicators: "xlsx" when any of them comes
+    from the DZS workbook in that year (dzs_xlsx.bridge adds whole years, so in practice all five)."""
+    out = {}
+    for p in DEMO_IZVOR["promjena_stanovnistva"] + DEMOGRAFIJA:
+        for y, src in dzs_xlsx.year_sources(dzs, p).items():
+            out[str(y)] = dzs_xlsx.IZVOR_XLSX if dzs_xlsx.IZVOR_XLSX in (out.get(str(y)), src) else src
+    return dict(sorted(out.items()))
+
+
+def sources(kodovi, log, xlsx_years=()):
     """The sources of the block, for the card's footnote: DZS tables with their PxWeb update
-    date, and the Porezna uprava workbook with its Last-Modified date."""
+    date, the DZS workbook "Gradovi i općine u statistici" for the years it fills (xlsx_years,
+    with its Last-Modified date) and the Porezna uprava workbook with its Last-Modified date."""
     out = []
     for table, m in kodovi["meta"]["tablice"].items():
         out.append({"izdavatelj": pxweb.PUBLISHER, "naziv": m.get("naslov"), "tablica": table, "url": m["url"],
                     "azurirano": (m.get("dzs_azurirano") or "")[:10] or None, "preuzeto": m.get("preuzeto")})
+    g = log.get(dzs_xlsx.LOG_KEY)
+    if xlsx_years and g:
+        out.append({"izdavatelj": pxweb.PUBLISHER, "naziv": dzs_xlsx.TITLE, "tablica": dzs_xlsx.SOURCE_ID,
+                    "url": g["url"], "azurirano": _modified(g), "preuzeto": g.get("retrieved"),
+                    "godine": sorted(int(y) for y in xlsx_years)})
     e = log.get("porezna_neto_dohodak")
     if e:
-        from email.utils import parsedate_to_datetime
         out.append({"izdavatelj": "Porezna uprava", "naziv": "Neto dohodak stanovništva po općinama/gradovima prebivališta",
                     "tablica": None, "url": e["url"],
-                    "azurirano": parsedate_to_datetime(e["last_modified"]).date().isoformat() if e.get("last_modified") else None,
+                    "azurirano": _modified(e),
                     "preuzeto": e.get("retrieved")})
     return out
 
@@ -169,7 +201,8 @@ def population_economy(units, dzs, doh, kodovi, log):
     med, cnt = medians(units, ind)
     est = dzs[dzs.pokazatelj == "stanovnici_procjena"]
     series = {o: {str(int(y)): _num(v) for y, v in zip(g.godina, g.vrijednost)} for o, g in est.groupby("oib")}
-    src = sources(kodovi, log)
+    by_year = year_sources(dzs)
+    src = sources(kodovi, log, [y for y, s in by_year.items() if s == dzs_xlsx.IZVOR_XLSX])
     out = {}
     for u in units.itertuples():
         r = ind.loc[u.oib]
@@ -184,8 +217,10 @@ def population_economy(units, dzs, doh, kodovi, log):
                         "medijan": _num(med.loc[peers, k]) if has_med else None,
                         "n_medijan": int(cnt.loc[peers, k]) if has_med else 0}
         block["promjena_stanovnistva"]["od_godine"] = int(r["promjena_od"])
+        for k in DEMO_IZVOR:
+            block[k]["izvor"] = by_year.get(str(block[k]["godina"]))
         out[u.oib] = {"skupina": peers, "pokazatelji": block, "procjene": series.get(u.oib, {}),
-                      "uzivo": live_query(kodovi, u.oib), "izvori": src}
+                      "izvor_po_godini": by_year, "uzivo": live_query(kodovi, u.oib), "izvori": src}
     return out
 
 
