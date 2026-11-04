@@ -4,6 +4,7 @@
     .venv/Scripts/python -m pipeline.publish --ai other.json   # publish AI texts from another file
 
   jedinice.json            index of all 576 units: names, codes, grade and points per year
+  (profiles carry the latest State Audit Office opinion from data/reference/dur_revizije.json)
   jedinice/<slug>/izvor.json  where the numbers come from: formula of I1-I5, auxiliary quantities
                            and every input with its sheet and row in the MF files (provenance.py)
   jedinice/<slug>.json     full profile: every year's results, fact pack, peer medians,
@@ -81,6 +82,7 @@ def group_medians(res):
 
 
 AI_TEXTS = explain.AI_DIR / f"objasnjenja-{config.LAST_YEAR}.json"
+AUDITS = config.REFERENCE / "dur_revizije.json"     # pipeline/dur.py; committed, refreshed by hand
 
 
 def load_ai_texts(path=AI_TEXTS):
@@ -280,6 +282,7 @@ def main():
     write(API / "jedinice.json", {"generirano": generated, "zadnja_godina": config.LAST_YEAR, "jedinice": index})
     write(API / "skupine.json", group_medians(res))
 
+    audits = json.loads(AUDITS.read_text(encoding="utf-8")) if AUDITS.exists() else None
     shown_ai = 0
     for u in units.to_dict("records"):
         n = nested[u["oib"]]
@@ -293,6 +296,8 @@ def main():
             "susjedi": neighbours,
             "cinjenice": pack,
             "objasnjenje": explanation(pack, ai_texts.get(u["oib"])),
+            # latest financial audit of the State Audit Office; None: no audit since 2019 (or no layer)
+            "revizija": audits.get(u["oib"]) if audits is not None else None,
         })
         shown_ai += bool(detail["objasnjenje"]) and detail["objasnjenje"]["izvor"] == "ai"
         write(API / "jedinice" / f"{u['slug']}.json", detail)

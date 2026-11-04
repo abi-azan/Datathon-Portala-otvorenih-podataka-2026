@@ -25,6 +25,7 @@ Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datat
 - **Vidljiva provjera brojki.** Svaka brojka u objašnjenju pokazuje činjenicu iz koje dolazi. Ispod svake sastavnice je "Kako je izračunato": formula, pomoćne veličine po godinama i ulazni iznosi s kontom, listom i retkom u datotekama Ministarstva financija. Test iz samih tih ulaza ponovno dobiva objavljene pokazatelje za svih 576 jedinica.
 - **Simulator spajanja** (`#/simulator`): odabir 2-4 susjedne općine ili grada iste županije na karti ili pretragom. Prikazuje ocjenu spojene jedinice i rang u skupini, iznose prije i poslije (dospjele obveze, uprava), raspon uštede na općoj upravi i promjenu fiskalnog izravnanja po zakonskoj formuli. Svih 13.353 dopuštenih skupina izračunato je unaprijed.
 - **Karta reforme** (`#/reforma`): scenarij u kojem se unutar županije najmanja jedinica ispod praga spaja s najmanjim susjedom, za pragove od 2.500, 5.000 i 10.000 stanovnika (555 → 370, 239 ili 147 jedinica). Scenarij, ne prijedlog granica.
+- **Revizija Državnog ureda za reviziju** na svjedodžbi: zadnje mišljenje financijske revizije (bezuvjetno, uvjetno, nepovoljno ili suzdržano), revidirana godina i poveznica na izvješće, ili "nije imala financijsku reviziju od 2019.". Ne ulazi u ocjenu.
 - **Metodologija i podaci** (`#/metodologija`): formule, pragovi, ponderi, pravila i AI prompt čitaju se iz koda (`metodologija.json`), uz popis svih skupova podataka.
 - **Otvoreni API**: statične datoteke bez ključa, opisane u OpenAPI 3.1. Sadrži sve rezultate, šifrarnik (OIB ↔ RKP ↔ šifra DGU/DZS ↔ naziv), granice, simulator, Kartu reforme, izvor svake brojke i zapis provenijencije svakog preuzimanja.
 
@@ -38,6 +39,7 @@ Svi korišteni skupovi s izdavateljem, poveznicom, licencom i načinom pristupa 
 | Popis 2021. i granice gradova i općina (INSPIRE) | DZS, servis DGU/NIPP | **API: OGC WFS** |
 | Katalog Portala otvorenih podataka | data.gov.hr | **API: CKAN** |
 | Tablica fiskalnog izravnanja za 2027. (kapacitet, referentne vrijednosti, puni iznosi) | Ministarstvo financija | datoteka (uvjetni GET) |
+| Izvješća o financijskim revizijama JLP(R)S, objavljena 2019.-2026. | Državni ured za reviziju | HTML popis i PDF (`pipeline/dur.py`, rezultat u `data/reference/dur_revizije.json`) |
 | Upravne jedinice INSPIRE, indeks razvijenosti 2024. | DGU, MRRFEU | jednokratno, u `data/reference/jls_master.csv` |
 
 Podaci Ministarstva financija nisu na Portalu otvorenih podataka i nemaju izričitu licencu. Koriste se prema Zakonu o pravu na pristup informacijama (čl. 27. i 31.) i uz uvjete Otvorene dozvole, koja prema Pravilniku NN 67/17 (čl. 4.) vrijedi kad tijelo nije objavilo druge uvjete. Obrazloženje je u [docs/skupovi-podataka.md](docs/skupovi-podataka.md). Preporuka Ministarstvu: objaviti PR-RAS, RAS-funkcijski i Bilancu na data.gov.hr, s licencom i API-jem.

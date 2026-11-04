@@ -198,6 +198,7 @@ export function Methodology() {
               <li>
                 <strong className="font-semibold text-ink">Karta reforme.</strong> {doc.simulator.reforma}
               </li>
+
             </ul>
           </Section>
 
@@ -207,9 +208,11 @@ export function Methodology() {
                 Povučeno s data.gov.hr API-ja (CKAN) {day(ckan.zadnje_preuzimanje)}
               </p>
             )}
+            {doc.revizija && <p className="mt-3 text-sm text-ink-2">{doc.revizija}</p>}
             <p className="mt-3 text-sm text-ink-2">
-              Svaki skup se preuzima automatski; vrijeme, ETag i sha256 svakog preuzimanja su u{' '}
-              <a className={link} href="./api/v1/izvori.json">zapisu izvora</a>.
+              Podaci Ministarstva financija, DZS-a i Portala otvorenih podataka preuzimaju se automatski pri svakoj izgradnji;
+              izvješća revizije i podaci za šifrarnik (DGU, indeks razvijenosti) osvježavaju se ručno. Vrijeme, ETag i sha256
+              svakog preuzimanja su u <a className={link} href="./api/v1/izvori.json">zapisu izvora</a>.
             </p>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[720px] text-sm">

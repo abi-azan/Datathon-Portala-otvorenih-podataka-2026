@@ -92,6 +92,9 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
             "reforma": "Unutar županije najmanja jedinica ispod praga spaja se s najmanjim susjedom dok sve "
                        "ne dosegnu prag (2.500, 5.000 ili 10.000 stanovnika). Scenarij, ne prijedlog granica.",
         },
+        "revizija": "Na svjedodžbi je zadnje mišljenje financijske revizije Državnog ureda za reviziju (izvješća "
+                    "objavljena od 2019.), pročitano iz teksta izvješća, s revidiranom godinom i poveznicom. Mišljenje "
+                    "ne ulazi u ocjenu.",
         "ogranicenja": [
             "Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja ni razina usluga.",
             "Podaci su razina 22: proračun jedinice bez proračunskih korisnika i bez komunalnih društava, pa dug "

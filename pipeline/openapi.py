@@ -101,6 +101,15 @@ SCHEMAS = {
                                "km": {"type": "number"}}}},
             "cinjenice": {"type": ["object", "null"], "properties": {
                 "facts": {"type": "array", "items": {"$ref": "#/components/schemas/Cinjenica"}}}},
+            "revizija": {"type": ["object", "null"],
+                         "description": "Zadnja financijska revizija Državnog ureda za reviziju (izvješća objavljena od 2019., "
+                                        "pipeline/dur.py). null: jedinica nije imala financijsku reviziju od 2019.",
+                         "required": ["objavljeno", "revidirana_godina", "misljenje", "url"],
+                         "properties": {
+                             "objavljeno": {"type": "integer", "description": "Godina objave izvješća."},
+                             "revidirana_godina": INT,
+                             "misljenje": {"enum": ["bezuvjetno", "uvjetno", "nepovoljno", "suzdržano", None]},
+                             "url": {"type": "string", "format": "uri"}}},
             "objasnjenje": {"type": ["object", "null"], "required": ["tekst", "izvor", "model", "provjera"],
                             "description": "Kratko objašnjenje ocjene. AI tekst (Gemma 4 na Kaggleu) objavljuje se samo ako je "
                                            "napisan iz istog paketa činjenica (pack_sha256) i ako prolazi provjeru brojki; "

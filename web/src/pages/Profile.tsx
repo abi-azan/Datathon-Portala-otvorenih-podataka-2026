@@ -258,6 +258,29 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           </Card>
 
           <Card>
+            <Eyebrow>Revizija Državnog ureda za reviziju</Eyebrow>
+            {unit.revizija ? (
+              <>
+                <p className="mt-3 font-medium">{OPINION[unit.revizija.misljenje ?? ''] ?? 'Mišljenje nije pročitano iz izvješća'}</p>
+                <p className="mt-1 text-sm text-ink-2">
+                  Financijska revizija
+                  {unit.revizija.revidirana_godina ? ` za ${unit.revizija.revidirana_godina}.` : ''}, izvješće objavljeno{' '}
+                  {unit.revizija.objavljeno}.
+                </p>
+                <a
+                  href={unit.revizija.url}
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm underline decoration-axis underline-offset-4 hover:decoration-ink"
+                >
+                  Izvješće (PDF) <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                </a>
+                <p className="mt-3 text-xs text-muted">Mišljenje revizije ne ulazi u ocjenu; prikazuje se kao neovisna provjera.</p>
+              </>
+            ) : (
+              <p className="mt-3 text-sm text-ink-2">Jedinica nije imala financijsku reviziju od 2019. (izvješća objavljena 2019.–2026.).</p>
+            )}
+          </Card>
+
+          <Card>
             <Eyebrow>Otvorenost na data.gov.hr</Eyebrow>
             {unit.portal_objavljuje ? (
               <div className="mt-3 space-y-2 text-sm text-ink-2">
@@ -338,6 +361,14 @@ function ExtLink({ href, children }: { href: string; children: React.ReactNode }
 }
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+// Opinions of the State Audit Office, in its own words
+const OPINION: Record<string, string> = {
+  bezuvjetno: 'Bezuvjetno mišljenje',
+  uvjetno: 'Uvjetno mišljenje',
+  nepovoljno: 'Nepovoljno mišljenje',
+  suzdržano: 'Suzdržano mišljenje (suzdržavanje od izražavanja mišljenja)',
+}
 
 // "Kanal za prijavu greške" (PLAN §6, SHOULD): a GitHub issue with the unit already filled in.
 const ISSUES = 'https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026/issues/new'

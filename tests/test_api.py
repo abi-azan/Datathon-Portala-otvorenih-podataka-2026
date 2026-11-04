@@ -128,6 +128,19 @@ def test_dataset_list_matches_schema_and_csv(spec):
     assert list(v.iter_errors(data))
 
 
+def test_audit_layer_matches_the_known_cases():
+    """DUR layer (pipeline/dur.py): about 330 units have a financial audit since 2019; Povljana's
+    is the 2024 audit with an adverse opinion (docs/research/05)."""
+    from pipeline import publish
+    if not publish.AUDITS.exists():
+        pytest.skip("no data/reference/dur_revizije.json")
+    index = load("jedinice.json")["jedinice"]
+    audited = [u for u in index if load(f"jedinice/{u['slug']}.json")["revizija"]]
+    assert len(audited) >= 300
+    pov = load("jedinice/opcina-povljana.json")["revizija"]
+    assert pov["misljenje"] == "nepovoljno" and pov["revidirana_godina"] == 2024 and pov["url"].startswith("https://www.revizija.hr/")
+
+
 def test_dcat_catalogue_lists_what_is_published():
     """DCAT-AP mandatory properties are present and every downloadable distribution exists."""
     cat = load("dcat.jsonld")

@@ -90,6 +90,13 @@ export interface UnitDetail {
   godine: Record<string, YearResult>
   susjedi: { slug: string; naziv: string; vrsta: 'kopno' | 'more'; km: number }[]
   cinjenice: { facts: Fact[]; naziv: { nom: string; gen: string; lok: string } } | null
+  /** Latest financial audit of the State Audit Office since 2019 (pipeline/dur.py); null: none. */
+  revizija?: {
+    objavljeno: number
+    revidirana_godina: number | null
+    misljenje: 'bezuvjetno' | 'uvjetno' | 'nepovoljno' | 'suzdržano' | null
+    url: string
+  } | null
   objasnjenje: {
     tekst: string
     izvor: 'ai' | 'predlozak'
@@ -248,6 +255,7 @@ export interface MethodologyDoc {
     prompt_jednak_batchu: boolean | null
   }
   simulator: Record<string, string>
+  revizija?: string
   ogranicenja: string[]
 }
 
