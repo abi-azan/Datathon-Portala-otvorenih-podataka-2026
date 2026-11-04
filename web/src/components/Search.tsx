@@ -132,6 +132,19 @@ export function Search({
           })}
         </ul>
       )}
+      {/* live region stays mounted so screen readers announce the empty result */}
+      <p
+        role="status"
+        className={
+          open && q.trim() !== '' && hits.length === 0
+            ? 'absolute z-20 mt-2 w-full rounded-xl border border-hairline bg-card px-4 py-3 text-sm text-ink-2 shadow-xl'
+            : 'sr-only'
+        }
+      >
+        {open && q.trim() !== '' && hits.length === 0
+          ? `Nema jedinice s nazivom „${q.trim()}”. Provjerite pravopis ili upišite početak naziva, npr. „povlj”.`
+          : ''}
+      </p>
     </div>
   )
 }

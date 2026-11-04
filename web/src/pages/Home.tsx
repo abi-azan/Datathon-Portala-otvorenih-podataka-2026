@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 're
 import { GradeLegend } from '../components/Grade'
 import { Eyebrow } from '../components/Layout'
 import { Search } from '../components/Search'
+import { UnitTable } from '../components/UnitTable'
 import type { IndexFile } from '../lib/data'
 import { num } from '../lib/format'
 import { unitHref } from '../lib/router'
@@ -34,6 +35,7 @@ export function Home({ index }: { index: IndexFile }) {
   const [year, setYear] = useState(String(index.zadnja_godina))
   const [playing, setPlaying] = useState(false)
   const [view, setView] = useState<ViewKey>('ocjena')
+  const [mode, setMode] = useState<'karta' | 'tablica'>('karta')
   const ctx = contextView(view)
   const jls = useMemo(() => index.jedinice.filter((u) => u.vrsta !== 'zupanija'), [index])
 
@@ -214,11 +216,33 @@ export function Home({ index }: { index: IndexFile }) {
         </p>
       </div>
 
-      {/* phones: shorter, so the page can still be scrolled past the map */}
-      <div className="h-[60vh] min-h-[420px] lg:sticky lg:top-24 lg:h-[min(78vh,820px)] lg:min-h-[520px]">
-        <Suspense fallback={<MapPlaceholder>Učitavam kartu…</MapPlaceholder>}>
-          <GradeMap units={index.jedinice} year={year} colorBy={view} />
-        </Suspense>
+      <div className="flex flex-col gap-3 lg:sticky lg:top-24 lg:self-start">
+        <div className="flex justify-end">
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Karta ili tablica">
+            {(['karta', 'tablica'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="radio"
+                aria-checked={m === mode}
+                onClick={() => setMode(m)}
+                className={`rounded-lg px-3 py-1 text-sm transition ${m === mode ? 'bg-card font-semibold shadow-sm' : 'text-ink-2 hover:text-ink'}`}
+              >
+                {m === 'karta' ? 'Karta' : 'Tablica'}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* phones: shorter, so the page can still be scrolled past the map */}
+        <div className="h-[60vh] min-h-[420px] lg:h-[min(74vh,780px)] lg:min-h-[500px]">
+          {mode === 'karta' ? (
+            <Suspense fallback={<MapPlaceholder>Učitavam kartu…</MapPlaceholder>}>
+              <GradeMap units={index.jedinice} year={year} colorBy={view} />
+            </Suspense>
+          ) : (
+            <UnitTable units={index.jedinice} year={year} ctx={ctx} />
+          )}
+        </div>
       </div>
     </main>
   )
