@@ -25,8 +25,11 @@ Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datat
 - **Vidljiva provjera brojki.** Svaka brojka u objašnjenju pokazuje činjenicu iz koje dolazi. Ispod svake sastavnice je "Kako je izračunato": formula, pomoćne veličine po godinama i ulazni iznosi s kontom, listom i retkom u datotekama Ministarstva financija. Test iz samih tih ulaza ponovno dobiva objavljene pokazatelje za svih 576 jedinica.
 - **Simulator spajanja** (`#/simulator`): odabir 2-4 susjedne općine ili grada iste županije na karti ili pretragom. Prikazuje ocjenu spojene jedinice i rang u skupini, iznose prije i poslije (dospjele obveze, uprava), raspon uštede na općoj upravi i promjenu fiskalnog izravnanja po zakonskoj formuli. Svih 13.353 dopuštenih skupina izračunato je unaprijed.
 - **Karta reforme** (`#/reforma`): scenarij u kojem se unutar županije najmanja jedinica ispod praga spaja s najmanjim susjedom, za pragove od 2.500, 5.000 i 10.000 stanovnika (555 → 370, 239 ili 147 jedinica). Scenarij, ne prijedlog granica.
+- **Stanovništvo i gospodarstvo** u pregledu jedinice: kretanje broja stanovnika od 2021., prirodni prirast, neto migracija, noćenja turista, građevinske dozvole, neto dohodak i udio mirovina, uz medijan usporedne skupine. Niz stanovništva preglednik traži **uživo s API-ja DZS-a** (PxWeb, oznaka "uživo s API-ja DZS-a"), a spremljena kopija iz builda je rezerva. Ne ulazi u ocjenu.
+- **Fiskalno izravnanje** u pregledu jedinice: porezni kapacitet po stanovniku prema referentnoj vrijednosti, procjena godišnje isplate i, za 124 jedinice s nižom stopom poreza na dohodak, procjena koliko bi proračun imao uz najviše stope. Ne ulazi u ocjenu.
 - **Revizija Državnog ureda za reviziju** u pregledu jedinice: zadnje mišljenje financijske revizije (bezuvjetno, uvjetno, nepovoljno ili suzdržano), revidirana godina i poveznica na izvješće, ili "nije imala financijsku reviziju od 2019.". Ne ulazi u ocjenu.
 - **Metodologija i podaci** (`#/metodologija`): formule, pragovi, ponderi, pravila i AI prompt čitaju se iz koda (`metodologija.json`), uz popis svih skupova podataka.
+- **MCP server** (`fiskalna_mcp`): AI asistenti koji podržavaju MCP mogu pitati za ocjenu, usporedbu, scenarij spajanja i izvor brojke, a odgovaraju našim brojkama s poveznicom (vidi dolje).
 - **Otvoreni API**: statične datoteke bez ključa, opisane u OpenAPI 3.1. Sadrži sve rezultate, šifrarnik (OIB ↔ RKP ↔ šifra DGU/DZS ↔ naziv), granice, simulator, Kartu reforme, izvor svake brojke i zapis provenijencije svakog preuzimanja.
 
 ## Podaci
@@ -38,6 +41,10 @@ Svi korišteni skupovi s izdavateljem, poveznicom, licencom i načinom pristupa 
 | PR-RAS, RAS-funkcijski i Bilanca JLP(R)S 2019.-2025. | Ministarstvo financija | datoteke (uvjetni GET, ETag) |
 | Popis 2021. i granice gradova i općina (INSPIRE) | DZS, servis DGU/NIPP | **API: OGC WFS** |
 | Katalog Portala otvorenih podataka | data.gov.hr | **API: CKAN** |
+| Procjene stanovništva, migracije, rođeni i umrli, turizam, građevinske dozvole (6 tablica) | DZS | **API: PxWeb** (u ETL-u, a niz stanovništva i uživo iz preglednika) |
+| Gradovi i općine u statistici (stanovništvo 2025., dok ga PxWeb nema) | DZS | datoteka s podaci.dzs.hr, skup na data.gov.hr (uvjetni GET) |
+| Neto dohodak po jedinicama, porezne stope, porez na potrošnju i nekretnine, dohodak po razredima | Porezna uprava | datoteke s data.gov.hr, pronađene preko **CKAN API-ja** (`package_show`) |
+| Tablice udjela i odluke o fiskalnom izravnanju 2021.-2025. | Ministarstvo financija | datoteke (uvjetni GET) |
 | Tablica fiskalnog izravnanja za 2027. (kapacitet, referentne vrijednosti, puni iznosi) | Ministarstvo financija | datoteka (uvjetni GET) |
 | Izvješća o financijskim revizijama JLP(R)S, objavljena 2019.-2026. | Državni ured za reviziju | HTML popis i PDF (`pipeline/dur.py`, rezultat u `data/reference/dur_revizije.json`) |
 | Upravne jedinice INSPIRE, indeks razvijenosti 2024. | DGU, MRRFEU | jednokratno, u `data/reference/jls_master.csv` |
@@ -62,13 +69,46 @@ Pet pokazatelja, svaki se boduje 0-100 interpolacijom između pragova iz prakse 
 
 ## Arhitektura
 
+```mermaid
+flowchart LR
+  subgraph IZ["Izvori (javni sektor)"]
+    MF["Ministarstvo financija<br/>PR-RAS, Bilanca, izravnanje"]
+    WFS["DZS INSPIRE WFS<br/>Popis 2021., granice"]
+    PX["DZS PxWeb API<br/>stanovništvo, turizam, dozvole"]
+    CK["data.gov.hr CKAN API<br/>katalog, Porezna uprava"]
+    DUR["Državni ured za reviziju<br/>izvješća (ručno, commitano)"]
+  end
+  subgraph CI["GitHub Actions (tjedno i na push)"]
+    ETL["ETL, Python 3.12<br/>pipeline/build.py<br/>zapis URL, ETag, sha256"]
+    TEST["testovi (pytest)<br/>sheme OpenAPI"]
+  end
+  API[("Statični API na GitHub Pages<br/>OpenAPI 3.1, DCAT-AP, CSV, JSON")]
+  WEB["Web: React, MapLibre"]
+  MCPS["MCP server fiskalna_mcp<br/>za AI asistente"]
+  KG["Kaggle GPU<br/>Gemma 4 31B, llama.cpp"]
+  MF --> ETL
+  WFS --> ETL
+  PX --> ETL
+  CK --> ETL
+  DUR --> ETL
+  ETL --> TEST --> API
+  ETL -- "paketi činjenica" --> KG
+  KG -- "provjereni tekstovi (commit)" --> ETL
+  API --> WEB
+  API --> MCPS
+  PX -. "uživo iz preglednika (CORS)" .-> WEB
 ```
-IZVORI  MF (XLSX, ETag) · DZS INSPIRE WFS · data.gov.hr CKAN API
+
+Moduli ETL-a:
+
+```
+IZVORI  MF (XLSX, ETag) · DZS INSPIRE WFS i PxWeb · data.gov.hr CKAN API · Porezna uprava · DUR
    │      pipeline/sources.py zapisuje URL, vrijeme, ETag i sha256 svakog preuzimanja
    ▼
 ETL (Python 3.12)       pipeline/build.py
-   mf.py → units.py → population.py → geo.py → openness.py → methodology.py
+   mf.py → units.py → population.py → geo.py → openness.py → izravnanje_isplate.py → methodology.py
    │                                         (susjedi, otoci, TopoJSON)
+   ├─ pxweb.py + dzs_xlsx.py, porezna.py → kontekst.py      (kontekst, ne ulazi u ocjenu)
    ├─ merge.py (+ izravnanje.py) → simulator/zup-XX.json   (13.353 skupine, unaprijed)
    ├─ reforma.py → reforma/prag-N.json                     (pohlepno pravilo, 3 praga)
    ├─ facts.py → explain.py → verify.py ──► Kaggle (Gemma 4 31B, llama.cpp, T4 GPU)
@@ -87,9 +127,9 @@ GitHub Actions (.github/workflows/deploy.yml): ETL → API → testovi → build
 - AI tekstovi generiraju se jednom na Kaggleu i commitaju. CI ih samo provjerava i objavljuje.
 - **Interoperabilnost:** stabilni ključevi (OIB, RKP, službena šifra DGU/DZS), OpenAPI 3.1, CSV i JSON, katalog DCAT-AP (EU kontrolirani rječnici za licencu, format, temu, državu i učestalost), INSPIRE izvori i zapis provenijencije.
 - **Preduvjeti:**
-  - pravni: licenca podataka MF-a;
-  - organizacijski: objava MF podataka na portalu;
-  - tehnički: Node.js za mapshaper i besplatni Kaggle GPU za tekstove.
+  - **pravni:** podaci MF-a (PR-RAS, Bilanca, izravnanje) nemaju izričitu licencu, pa se koriste prema ZPPI i Pravilniku NN 67/17 (obrazloženje u `docs/skupovi-podataka.md`); ostali izvori su pod Otvorenom dozvolom ili navedenim uvjetima. Kod je pod EUPL-1.2, a rezultati pod CC BY 4.0;
+  - **organizacijski:** MF jednom godišnje objavljuje izvještaje jedinica (konačni podaci za prethodnu godinu, oko srpnja), a tjedni CI ih preuzme sam. Najviše bi pomoglo da MF te izvještaje objavi na data.gov.hr, s licencom i API-jem. Održavanje traži jednu osobu koja godišnje pregleda nove podatke i pokrene AI tekstove;
+  - **tehnički:** GitHub (repozitorij, Actions, Pages) bez poslužitelja i baze; Python 3.12 i Node.js 22 (mapshaper) u CI-ju; besplatni Kaggle GPU (oko 4 h godišnje) za AI tekstove. Statični API može preuzeti bilo koja institucija, a katalog DCAT-AP može preuzeti portal.
 
 ## Pokretanje
 
@@ -129,6 +169,16 @@ Osnovna adresa je `<stranica>/api/v1/`, a opis je u `openapi.json`.
 - Pokretanje: `.venv/Scripts/python -m fiskalna_mcp` (javni API) ili `… --api web/public/api/v1` (lokalni build, bez mreže).
 - Konfiguracija klijenta, naredbe za MCP Inspector i primjeri pitanja: [docs/mcp.md](docs/mcp.md). SDK: `mcp` 2.3.0 (MIT).
 
+## Daljnji razvoj
+
+- **Objava podataka MF-a na data.gov.hr.** Tada se cijela Fiskalna karta hrani s portala, preko CKAN API-ja, i osvježava sama.
+- **Godišnje osvježavanje.** Kad MF objavi 2026., isti ETL izračuna novu ocjenu i trend; AI tekstovi se ponovno pišu samo za jedinice čiji se paket promijenio (`--skip`).
+- **Proračunski korisnici:** sada se ocjenjuje proračun same jedinice (razina 22), bez vrtića, ustanova i drugih korisnika njezina proračuna. Konsolidirana slika bila bi potpunija.
+- **Usporedba plana i izvršenja:** proračuni koje jedinice objavljuju na portalu (269 jedinica ima barem jedan skup) uz izvršenje iz izvještaja MF-a.
+- **Novi slojevi konteksta kad postanu dostupni po jedinici:** nezaposlenost (HZZ je sada objavljuje samo po županijama), novi poslovni subjekti iz Sudskog registra.
+- **Prognozu razvoja smo testirali i odbacili** (`docs/research/13-prediktori-razvoja.md`): razvoj je vrlo postojan (indeks razvijenosti 2018. i 2024., Spearman 0,965), a model s 36 prediktora ne predviđa rast dohotka bolje od prošlog trenda. Provjera se može ponoviti kad izađe novo izdanje indeksa.
+- **MCP server u javnom registru** MCP servera, uz poslužitelj koji ga nudi preko HTTP-a, kako bi ga AI asistenti mogli koristiti bez instalacije.
+
 ## Licence
 
 - **Kod:** [EUPL-1.2](LICENSE).
@@ -156,4 +206,4 @@ Pravila natjecanja traže popis svih AI alata:
 | Claude Fable | vlasnički; Anthropic uvjeti | neovisne recenzije plana |
 | Claude (Anthropic), ocjenjivanje | vlasnički; Anthropic uvjeti | ocjena jezika Gemma tekstova tijekom razvoja |
 
-Za tekstove koji se prikazuju u aplikaciji koristi se samo otvoreni model. Batch od 4.11. (Gemma 4 31B, 3,5 h na Kaggle T4) dao je AI tekst za 565 od 576 jedinica; ostalih 11 ima predložak s oznakom (`docs/research/06-gemma-test.md`, v8). Prompt i provjera brojki su javni: `pipeline/explain.py`, `pipeline/verify.py`.
+Za tekstove koji se prikazuju u aplikaciji koristi se samo otvoreni model. Batch od 4.11. (Gemma 4 31B, 3,5 h na Kaggle T4) dao je AI tekst za svih 576 jedinica nakon ispravka provjere ocjena (`docs/research/06-gemma-test.md`, v8 i v8b). Paketi činjenica od 5.11. imaju i kontekst (stanovništvo, dohodak), pa se tekstovi pišu ponovno (pilot v9: 20/20 prolazi provjeru); do tada profili s promijenjenim paketom prikazuju predložak s oznakom. Prompt i provjera brojki su javni: `pipeline/explain.py`, `pipeline/verify.py`.
