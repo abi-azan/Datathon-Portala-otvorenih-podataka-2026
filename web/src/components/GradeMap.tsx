@@ -13,18 +13,22 @@ import { grade, num } from '../lib/format'
 import { go, unitHref } from '../lib/router'
 import { GradeChip } from './Grade'
 import { BASEMAP, BLANK, CROATIA, gradeFill, quietBasemap } from './mapStyle'
+import { SEQUENTIAL, classOf, contextView, quintiles, type ViewKey } from '../lib/views'
 
 maplibregl.setWorkerUrl(workerUrl)
 
 const fillColor = gradeFill(['feature-state', 'g'])
 
-/** What the fill encodes. Only the grade for now; add a member and its COLOR_BY entry for new layers. */
-export type MapColorBy = 'ocjena'
+/** What the fill encodes: the grade, or one of the two context views (lib/views.ts). */
+export type MapColorBy = ViewKey
 
-// Per colouring: the feature-state value `g` of a unit in a year, and the fill expression that reads it.
-const COLOR_BY: Record<MapColorBy, { value: (u: UnitIndex, year: string) => number; fill: maplibregl.ExpressionSpecification }> = {
-  ocjena: { value: (u, year) => u.ocjena[year] ?? 0, fill: fillColor },
-}
+// The context views colour their quintile class 1-5 (feature-state `g`) on the sequential ramp.
+const sequentialFill = [
+  'match',
+  ['coalesce', ['feature-state', 'g'], 0],
+  ...SEQUENTIAL.flatMap((c, i) => [i + 1, c]),
+  '#ffffff',
+] as unknown as maplibregl.ExpressionSpecification
 
 interface Props {
   units: UnitIndex[]
@@ -127,7 +131,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
           type: 'fill',
           source: 'jls',
           paint: {
-            'fill-color': COLOR_BY.ocjena.fill,
+            'fill-color': fillColor,
             'fill-opacity': ['case', ['boolean', ['feature-state', 'dim'], false], 0.22, 0.94],
           },
         },
@@ -201,11 +205,13 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
   useEffect(() => {
     const m = map.current
     if (!ready || !m) return
-    const by = COLOR_BY[colorBy]
-    m.setPaintProperty('jls-fill', 'fill-color', by.fill)
+    const view = contextView(colorBy)
+    const cuts = view ? quintiles(units, view, year) : []
+    m.setPaintProperty('jls-fill', 'fill-color', view ? sequentialFill : fillColor)
     for (const u of units) {
       if (u.vrsta === 'zupanija') continue
-      m.setFeatureState({ source: 'jls', id: u.sifra }, { g: by.value(u, year) })
+      const g = view ? classOf(view.value(u, year), cuts) : (u.ocjena[year] ?? 0)
+      m.setFeatureState({ source: 'jls', id: u.sifra }, { g })
     }
   }, [ready, units, year, colorBy])
 
@@ -252,13 +258,14 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
   }, [ready, focusKey])
 
   const h = hover && grade(hover.unit.ocjena[year])
+  const view = contextView(colorBy)
   const hoverSelected = hover != null && (selected ?? []).includes(hover.unit.sifra)
   return (
     <div className="relative h-full w-full overflow-hidden rounded-2xl border border-hairline bg-surface">
       <div ref={box} className="h-full w-full" aria-label="Karta ocjena općina i gradova" role="region" />
       {/* max width keeps the caption clear of the zoom buttons on narrow screens */}
       <div className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur">
-        <div className="text-sm font-semibold">Ocjena financijske stabilnosti, {year}.</div>
+        <div className="text-sm font-semibold">{view ? view.label : 'Ocjena financijske stabilnosti'}, {year}.</div>
         <div className="text-xs text-muted">
           556 općina i gradova · prijeđi mišem, klikni za {selectable ? 'odabir' : 'svjedodžbu'}
         </div>
@@ -281,6 +288,12 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
             {h ? <GradeChip g={h.value} /> : <span className="text-sm text-muted">nema podataka</span>}
             <span className="tabular text-sm text-ink-2">{num(hover.unit.bodovi[year], 1)} / 100 bodova</span>
           </div>
+          {view && (
+            <div className="mt-1.5 text-sm">
+              <span className="text-muted">{view.short}: </span>
+              <span className="tabular font-medium">{view.format(view.value(hover.unit, year))}</span>
+            </div>
+          )}
           <div className="mt-2 text-xs text-muted">
             {hint?.(hover.unit.sifra) ??
               (!selectable ? 'Klikni za svjedodžbu jedinice' : hoverSelected ? 'Klikni za uklanjanje iz odabira' : 'Klikni za odabir jedinice')}

@@ -6,6 +6,7 @@ import { Search } from '../components/Search'
 import type { IndexFile } from '../lib/data'
 import { num } from '../lib/format'
 import { unitHref } from '../lib/router'
+import { CONTEXT_VIEWS, SEQUENTIAL, classOf, contextView, quintiles, type ViewKey } from '../lib/views'
 
 const YEARS = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']
 
@@ -32,6 +33,8 @@ function MapPlaceholder({ children }: { children: ReactNode }) {
 export function Home({ index }: { index: IndexFile }) {
   const [year, setYear] = useState(String(index.zadnja_godina))
   const [playing, setPlaying] = useState(false)
+  const [view, setView] = useState<ViewKey>('ocjena')
+  const ctx = contextView(view)
   const jls = useMemo(() => index.jedinice.filter((u) => u.vrsta !== 'zupanija'), [index])
 
   useEffect(() => {
@@ -68,6 +71,22 @@ export function Home({ index }: { index: IndexFile }) {
   }, [jls, year])
   const underPressure = (people[1] ?? 0) + (people[2] ?? 0)
 
+  // legend of a context view: the five quintile classes with their ranges and unit counts
+  const classes = useMemo(() => {
+    if (!ctx) return []
+    const cuts = quintiles(jls, ctx, year)
+    const vals = jls.map((u) => ctx.value(u, year))
+    const lo = Math.min(...vals.filter((v): v is number => v != null && Number.isFinite(v)))
+    const hi = Math.max(...vals.filter((v): v is number => v != null && Number.isFinite(v)))
+    const edges = [lo, ...cuts, hi]
+    return SEQUENTIAL.map((color, i) => ({
+      color,
+      from: edges[i],
+      to: edges[i + 1],
+      n: vals.filter((v) => classOf(v, cuts) === i + 1).length,
+    }))
+  }, [ctx, jls, year])
+
   const examples = ['grad-zagreb', 'grad-split', 'opcina-sveta-marija', 'opcina-povljana']
     .map((s) => index.jedinice.find((u) => u.slug === s))
     .filter(Boolean)
@@ -99,18 +118,58 @@ export function Home({ index }: { index: IndexFile }) {
           ))}
         </div>
 
+        <div>
+          <Eyebrow>Prikaz na karti</Eyebrow>
+          <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Prikaz na karti">
+            {[{ key: 'ocjena' as ViewKey, short: 'Ocjena' }, ...CONTEXT_VIEWS].map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                role="radio"
+                aria-checked={v.key === view}
+                onClick={() => setView(v.key)}
+                className={`rounded-lg px-2 py-1.5 text-sm transition ${v.key === view ? 'bg-card font-semibold shadow-sm' : 'text-ink-2 hover:text-ink'}`}
+              >
+                {v.short}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="rounded-2xl border border-hairline bg-card p-5">
-          <div className="flex items-baseline justify-between">
-            <Eyebrow>Ocjena za {year}.</Eyebrow>
-            <span className="text-xs text-muted">broj jedinica</span>
+          <div className="flex items-baseline justify-between gap-3">
+            <Eyebrow>{ctx ? `${ctx.label}, ${year}.` : `Ocjena za ${year}.`}</Eyebrow>
+            <span className="shrink-0 text-xs text-muted">broj jedinica</span>
           </div>
-          <div className="mt-4">
-            <GradeLegend counts={counts} />
-          </div>
-          <p className="mt-4 border-t border-hairline pt-4 text-sm leading-relaxed text-ink-2">
-            U jedinicama s ocjenom 1 ili 2 živi{' '}
-            <strong className="tabular font-semibold text-ink">{num(underPressure)}</strong> stanovnika.
-          </p>
+          {!ctx ? (
+            <>
+              <div className="mt-4">
+                <GradeLegend counts={counts} />
+              </div>
+              <p className="mt-4 border-t border-hairline pt-4 text-sm leading-relaxed text-ink-2">
+                U jedinicama s ocjenom 1 ili 2 živi{' '}
+                <strong className="tabular font-semibold text-ink">{num(underPressure)}</strong> stanovnika.
+              </p>
+            </>
+          ) : (
+            <>
+              <ul className="mt-4 space-y-1.5" aria-label={`Legenda: ${ctx.label}`}>
+                {classes.map((c, i) => (
+                  <li key={i} className="flex items-center gap-3 text-sm">
+                    <span className="h-4 w-7 shrink-0 rounded" style={{ background: c.color }} aria-hidden />
+                    <span className="tabular flex-1 text-ink-2">
+                      {ctx.range(c.from, c.to)}
+                    </span>
+                    <span className="tabular text-muted">{c.n}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 border-t border-hairline pt-4 text-sm leading-relaxed text-ink-2">
+                Kontekst, ne ulazi u ocjenu. Razredi su petine općina i gradova u {year}. godini; tamnije znači više, a ne
+                bolje ili lošije.
+              </p>
+            </>
+          )}
         </div>
 
         <div>
@@ -156,7 +215,7 @@ export function Home({ index }: { index: IndexFile }) {
       {/* phones: shorter, so the page can still be scrolled past the map */}
       <div className="h-[60vh] min-h-[420px] lg:sticky lg:top-24 lg:h-[min(78vh,820px)] lg:min-h-[520px]">
         <Suspense fallback={<MapPlaceholder>Učitavam kartu…</MapPlaceholder>}>
-          <GradeMap units={index.jedinice} year={year} />
+          <GradeMap units={index.jedinice} year={year} colorBy={view} />
         </Suspense>
       </div>
     </main>

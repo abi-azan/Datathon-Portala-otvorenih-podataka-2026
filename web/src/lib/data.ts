@@ -16,6 +16,8 @@ export interface UnitIndex {
   bodovi: Record<string, number | null>
   uprava_pc: number | null
   udio_tekucih_pomoci: number | null
+  uprava_pc_po_godini?: Record<string, number | null>
+  udio_tekucih_pomoci_po_godini?: Record<string, number | null>
 }
 
 export interface IndexFile {

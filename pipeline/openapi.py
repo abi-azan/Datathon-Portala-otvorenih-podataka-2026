@@ -37,6 +37,9 @@ SCHEMAS = {
             "bodovi": {**BY_YEAR_NUM, "description": "Bodovi 0-100 po godini."},
             "uprava_pc": {**NUM, "description": "Trošak opće uprave po stanovniku u zadnjoj godini, €."},
             "udio_tekucih_pomoci": {**NUM, "description": "Udio tekućih pomoći u tekućim prihodima, zadnja godina."},
+            "uprava_pc_po_godini": {**BY_YEAR_NUM, "description": "Trošak opće uprave po stanovniku po godini, €."},
+            "udio_tekucih_pomoci_po_godini": {**BY_YEAR_NUM,
+                                              "description": "Udio tekućih pomoći u tekućim prihodima po godini."},
         },
     },
     "Indeks": {

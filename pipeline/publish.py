@@ -60,6 +60,11 @@ def clean(x):
     return x
 
 
+def _round(x, digits):
+    """Round a number for the index (every page loads it); None, NaN and inf stay as clean() makes them."""
+    return round(x, digits) if isinstance(x, (int, float)) and math.isfinite(x) else x
+
+
 def write(path, obj):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(clean(obj), ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -266,6 +271,9 @@ def main():
             "bodovi": {y: r["bodovi"] for y, r in years.items()},
             "uprava_pc": years[str(config.LAST_YEAR)]["uprava_pc"],
             "udio_tekucih_pomoci": years[str(config.LAST_YEAR)]["udio_tekucih_pomoci"],
+            # per year, for the map's two context views (PLAN §6 MUST 2)
+            "uprava_pc_po_godini": {y: _round(r["uprava_pc"], 1) for y, r in years.items()},
+            "udio_tekucih_pomoci_po_godini": {y: _round(r["udio_tekucih_pomoci"], 4) for y, r in years.items()},
         })
     generated = datetime.now(timezone.utc).isoformat(timespec="seconds")
     write(API / "jedinice.json", {"generirano": generated, "zadnja_godina": config.LAST_YEAR, "jedinice": index})
