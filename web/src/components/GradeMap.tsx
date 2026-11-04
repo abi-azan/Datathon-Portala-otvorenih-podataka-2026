@@ -55,6 +55,12 @@ interface Props {
   /** Šifre of units drawn with a thick outline. */
   selected?: string[]
   onSelect?: (sifra: string) => void
+  /** Šifre of units drawn faded (e.g. not allowed as the next pick in the simulator). */
+  dimmed?: string[]
+  /** Tooltip footer for a unit, instead of the default click hint (e.g. why it cannot be picked). */
+  hint?: (sifra: string) => string | undefined
+  /** Šifre of units to fit the view to whenever this list changes (e.g. the county of the selection). */
+  focus?: string[]
 }
 
 interface Hover {
@@ -72,7 +78,7 @@ const BLANK: maplibregl.StyleSpecification = {
   layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#fdfdfc' } }],
 }
 
-export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, selected, onSelect }: Props) {
+export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, selected, onSelect, dimmed, hint, focus }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
@@ -88,6 +94,8 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
     clickProps.current = { selectable, onSelect }
   }, [selectable, onSelect])
   const outlined = useRef(new Set<string>())
+  const faded = useRef(new Set<string>())
+  const geo = useRef<FeatureCollection | null>(null)
 
   useEffect(() => {
     if (!box.current) return
@@ -106,6 +114,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     map.current = m
     outlined.current = new Set()
+    faded.current = new Set()
     let removed = false
     let styleOk = false
     m.on('style.load', () => {
@@ -134,10 +143,22 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
       if (removed) return
       const jls = feature(topo, topo.objects.jls) as FeatureCollection
       const zup = feature(topo, topo.objects.zupanije) as FeatureCollection
+      geo.current = jls
       const firstLabel = m.getStyle().layers.find((l: maplibregl.LayerSpecification) => l.type === 'symbol')?.id
       m.addSource('jls', { type: 'geojson', data: jls, promoteId: 'sifra' })
       m.addSource('zup', { type: 'geojson', data: zup })
-      m.addLayer({ id: 'jls-fill', type: 'fill', source: 'jls', paint: { 'fill-color': COLOR_BY.ocjena.fill, 'fill-opacity': 0.94 } }, firstLabel)
+      m.addLayer(
+        {
+          id: 'jls-fill',
+          type: 'fill',
+          source: 'jls',
+          paint: {
+            'fill-color': COLOR_BY.ocjena.fill,
+            'fill-opacity': ['case', ['boolean', ['feature-state', 'dim'], false], 0.22, 0.94],
+          },
+        },
+        firstLabel,
+      )
       m.addLayer({ id: 'jls-line', type: 'line', source: 'jls', paint: { 'line-color': '#ffffff', 'line-width': 0.5, 'line-opacity': 0.9 } }, firstLabel)
       m.addLayer({ id: 'zup-line', type: 'line', source: 'zup', paint: { 'line-color': '#52514e', 'line-width': 1, 'line-opacity': 0.7 } }, firstLabel)
       m.addLayer({
@@ -224,6 +245,38 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
     outlined.current = next
   }, [ready, selected])
 
+  // fade the units that cannot be picked; same diffing as the outline
+  useEffect(() => {
+    const m = map.current
+    if (!ready || !m) return
+    const next = new Set(dimmed ?? [])
+    for (const s of faded.current) if (!next.has(s)) m.setFeatureState({ source: 'jls', id: s }, { dim: false })
+    for (const s of next) if (!faded.current.has(s)) m.setFeatureState({ source: 'jls', id: s }, { dim: true })
+    faded.current = next
+  }, [ready, dimmed])
+
+  // fit the view to the focus units when their list changes
+  const focusKey = (focus ?? []).join(',')
+  useEffect(() => {
+    const m = map.current
+    if (!ready || !m || !geo.current || !focusKey) return
+    const want = new Set(focusKey.split(','))
+    let [w, s, e, n] = [180, 90, -180, -90]
+    const visit = (c: unknown): void => {
+      if (Array.isArray(c) && typeof c[0] === 'number') {
+        const [x, y] = c as number[]
+        w = Math.min(w, x)
+        e = Math.max(e, x)
+        s = Math.min(s, y)
+        n = Math.max(n, y)
+      } else if (Array.isArray(c)) c.forEach(visit)
+    }
+    for (const f of geo.current.features) {
+      if (want.has(f.properties?.sifra) && f.geometry.type !== 'GeometryCollection') visit(f.geometry.coordinates)
+    }
+    if (w < e) m.fitBounds([w, s, e, n], { padding: 48, maxZoom: 9.5, duration: 600 })
+  }, [ready, focusKey])
+
   const h = hover && grade(hover.unit.ocjena[year])
   const hoverSelected = hover != null && (selected ?? []).includes(hover.unit.sifra)
   return (
@@ -255,7 +308,8 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
             <span className="tabular text-sm text-ink-2">{num(hover.unit.bodovi[year], 1)} / 100 bodova</span>
           </div>
           <div className="mt-2 text-xs text-muted">
-            {!selectable ? 'Klikni za svjedodžbu jedinice' : hoverSelected ? 'Klikni za uklanjanje iz odabira' : 'Klikni za odabir jedinice'}
+            {hint?.(hover.unit.sifra) ??
+              (!selectable ? 'Klikni za svjedodžbu jedinice' : hoverSelected ? 'Klikni za uklanjanje iz odabira' : 'Klikni za odabir jedinice')}
           </div>
         </div>
       )}

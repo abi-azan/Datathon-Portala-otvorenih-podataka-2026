@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
+import type { Page } from '../lib/router'
 
-export function Header({ current }: { current: 'home' | 'unit' | 'methodology' }) {
+export function Header({ current }: { current: Page }) {
   const link = (href: string, label: string, active: boolean) => (
     <a
       href={href}
@@ -24,9 +25,7 @@ export function Header({ current }: { current: 'home' | 'unit' | 'methodology' }
           aria-label="Glavna navigacija"
         >
           {link('#/', 'Karta', current === 'home')}
-          <span className="shrink-0 cursor-not-allowed rounded-lg px-3 py-1.5 text-sm whitespace-nowrap text-muted" title="Uskoro">
-            Simulator spajanja
-          </span>
+          {link('#/simulator', 'Simulator spajanja', current === 'simulator')}
           <span className="shrink-0 cursor-not-allowed rounded-lg px-3 py-1.5 text-sm whitespace-nowrap text-muted" title="Uskoro">
             Karta reforme
           </span>

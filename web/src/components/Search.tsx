@@ -5,8 +5,28 @@ import { VRSTA, fold, num } from '../lib/format'
 import { go, unitHref } from '../lib/router'
 import { GradeChip } from './Grade'
 
+interface Props {
+  units: UnitIndex[]
+  year: string
+  autoFocus?: boolean
+  /** Called with the picked unit instead of opening its profile (the simulator). */
+  onPick?: (u: UnitIndex) => void
+  /** Why a unit cannot be picked; such options are shown but disabled. */
+  disabledReason?: (u: UnitIndex) => string | undefined
+  label?: string
+  placeholder?: string
+}
+
 /** "Pronađi svoju općinu": accessible combobox, diacritics-insensitive. */
-export function Search({ units, year, autoFocus = false }: { units: UnitIndex[]; year: string; autoFocus?: boolean }) {
+export function Search({
+  units,
+  year,
+  autoFocus = false,
+  onPick,
+  disabledReason,
+  label = 'Pronađi svoju općinu, grad ili županiju',
+  placeholder = 'Pronađi svoju općinu ili grad…',
+}: Props) {
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
   const [open, setOpen] = useState(false)
@@ -23,15 +43,19 @@ export function Search({ units, year, autoFocus = false }: { units: UnitIndex[];
   }, [q, keyed])
 
   const pick = (u: UnitIndex) => {
+    if (disabledReason?.(u)) return
     setOpen(false)
     setQ('')
-    go(unitHref(u.slug))
+    if (onPick) {
+      onPick(u)
+      input.current?.focus()
+    } else go(unitHref(u.slug))
   }
 
   return (
     <div className="relative">
       <label htmlFor={`${listId}-input`} className="sr-only">
-        Pronađi svoju općinu, grad ili županiju
+        {label}
       </label>
       <div className="flex items-center gap-3 rounded-xl border border-axis bg-card px-4 py-3 shadow-sm transition focus-within:border-ink focus-within:shadow-md">
         <SearchIcon className="h-5 w-5 shrink-0 text-muted" aria-hidden />
@@ -60,7 +84,7 @@ export function Search({ units, year, autoFocus = false }: { units: UnitIndex[];
               setOpen(false)
             }
           }}
-          placeholder="Pronađi svoju općinu ili grad…"
+          placeholder={placeholder}
           className="w-full bg-transparent text-base outline-none placeholder:text-muted focus-visible:outline-none"
           role="combobox"
           aria-expanded={open && hits.length > 0}
@@ -75,29 +99,33 @@ export function Search({ units, year, autoFocus = false }: { units: UnitIndex[];
           role="listbox"
           className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-hairline bg-card py-1 shadow-xl"
         >
-          {hits.map((u, i) => (
-            <li
-              key={u.slug}
-              id={`${listId}-${u.slug}`}
-              role="option"
-              aria-selected={i === active}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                pick(u)
-              }}
-              onMouseEnter={() => setActive(i)}
-              className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 ${i === active ? 'bg-page' : ''}`}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-medium">{u.naziv}</div>
-                <div className="truncate text-xs text-muted">
-                  {VRSTA[u.vrsta]}
-                  {u.vrsta !== 'zupanija' && ` · ${u.zupanija}`} · {num(u.stanovnici)} st.
+          {hits.map((u, i) => {
+            const reason = disabledReason?.(u)
+            return (
+              <li
+                key={u.slug}
+                id={`${listId}-${u.slug}`}
+                role="option"
+                aria-selected={i === active}
+                aria-disabled={reason ? true : undefined}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  pick(u)
+                }}
+                onMouseEnter={() => setActive(i)}
+                className={`flex items-center gap-3 px-4 py-2.5 ${reason ? 'cursor-not-allowed' : 'cursor-pointer'} ${i === active ? 'bg-page' : ''}`}
+              >
+                <div className={`min-w-0 flex-1 ${reason ? 'opacity-55' : ''}`}>
+                  <div className="truncate font-medium">{u.naziv}</div>
+                  <div className="truncate text-xs text-muted">
+                    {reason ??
+                      `${VRSTA[u.vrsta]}${u.vrsta !== 'zupanija' ? ` · ${u.zupanija}` : ''} · ${num(u.stanovnici)} st.`}
+                  </div>
                 </div>
-              </div>
-              <GradeChip g={u.ocjena[year]} />
-            </li>
-          ))}
+                <GradeChip g={u.ocjena[year]} />
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

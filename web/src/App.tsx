@@ -5,6 +5,7 @@ import { useRoute } from './lib/router'
 import { Home } from './pages/Home'
 import { Methodology } from './pages/Methodology'
 import { Profile } from './pages/Profile'
+import { Simulator } from './pages/Simulator'
 
 export default function App() {
   const route = useRoute()
@@ -17,11 +18,12 @@ export default function App() {
 
   // On the home page, fetch the lazy map chunk alongside the index instead of after it.
   useEffect(() => {
-    if (route.page === 'home') import('./components/GradeMap').catch(() => {})
+    if (route.page === 'home' || route.page === 'simulator') import('./components/GradeMap').catch(() => {})
   }, [route.page])
 
   useEffect(() => {
-    if (route.page !== 'unit') document.title = 'Fiskalna karta · financije općina, gradova i županija'
+    if (route.page === 'simulator') document.title = 'Simulator spajanja · Fiskalna karta'
+    else if (route.page !== 'unit') document.title = 'Fiskalna karta · financije općina, gradova i županija'
   }, [route])
 
   return (
@@ -47,6 +49,7 @@ export default function App() {
         {!index && !error && <p className="mx-auto max-w-3xl px-6 py-20 text-center text-muted">Učitavam…</p>}
         {index && route.page === 'home' && <Home index={index} />}
         {index && route.page === 'unit' && <Profile key={route.slug} slug={route.slug} lastYear={index.zadnja_godina} />}
+        {index && route.page === 'simulator' && <Simulator index={index} />}
         {route.page === 'methodology' && <Methodology />}
       </div>
       <Footer generated={index?.generirano} />

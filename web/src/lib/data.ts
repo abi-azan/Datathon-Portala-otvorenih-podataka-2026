@@ -98,6 +98,70 @@ export interface UnitDetail {
 
 export type GroupMedians = Record<string, Record<string, Record<string, number | null>>>
 
+/** Savings on general administration (01 without 017 and 018), pipeline/merge.py savings(). */
+export interface Savings {
+  godina: number
+  uprava_zbroj: number
+  medijan_pc: number | null
+  ocekivano: number | null
+  strukturni_jaz: number | null
+  realno_do: number | null
+  iznad_10000: boolean
+}
+
+/** Full fiscal equalization under the statutory formula (pipeline/izravnanje.py za_spajanje). */
+export interface Equalization {
+  puni_clanice: number
+  puni_spojena: number
+  promjena: number
+  promjena_udio: number | null
+  oznake: string[]
+  [k: string]: unknown
+}
+
+/** One precomputed group of the merger simulator (api/v1/simulator/zup-<id>.json). */
+export interface MergeSummary {
+  clanice: string[]
+  vrsta: 'grad' | 'opcina'
+  skupina: string
+  stanovnici: number
+  godina: number
+  ocjene: Record<string, number | null>
+  bodovi: Record<string, number | null>
+  zadnja: {
+    bodovi: number | null
+    bodovi_bez_ogranicenja: number | null
+    ogranicenje_do: boolean
+    ocjena: number
+    ocjena_rijec: string
+    zastavice: string[]
+    kvaliteta: string[]
+    I1: number | null
+    I2: number | null
+    I3: number | null
+    I4: number | null
+    I5: number | null
+    S1: number | null
+    S2: number | null
+    S3: number | null
+    S4: number | null
+    S5: number | null
+    ND: number | null
+    DO: number | null
+    uprava_pc: number | null
+    rang: number
+    n_skupine: number
+  }
+  usteda: Savings | null
+  izravnanje?: Equalization | null
+}
+
+export interface SimulatorFile {
+  zup_id: number
+  zupanija: string
+  skupine: Record<string, MergeSummary>
+}
+
 const BASE = `${import.meta.env.BASE_URL}api/v1/`
 
 export class HttpError extends Error {
@@ -128,4 +192,5 @@ function get<T>(path: string): Promise<T> {
 export const loadIndex = () => get<IndexFile>('jedinice.json')
 export const loadUnit = (slug: string) => get<UnitDetail>(`jedinice/${slug}.json`)
 export const loadGroups = () => get<GroupMedians>('skupine.json')
+export const loadSimulator = (zupId: number) => get<SimulatorFile>(`simulator/zup-${String(zupId).padStart(2, '0')}.json`)
 export const topoUrl = () => BASE + 'geo/jls.topo.json'
