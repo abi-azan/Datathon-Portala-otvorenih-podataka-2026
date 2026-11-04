@@ -25,20 +25,32 @@ function needed(src: SourceFile, key: string): string[] {
   return out
 }
 
+// A null indicator: I3 when there is net debt and no operating surplus (infinite years); the others
+// when their denominator is 0 (no current revenue, no legal base, no operating spending).
 const indicatorValue = (key: string, v: number | null) =>
-  v == null ? 'nema operativnog viška' : key === 'I3' ? `${num(v, 1)} god.` : pct(v)
+  v == null ? (key === 'I3' ? 'nema operativnog viška' : 'nema podataka (nazivnik je 0)') : key === 'I3' ? `${num(v, 1)} god.` : pct(v)
+
+/** Years in which indicator k reads quantity q: year t for ND and DO, the window for the rest,
+ *  and for I4 the legal base of the year before each window year. */
+function usedYears(src: SourceFile, k: string, q: string): number[] {
+  const win = src.prozor.godine
+  if (q === 'ND' || q === 'DO') return [src.godina]
+  if (k === 'I4' && q === 'ZO') return win.map((y) => y - 1)
+  return win
+}
 
 /** Formula, auxiliary quantities and input table behind one indicator (jedinice/<slug>/izvor.json). */
 export function SourcePanel({ src, k }: { src: SourceFile; k: string }) {
   const p = src.pokazatelji[k]
   const qs = needed(src, k)
-  // the years this indicator reads: year t for I5, the window for the rest, and for I4 also the
-  // year before the window (ZO of y − 1)
-  const win = src.prozor.godine
-  const years = (k === 'I5' ? [src.godina] : k === 'I4' ? [...win, Math.min(...win) - 1] : win).map(String)
+  const used = Object.fromEntries(qs.map((q) => [q, usedYears(src, k, q)]))
+  const years = [...new Set(Object.values(used).flat())].sort((a, b) => b - a).map(String)
+  // only amounts the formula reads: an account feeds a quantity in that quantity's years
+  // (account 3 also feeds I5 directly, in year t)
   const inputs = src.ulazi
-    .filter((u) => (src.konta[u.konto]?.za ?? []).some((z) => qs.includes(z) || z === k))
-    .filter((u) => years.includes(String(u.godina)))
+    .filter((u) =>
+      (src.konta[u.konto]?.za ?? []).some((z) => (used[z] ?? []).includes(u.godina) || (z === k && u.godina === src.godina)),
+    )
     .sort((a, b) => b.godina - a.godina || (a.redak ?? 0) - (b.redak ?? 0))
   const windowed = k !== 'I5'
   const doq = src.velicine.DO
@@ -74,7 +86,7 @@ export function SourcePanel({ src, k }: { src: SourceFile; k: string }) {
                 </th>
                 {years.map((y) => (
                   <td key={y} className="tabular py-1.5 pl-3 text-right whitespace-nowrap">
-                    {src.velicine[q]?.godine[y] != null ? eur(src.velicine[q].godine[y]) : ''}
+                    {used[q].includes(Number(y)) && src.velicine[q]?.godine[y] != null ? eur(src.velicine[q].godine[y]) : ''}
                     {q === 'glavnica' && src.velicine.glavnica.refinanciranje?.[y] ? ' *' : ''}
                   </td>
                 ))}
@@ -85,8 +97,8 @@ export function SourcePanel({ src, k }: { src: SourceFile; k: string }) {
       </div>
       {qs.includes('glavnica') && years.some((y) => src.velicine.glavnica.refinanciranje?.[y]) && (
         <p className="mt-2 text-xs text-ink-2">
-          * Refinanciranje: otplata glavnice veća je od 10 % tekućih prihoda i plaćena je novim kreditom (84), pa se broji
-          samo 54 − 84.
+          * Refinanciranje: otplata glavnice veća je od {pct(src.velicine.glavnica.prag_refinanciranja ?? null, 0)} tekućih
+          prihoda i plaćena je novim kreditom (84), pa se broji samo 54 − 84.
         </p>
       )}
       {k === 'I5' && doq && (doq.pravilo1_iskljuceno ?? 0) > 0 && (
@@ -117,7 +129,9 @@ export function SourcePanel({ src, k }: { src: SourceFile; k: string }) {
                   <td className="tabular py-1.5 pr-3">{u.godina}.</td>
                   <td className="tabular py-1.5 pr-3 text-right whitespace-nowrap">{eur(u.iznos, 2)}</td>
                   <td className="tabular py-1.5 whitespace-nowrap text-ink-2">
-                    {c?.izvor === 'Bilanca' ? `Bilanca, ${u.stupac}${u.redak}` : `PR-RAS, redak ${u.redak}`}
+                    {c?.izvor === 'Bilanca'
+                      ? `Bilanca${u.stupac && u.redak ? `, ćelija ${u.stupac}${u.redak}` : ''}`
+                      : `PR-RAS${u.redak ? `, redak ${u.redak}` : ''}`}
                   </td>
                 </tr>
               )
@@ -148,15 +162,23 @@ const FACT_COMPONENT: Record<string, string> = {
   'dospjele neplaćene obveze': 'I5',
 }
 // Same number spellings as pipeline/verify.py (NUMBER), so the text is split where the check reads it.
-const NUMBER = /(?<![\d,.])-?\d+(?:[.,  ]\d+)*/g
-const value = (token: string) => Math.abs(Number(token.replace(/[.  ]/g, '').replace(',', '.')))
+const NUMBER = /(?<![\d,.])-?\d+(?:[.,\u00a0\u202f]\d+)*/g
+const value = (token: string) => Math.abs(Number(token.replace(/[.\u00a0\u202f]/g, '').replace(',', '.')))
+/** What follows a number ("%", "€", "boda", "god."), so "2 %" is not taken for the grade "2". */
+const UNIT = /^\s*(%|€|bod|god)/
+const unitAfter = (s: string, end: number) => UNIT.exec(s.slice(end, end + 8))?.[1] ?? ''
 
 /** The fact a number comes from: the first fact in pack order (grade and points come before the
- *  components) that writes it exactly the same way; failing that, one with the same value. */
-function factFor(token: string, facts: Fact[]): { fact: Fact; component?: string } | null {
-  const tokens = (f: Fact) => [...f.value.matchAll(NUMBER), ...f.label.matchAll(NUMBER)].map((m) => m[0])
+ *  components) that writes it the same way and with the same unit after it; then the same spelling
+ *  with any unit; then the same value. */
+function factFor(token: string, unit: string, facts: Fact[]): { fact: Fact; component?: string } | null {
+  const tokens = (f: Fact) =>
+    [f.value, f.label].flatMap((s) => [...s.matchAll(NUMBER)].map((m) => ({ t: m[0], unit: unitAfter(s, (m.index ?? 0) + m[0].length) })))
   const v = value(token)
-  const best = facts.find((f) => tokens(f).includes(token)) ?? facts.find((f) => tokens(f).some((t) => value(t) === v))
+  const best =
+    facts.find((f) => tokens(f).some((x) => x.t === token && x.unit === unit)) ??
+    facts.find((f) => tokens(f).some((x) => x.t === token)) ??
+    facts.find((f) => tokens(f).some((x) => value(x.t) === v))
   if (!best) return null
   const component = best.label.startsWith('Sastavnica: ')
     ? FACT_COMPONENT[best.label.slice('Sastavnica: '.length)]
@@ -174,7 +196,7 @@ export function CheckedText({ text, facts, onOpen }: { text: string; facts: Fact
   for (const m of text.matchAll(NUMBER)) {
     const i = m.index ?? 0
     if (i > last) parts.push(text.slice(last, i))
-    const hit = factFor(m[0], facts)
+    const hit = factFor(m[0], unitAfter(text, i + m[0].length), facts)
     parts.push({ token: m[0], fact: hit?.fact ?? null, component: hit?.component })
     last = i + m[0].length
   }

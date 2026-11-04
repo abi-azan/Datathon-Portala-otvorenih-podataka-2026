@@ -4,7 +4,7 @@ import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { TrendChart } from '../components/TrendChart'
 import { CheckedText, SourcePanel } from '../components/Sources'
-import { HttpError, loadGroups, loadSource, loadUnit, type GroupMedians, type SourceFile, type UnitDetail } from '../lib/data'
+import { HttpError, canMerge, loadGroups, loadSource, loadUnit, type GroupMedians, type SourceFile, type UnitDetail } from '../lib/data'
 import { COMPONENTS, FLAGS, QUALITY, VRSTA, eur, num, pct } from '../lib/format'
 import { simulatorHref, unitHref } from '../lib/router'
 
@@ -293,7 +293,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                 ))}
               </ul>
               {/* the simulator takes municipalities and towns of one county, not counties or Zagreb */}
-              {!isCounty && unit.sifra !== '01333' && (
+              {canMerge(unit) && (
                 <a
                   href={simulatorHref([unit.sifra])}
                   className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium underline decoration-axis underline-offset-4 hover:decoration-ink"

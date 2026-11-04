@@ -244,7 +244,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ai", default=AI_TEXTS, metavar="JSON",
                     help="AI texts to publish (default data/ai/objasnjenja-<year>.json)")
-    ai_texts = load_ai_texts(ap.parse_args().ai)
+    ai_path = Path(ap.parse_args().ai)
+    ai_texts = load_ai_texts(ai_path)
     units = pd.read_csv(config.BUILD / "units.csv", dtype={"oib": str, "sifra": str, "rkp": str})
     res = pd.read_parquet(config.BUILD / "results.parquet")
     nested = {u["oib"]: u for u in json.loads((config.BUILD / "results.json").read_text(encoding="utf-8"))}
@@ -269,8 +270,8 @@ def main():
     generated = datetime.now(timezone.utc).isoformat(timespec="seconds")
     write(API / "jedinice.json", {"generirano": generated, "zadnja_godina": config.LAST_YEAR, "jedinice": index})
     write(API / "skupine.json", group_medians(res))
-    write(API / "metodologija.json", metodologija.doc(AI_TEXTS))
 
+    shown_ai = 0
     for u in units.to_dict("records"):
         n = nested[u["oib"]]
         nb = susjedi.get(u["sifra"], {"kopno": {}, "more": {}})
@@ -284,7 +285,10 @@ def main():
             "cinjenice": pack,
             "objasnjenje": explanation(pack, ai_texts.get(u["oib"])),
         })
+        shown_ai += bool(detail["objasnjenje"]) and detail["objasnjenje"]["izvor"] == "ai"
         write(API / "jedinice" / f"{u['slug']}.json", detail)
+    # the methodology page reports what is published, not what was imported
+    write(API / "metodologija.json", metodologija.doc(ai_path, shown_ai=shown_ai, n_units=len(units)))
 
     # visible number check: formula and inputs behind each indicator (pipeline/provenance.py)
     sources_by_oib = provenance.build(units, pd.read_parquet(config.BUILD / "prras_long.parquet"),

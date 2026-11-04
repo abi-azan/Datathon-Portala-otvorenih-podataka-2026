@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { feature, merge } from 'topojson-client'
 import type { GeometryCollection, MultiPolygon, Polygon, Topology } from 'topojson-specification'
 import type { Feature, FeatureCollection } from 'geojson'
-import { topoUrl, type ReformUnit } from '../lib/data'
+import { ZAGREB_SIFRA as ZAGREB, topoUrl, type ReformUnit } from '../lib/data'
 import { num } from '../lib/format'
 import { GradeChip } from './Grade'
 import { BASEMAP, BLANK, CROATIA, gradeFill, quietBasemap } from './mapStyle'
@@ -13,7 +13,6 @@ import { BASEMAP, BLANK, CROATIA, gradeFill, quietBasemap } from './mapStyle'
 maplibregl.setWorkerUrl(workerUrl)
 
 const reformKey = (u: ReformUnit) => u.clanice.join('-')
-const ZAGREB = '01333'
 
 interface Props {
   units: ReformUnit[]

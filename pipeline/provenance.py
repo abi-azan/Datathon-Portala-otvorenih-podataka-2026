@@ -14,6 +14,7 @@ compares them with the published results, so the explanation cannot drift from t
 """
 import math
 import re
+from urllib.parse import unquote
 
 import openpyxl
 import pandas as pd
@@ -24,8 +25,8 @@ YEARS = [config.LAST_YEAR - k for k in range(len(methodology.WINDOW_WEIGHTS))]  
 WEIGHTS = dict(zip(YEARS, methodology.WINDOW_WEIGHTS))
 ALL_YEARS = sorted(set(YEARS) | {min(YEARS) - 1})      # ZO of t-1 enters I4 for the first window year
 
-PRRAS_FILE = "Lokalci FINALI 2019 2024 EURO.zip"     # MF ZIP (config.MF_PRRAS_ZIP)
-BILANCA_FILE = "Bilanca_2019_do_2025_R22_EURO.xlsx"  # MF workbook (config.MF_BILANCA)
+PRRAS_FILE = unquote(config.MF_PRRAS_ZIP.rsplit("/", 1)[-1])     # e.g. "Lokalci FINALI 2019 2024 EURO.zip"
+BILANCA_FILE = unquote(config.MF_BILANCA.rsplit("/", 1)[-1])
 
 KP = "+".join(config.CAPITAL_GRANTS)
 QUANTITIES = {
@@ -67,10 +68,11 @@ BILANCA_NAMES = {
 def bilanca_cells(path):
     """{(year, oib): {code: (row, column letter)}} for the Bilanca columns above, located with the
     same header rules as mf.parse_bilanca (2025: "dio 26 D"; earlier: "dio 26" plus a second
-    header row "- dospjele")."""
+    header row "- dospjele"). mf.py keeps no cell positions for Bilanca and is frozen until the
+    submission, so the rules are repeated here; a missing workbook is an error, not empty cells."""
     out = {}
     if not path.exists():
-        return out
+        raise FileNotFoundError(f"{path}: provenance needs the Bilanca workbook (run pipeline.build)")
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
     for sn in wb.sheetnames:
         year = int(sn)
@@ -81,10 +83,10 @@ def bilanca_cells(path):
         h2 = [str(c).strip().lower() if c is not None else "" for c in next(it)]
         col = {}
         for i, c in enumerate(h1):
-            if c in ("11", "25", "26"):
+            if c in config.BILANCA_CODES:
                 col.setdefault(c, i)
             m = re.match(r"dio (\d\d)(?: ([DN]))?$", c)
-            if m and m.group(1) in ("23", "24", "26"):
+            if m and m.group(1) in config.BILANCA_SPLITS:
                 part = m.group(2) or ("N" if "nedospjel" in h2[i] else "D" if "dospjel" in h2[i] else None)
                 if part == "D":
                     col.setdefault(f"{m.group(1)}_D", i)
@@ -140,6 +142,7 @@ def build(units, prras, wide, res, bilanca_path=config.RAW / "mf" / "bilanca.xls
             velicine[q] = {"formula": formula,
                            "godine": {str(y): _num(rs[(o, y)][COLUMN[q]]) for y in years if (o, y) in rs}}
         velicine["glavnica"]["refinanciranje"] = {str(y): bool(rs[(o, y)]["refinanciranje"]) for y in YEARS if (o, y) in rs}
+        velicine["glavnica"]["prag_refinanciranja"] = methodology.REFINANCING_SHARE
         velicine["DO"]["iskazano"] = _num(last["DO_iskazano"])
         velicine["DO"]["pravilo1_iskljuceno"] = _num(last["DO_iskazano"] - last["DO"])
         pokazatelji = {k: {"naziv": n, "formula": f, "vrijednost": _num(last[k]), "bodovi": _num(last[f"S{k[1]}"]),

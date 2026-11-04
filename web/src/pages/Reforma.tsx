@@ -2,7 +2,7 @@ import { AlertTriangle, ArrowRight, X } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
-import { REFORM_THRESHOLDS, loadReform, type IndexFile, type ReformFile, type ReformUnit } from '../lib/data'
+import { REFORM_THRESHOLDS, canMerge, loadReform, type IndexFile, type ReformFile, type ReformUnit } from '../lib/data'
 import { GRADES, VRSTA, eur, num, pct } from '../lib/format'
 import { simulatorHref, unitHref } from '../lib/router'
 
@@ -20,7 +20,6 @@ function MapBox({ children }: { children: ReactNode }) {
   )
 }
 
-const ZAGREB = '01333'
 const keyOf = (u: ReformUnit) => u.clanice.join('-')
 const short = (naziv: string) => naziv.replace(/^(Općina|Grad) /, '')
 const mil = (x: number) => `${num(x / 1e6, 1)} mil. €`
@@ -72,7 +71,7 @@ export function Reforma({ index }: { index: IndexFile }) {
 
   const before = useMemo(() => {
     const c: Record<number, number> = {}
-    for (const u of index.jedinice) if (u.vrsta !== 'zupanija' && u.sifra !== ZAGREB && u.ocjena[year]) c[u.ocjena[year]!] = (c[u.ocjena[year]!] ?? 0) + 1
+    for (const u of index.jedinice) if (canMerge(u) && u.ocjena[year]) c[u.ocjena[year]!] = (c[u.ocjena[year]!] ?? 0) + 1
     return c
   }, [index, year])
   const after = useMemo(() => {

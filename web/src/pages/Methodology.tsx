@@ -161,8 +161,9 @@ export function Methodology() {
             <p className="mt-3 leading-relaxed text-ink-2">{doc.ai.opis}</p>
             <p className="mt-3 text-sm text-ink-2">
               Model: {doc.ai.model}.
-              {doc.ai.batch &&
-                ` AI tekst ima ${num(doc.ai.batch.ai)} od ${num(doc.ai.batch.jedinica)} jedinica; ostale imaju predložak s oznakom.`}{' '}
+              {doc.ai.batch?.prikazano_ai != null &&
+                ` AI tekst je objavljen za ${num(doc.ai.batch.prikazano_ai)} od ${num(doc.ai.batch.jedinica)} jedinica; ostale imaju predložak s oznakom.`}
+              {doc.ai.prompt_jednak_batchu === false && ' Prompt se od generiranja promijenio; prikazan je trenutni.'}{' '}
               Na svjedodžbi je svaka brojka u tekstu označena: pokazuje činjenicu iz koje dolazi, a brojka sastavnice vodi na
               konta i retke u datotekama Ministarstva financija.
             </p>

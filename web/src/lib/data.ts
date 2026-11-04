@@ -103,7 +103,14 @@ export interface SourceFile {
   pokazatelji: Record<string, { naziv: string; formula: string; vrijednost: number | null; bodovi: number | null; velicine: string[] }>
   velicine: Record<
     string,
-    { formula: string; godine: Record<string, number | null>; iskazano?: number | null; pravilo1_iskljuceno?: number | null; refinanciranje?: Record<string, boolean> }
+    {
+      formula: string
+      godine: Record<string, number | null>
+      iskazano?: number | null
+      pravilo1_iskljuceno?: number | null
+      refinanciranje?: Record<string, boolean>
+      prag_refinanciranja?: number
+    }
   >
   izvori: Record<string, { datoteka: string | null; list: string | null }>
   konta: Record<string, { naziv: string | null; izvor: 'PR-RAS' | 'Bilanca'; za: string[] }>
@@ -227,7 +234,16 @@ export interface MethodologyDoc {
     primjer: string
     prompt_sha256: string
     kod: Record<string, string>
-    batch: { modeli: string[]; jedinica: number; tekstova: number; ai: number; uvezeno: string; llama_cpp_commit: string | null } | null
+    batch: {
+      modeli: string[]
+      jedinica: number
+      tekstova: number
+      uvezeno_ai: number
+      prikazano_ai: number | null
+      uvezeno: string
+      llama_cpp_commit: string | null
+    } | null
+    prompt_jednak_batchu: boolean | null
   }
   simulator: Record<string, string>
   ogranicenja: string[]
@@ -248,6 +264,11 @@ export interface Dataset {
   zadnja_izmjena: string | null
   zadnje_preuzimanje?: string | null
 }
+
+/** DGU code of Grad Zagreb: a city and a county at once, so it is left out of mergers. */
+export const ZAGREB_SIFRA = '01333'
+/** Can the simulator and Karta reforme merge this unit (no counties, no Zagreb; merge.Data.eligible)? */
+export const canMerge = (u: { vrsta: Vrsta; sifra: string }) => u.vrsta !== 'zupanija' && u.sifra !== ZAGREB_SIFRA
 
 export const loadMethodology = () => get<MethodologyDoc>('metodologija.json')
 export const loadDatasets = () => get<Dataset[]>('skupovi.json')

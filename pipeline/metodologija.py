@@ -21,17 +21,22 @@ def _int(n):
     return f"{n:,}".replace(",", ".")
 
 
-def doc(ai_texts_path=None):
+def doc(ai_texts_path=None, shown_ai=None, n_units=None):
+    """ai_texts_path: the AI texts publish.py used; shown_ai: how many profiles it published with
+    the AI text (a text whose pack changed since the batch is shown as the template)."""
     ai = None
     if ai_texts_path is not None and ai_texts_path.exists():
         meta = json.loads(ai_texts_path.read_text(encoding="utf-8"))["meta"]
-        ai = {k: meta.get(k) for k in ("modeli", "gguf", "model_izvor", "llama_cpp_commit", "jedinica", "tekstova", "ai",
-                                       "uvezeno")}
+        ai = {k: meta.get(k) for k in ("modeli", "gguf", "model_izvor", "llama_cpp_commit", "tekstova", "uvezeno",
+                                       "prompt_sha256", "verify_sha256")}
+        ai.update(uvezeno_ai=meta.get("ai"), prikazano_ai=shown_ai, jedinica=n_units or meta.get("jedinica"))
+    w = methodology.WINDOW_WEIGHTS
+    big = methodology.SIZE_CLASSES[-1][0]
     return {
         "godina": config.LAST_YEAR,
-        "prozor": {"ponderi": methodology.WINDOW_WEIGHTS,
-                   "opis": "Pokazatelji I1-I4 su ponderirani prosjek zadnje četiri godine (ponderi 4, 3, 2 i 1, "
-                           "od najnovije), a I5 je stanje na kraju zadnje godine."},
+        "prozor": {"ponderi": w,
+                   "opis": f"Pokazatelji I1-I4 su ponderirani prosjek zadnje {len(w)} godine (ponderi "
+                           f"{', '.join(map(str, w[:-1]))} i {w[-1]}, od najnovije), a I5 je stanje na kraju zadnje godine."},
         "velicine": [{"oznaka": k, "formula": v} for k, v in provenance.QUANTITIES.items()],
         "pokazatelji": [{"oznaka": k, "naziv": n, "formula": f,
                          "ponder": methodology.SCENARIOS["osnovni"][k],
@@ -47,16 +52,17 @@ def doc(ai_texts_path=None):
                       f"(stanje veće nego prethodne godine). Jedinica dobiva oznaku kvalitete podataka."},
             {"oznaka": "pravilo 2",
              "tekst": f"Dospjele obveze od barem {_pc(methodology.DO_CAP_SHARE)} rashoda poslovanja ograničavaju bodove na "
-                      f"{str(methodology.DO_CAP_POINTS).replace('.', ',')}, pa je ocjena najviše 2."},
+                      f"{str(methodology.DO_CAP_POINTS).replace('.', ',')}, pa je ocjena najviše "
+                      f"{methodology.grade(methodology.DO_CAP_POINTS)[0]}."},
             {"oznaka": "refinanciranje",
              "tekst": f"Otplata glavnice veća od {_pc(methodology.REFINANCING_SHARE)} tekućih prihoda, plaćena novim kreditom "
                       "iste godine, broji se umanjena za novi kredit (54 − 84)."},
         ],
         "zastavice": [{"oznaka": k, "tekst": v} for k, v in facts.FLAGS.items()],
         "skupine": {"razredi": [label for _, _, label in methodology.SIZE_CLASSES],
-                    "opis": "Općine i gradovi uspoređuju se unutar vrste i razreda veličine; gradovi iznad 35.000 "
-                            "stanovnika čine skupinu velikih gradova, županije svoju skupinu, a Grad Zagreb nema usporedne "
-                            "skupine. Rang se prikazuje samo unutar skupine."},
+                    "opis": f"Općine i gradovi uspoređuju se unutar vrste i razreda veličine; gradovi od {_int(big)} "
+                            "stanovnika naviše čine skupinu velikih gradova, županije svoju skupinu, a Grad Zagreb nema "
+                            "usporedne skupine. Rang se prikazuje samo unutar skupine."},
         "ai": {
             "opis": "Python izračuna sve brojke i složi paket činjenica (pipeline/facts.py). Model napiše 3-5 rečenica oko "
                     "njih. Provjera (pipeline/verify.py) odbija tekst u kojem je ijedna brojka koje nema u paketu, ocjena "
@@ -64,9 +70,12 @@ def doc(ai_texts_path=None):
                     f"Odbijeni tekst piše se ponovno uz povratnu informaciju, najviše {explain.MAX_RETRIES} puta, a zatim "
                     "se koristi predložak. Na stranici se AI tekst prikazuje samo ako je napisan iz istog paketa "
                     "(sha256) i ako provjera prolazi i pri objavi.",
-            "model": "Gemma 4 31B-it, QAT Q4_0 (Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u (T4)",
+            "model": (f"{', '.join(ai['modeli'])} ({', '.join(ai['gguf'] or [])}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"
+                      if ai and ai.get("modeli") else
+                      f"Gemma 4 ({explain.BATCH_MODEL_SOURCE}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"),
             "sustav": explain.SYSTEM, "pravila": explain.RULES, "primjer": explain.EXAMPLE,
             "prompt_sha256": explain.prompt_sha256(),
+            "prompt_jednak_batchu": None if not ai else ai.get("prompt_sha256") == explain.prompt_sha256(),
             "kod": {"prompt": f"{REPO}/blob/main/pipeline/explain.py", "provjera": f"{REPO}/blob/main/pipeline/verify.py",
                     "cinjenice": f"{REPO}/blob/main/pipeline/facts.py", "biljeznica": f"{REPO}/blob/main/kaggle/gemma_runner.py"},
             "batch": ai,

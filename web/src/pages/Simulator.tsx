@@ -4,6 +4,7 @@ import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { Search } from '../components/Search'
 import {
+  canMerge,
   loadGroups,
   loadSimulator,
   loadUnit,
@@ -33,7 +34,6 @@ function MapBox({ children }: { children: ReactNode }) {
 }
 
 const MAX = 4
-const ZAGREB = '01333'
 const EXAMPLES = [
   { label: 'Povljana + Pag', j: ['03166', '05738'] },
   { label: 'Donji Lapac, Perušić, Plitvička Jezera i Udbina', j: ['00841', '03239', '04553', '04677'] },
@@ -73,7 +73,7 @@ export function Simulator({ index }: { index: IndexFile }) {
   const year = String(index.zadnja_godina)
   const bySifra = useMemo(() => new Map(index.jedinice.map((u) => [u.sifra, u])), [index])
   const jls = useMemo(() => index.jedinice.filter((u) => u.vrsta !== 'zupanija'), [index])
-  const eligible = useCallback((u: UnitIndex) => u.vrsta !== 'zupanija' && u.sifra !== ZAGREB, [])
+  const eligible = useCallback((u: UnitIndex) => canMerge(u), [])
 
   /** A selection from the URL: known, allowed units of the first unit's county, at most MAX. */
   const clean = useCallback(
