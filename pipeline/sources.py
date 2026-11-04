@@ -115,3 +115,64 @@ def ckan_resource(key, package_id, pick, dest):
         "license": pkg.get("license_title") or pkg.get("license_id"),
     }
     return fetch(key, r["url"], dest, meta=meta)
+
+
+RETRY_STATUS = {429, 500, 502, 503, 504}
+
+
+def fetch_json(key, url, body, dest, *, timeout=120, retries=6, backoff=5.0, meta=None, stats=None):
+    """GET url (body None) or POST body as JSON, save the response to dest and log the call.
+
+    For APIs that answer a query instead of serving a file (DZS PxWeb). Such servers send
+    no ETag, so every call downloads again. The query body is kept in the log entry, so
+    the request can be repeated exactly. HTTP 429 and 5xx are retried with a growing
+    pause (Retry-After when the server sends one). stats, if given, counts attempts
+    ("calls") and throttled answers ("429"). Returns the path."""
+    dest = Path(dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    method = "GET" if body is None else "POST"
+    r = None
+    for attempt in range(retries):
+        if stats is not None:
+            stats["calls"] = stats.get("calls", 0) + 1
+        try:
+            r = requests.request(method, url, json=body, headers=UA, timeout=timeout)
+        except requests.RequestException:
+            if attempt == retries - 1:
+                raise
+            time.sleep(backoff * 2 ** attempt)
+            continue
+        if r.status_code not in RETRY_STATUS:
+            break
+        if stats is not None and r.status_code == 429:
+            stats["429"] = stats.get("429", 0) + 1
+        if attempt == retries - 1:
+            break
+        wait = backoff * 2 ** attempt
+        if (r.headers.get("Retry-After") or "").isdigit():
+            wait = max(wait, int(r.headers["Retry-After"]))
+        print(f"  {key}: HTTP {r.status_code}, ponovni pokušaj za {wait:.0f} s")
+        time.sleep(wait)
+    r.raise_for_status()
+    r.json()                                    # fail here, not in the parser, if the answer is not JSON
+    tmp = dest.with_suffix(dest.suffix + ".part")
+    tmp.write_bytes(r.content)
+    tmp.replace(dest)
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    entry = {
+        "url": url,
+        "method": method,
+        **({"body": body} if body is not None else {}),
+        "file": str(dest.relative_to(config.ROOT)).replace("\\", "/"),
+        "retrieved": now,
+        "checked": now,
+        "etag": r.headers.get("ETag"),
+        "last_modified": r.headers.get("Last-Modified"),
+        "bytes": dest.stat().st_size,
+        "sha256": _sha256(dest),
+        **(meta or {}),
+    }
+    log = _log()
+    log[key] = entry
+    _save_log(log)
+    return dest
