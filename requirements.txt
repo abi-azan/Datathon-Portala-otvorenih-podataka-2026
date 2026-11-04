@@ -9,3 +9,4 @@ libpysal>=4.10
 spopt>=0.6
 pytest>=8
 jsonschema>=4.20
+mcp==2.3.0
