@@ -196,3 +196,36 @@ Sirovi izlaz: `kaggle/results/gemma_test_v6_12b_26b_31b.json`.
 - `UD-Q4_K_XL` ima smisla tek ako se prompt olabavi radi prirodnijeg stila, jer tada model ima više slobode, pa preciznost više vrijedi.
 
 Sirovi izlaz: `kaggle/results/gemma_test_v7_31b_q4_0_ud.json`.
+
+## v8: batch 576 (4.11. 1:53-5:23, noćna smjena)
+
+**Postav:**
+- Bilježnica `albertmari/fiskalna-karta-jls-gemma-batch`, Gemma 4 31B-it QAT Q4_0 s Kaggle Models (`gemma-4-31B_q4_0-it.gguf`), llama.cpp `2cbca38` iz predmemorije, 2× T4.
+- Prompt, činjenice i provjera su isti kao u v6 i v7 (sha256 prompta `1af71adc…`), a paketi svih 576 jedinica su za 2025. (`data/ai/manifest-2025.json`).
+- Sesija je trajala 12.527 s (3,48 h kvote; učitavanje modela 184 s), oko 21,7 s po tekstu. Pogrešaka servera nije bilo.
+- Sirovi izlaz: `kaggle/results/gemma_batch_2025_31b_q4_0.json`; uvezeno u `data/ai/objasnjenja-2025.json`.
+
+**Rezultat:**
+
+| | |
+|---|---|
+| Prošlo punu provjeru iz prvog pokušaja | 561/576 |
+| **Prošlo nakon najviše 2 ponavljanja (AI tekst na profilu)** | **565/576 (98,1 %)** |
+| Predložak s oznakom | 11 |
+
+**Svih 11 padova je lažna uzbuna provjere, ne greška modela.**
+- Tekstovi su ispravni, npr. Gradec: "Ocjenu najviše spušta sastavnica „servis duga”: otplata kredita i kamata iznosi 2,2 % zakonske osnovice, uz medijan skupine 3,8 % …".
+- `verify.claimed_grades` iza riječi "ocjen…" gleda samo 120 znakova. Kad prozor presiječe "3,8" iza trojke, ostaje samostalno "3" i čita se kao navedena ocjena ("ocjena 3"), a ta nije stvarna.
+- Pogođene su Gradec, Breznica, Kostrena, Lovran, Galovac, Bilje, Petrijevci, Pirovac, Fažana, Raša i Orehovica: sve imaju ocjenu 5 i medijan servisa duga od 3,8 %.
+- `verify.py` je zamrznut do kraja smjene, pa ispravak (prozor do kraja rečenice, ne 120 znakova) ide kao odluka za korisnika (`docs/noc-4-11.md`).
+
+**Ručni pregled 20 nasumičnih AI tekstova** (seed 2026):
+- **Jezik:** svih 20 je gramatički ispravno; nazivi su u nominativu, a slaganje je točno. Stil je šablonski, kako prompt traži, s 48-95 riječi.
+- **Sadržaj:** svih 20 se slaže s paketom: najslabija sastavnica, jake strane, upozorenja i napomena o kreditu (Drnje). Nijedan ne izmišlja jaku stranu.
+- **Tri ponovljene nespretnosti:**
+  1. Medijanu se izgubi riječ predznaka. Primjer: "nakon otplate glavnice kredita nedostaje 12,2 % tekućih prihoda, uz medijan skupine od 16,9 % tekućih prihoda" (Dugopolje, Pušća), a u paketu stoji "medijan skupine: ostaje 16,9 %". Pogađa 2/20.
+  2. "uz medijan skupine od viška 20,0 % tekućih prihoda" (Netretić, Bošnjaci, Donji Miholjac), kao u v6 kod Motovuna. Pogađa 3/20.
+  3. "Ocjenu najviše spušta sastavnica „operativni saldo”", a ista je sastavnica navedena i kao jaka strana (Netretić sa 100 bodova, Donji Miholjac). To dolazi iz paketa: od v5 paket uvijek imenuje najslabiju sastavnicu, i kad su sve iznad 90 bodova. Pogađa 3/20.
+- **Prijedlog** (zahtijeva promjenu činjenica i prompta, pa ponovni batch od oko 3,5 h): kad je najslabija sastavnica iznad 90 bodova, paket i prompt neka kažu "Najniže bodove ima sastavnica …", a medijan neka se uvijek prepiše s riječju predznaka. Odluka je na korisniku.
+
+**Na profilu:** oznaka je "AI tekst · Gemma 4 31B · 11/11 brojki provjereno" (Povljana). Klik na "1.045.908 €" otvara izračun dospjelih obveza s ćelijama Bilance.

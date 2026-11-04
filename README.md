@@ -147,4 +147,4 @@ Pravila natjecanja traže popis svih AI alata:
 | Claude Fable | vlasnički; Anthropic uvjeti | neovisne recenzije plana |
 | Claude (Anthropic), ocjenjivanje | vlasnički; Anthropic uvjeti | ocjena jezika Gemma tekstova tijekom razvoja |
 
-Za tekstove koji se prikazuju u aplikaciji koristi se samo otvoreni model. Dok batch nije gotov, svjedodžba prikazuje predložak s oznakom. Prompt i provjera brojki su javni: `pipeline/explain.py`, `pipeline/verify.py`.
+Za tekstove koji se prikazuju u aplikaciji koristi se samo otvoreni model. Batch od 4.11. (Gemma 4 31B, 3,5 h na Kaggle T4) dao je AI tekst za 565 od 576 jedinica; ostalih 11 ima predložak s oznakom (`docs/research/06-gemma-test.md`, v8). Prompt i provjera brojki su javni: `pipeline/explain.py`, `pipeline/verify.py`.
