@@ -306,7 +306,10 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
 
           <p className="text-xs leading-relaxed text-muted">
             Izvor: Ministarstvo financija, PR-RAS i Bilanca razine 22, {YEARS[0]}.–{year}.; DZS, Popis 2021. Šifra jedinice{' '}
-            {unit.sifra}, OIB {unit.oib}.
+            {unit.sifra}, OIB {unit.oib}.{' '}
+            <a href={reportHref(unit)} className="underline underline-offset-2 hover:text-ink">
+              Prijavi grešku u podacima
+            </a>
           </p>
         </aside>
       </div>
@@ -335,3 +338,17 @@ function ExtLink({ href, children }: { href: string; children: React.ReactNode }
 }
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+// "Kanal za prijavu greške" (PLAN §6, SHOULD): a GitHub issue with the unit already filled in.
+const ISSUES = 'https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026/issues/new'
+function reportHref(u: { naziv: string; oib: string; sifra: string; slug: string }) {
+  const body = [
+    `Jedinica: ${u.naziv} (OIB ${u.oib}, šifra ${u.sifra})`,
+    `Stranica: ${window.location.origin}${window.location.pathname}#/jedinica/${u.slug}`,
+    '',
+    'Što nije točno (brojka, godina, sastavnica):',
+    '',
+    'Odakle je točan podatak (npr. bilješke uz financijske izvještaje, poveznica):',
+  ].join('\n')
+  return `${ISSUES}?${new URLSearchParams({ title: `Greška u podacima: ${u.naziv}`, labels: 'podaci', body })}`
+}
