@@ -4,7 +4,7 @@
 
 Popis svih skupova podataka koje Fiskalna karta JLS koristi, s izdavateljem, poveznicom i licencom. Isti popis je u otvorenom API-ju kao `api/v1/skupovi.json`, uz vrijeme zadnjeg preuzimanja i sha256. Za izvore koje ETL preuzima sam, cijeli zapis preuzimanja (URL, vrijeme, ETag, sha256) je u `api/v1/izvori.json`.
 
-## Korišteno (9)
+## Korišteno (10)
 
 | Naziv | Izdavatelj | Poveznica | Licenca | Način pristupa | Čemu služi |
 |---|---|---|---|---|---|
@@ -17,6 +17,7 @@ Popis svih skupova podataka koje Fiskalna karta JLS koristi, s izdavateljem, pov
 | Vrijednosti indeksa razvijenosti i pokazatelja za izračun indeksa razvijenosti 2024. | Ministarstvo regionalnoga razvoja i fondova Europske unije | [stranica skupa](https://razvoj.gov.hr/o-ministarstvu/djelokrug-1939/regionalni-razvoj/indeks-razvijenosti/vrijednost-indeksa-razvijenosti-i-pokazatelja-za-izracun-indeksa-razvijenosti-2024/5508), [datoteka](https://razvoj.gov.hr/UserDocsImages/O%20ministarstvu/Regionalni%20razvoj/indeks%20razvijenosti/Vrijednosti%20indeksa%20razvijenosti%20i%20pokazatelja%20za%20izrac%CC%8Cun%20indeksa%20razvijenosti.pdf) | [uvjeti korištenja razvoj.gov.hr: prenošenje bez posebne dozvole, uz navođenje izvora](https://razvoj.gov.hr/uvjeti-koristenja/76) | datoteka (PDF) | Parsirano jednom u data/reference/jls_master.csv: indeks, razvojna skupina I-VIII i potpomognuto područje. Prikazuje se na profilu kao kontekst i ne ulazi u ocjenu. |
 | OpenStreetMap, vektorske pločice OpenFreeMap (stil Positron) | OpenStreetMap suradnici; usluga OpenFreeMap | [stranica skupa](https://openfreemap.org), [stil karte](https://tiles.openfreemap.org/styles/positron) | [ODbL 1.0 (© OpenStreetMap suradnici); OpenFreeMap MIT; shema OpenMapTiles (dizajn CC BY 4.0)](https://www.openstreetmap.org/copyright) | vektorske pločice | Podloga karte ispod ocjena: more, obala i nazivi mjesta. Ako se ne učita, karta radi i bez nje. |
 | Gemma 4 31B-it (QAT Q4_0, GGUF) | Google DeepMind (Kaggle Models) | [stranica skupa](https://www.kaggle.com/models/google/gemma-4), [model](https://www.kaggle.com/models/google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf) | [Apache-2.0](https://ai.google.dev/gemma/docs/gemma_4_license) | model | Jezični model koji na Kaggle GPU-u piše kratko objašnjenje ocjene iz paketa činjenica. Svaku brojku u tekstu provjerava verify.py. Odabran nakon testa v6 (20/20 prolaza); 12B je rezerva, a testirani su i E4B i 26B-A4B. |
+| Tablica udjela po JLP(R)S za fiskalno izravnanje u 2027. godini (kapacitet, referentne vrijednosti, puni iznos i udio) | Ministarstvo financija | [stranica skupa](https://mfin.gov.hr/istaknute-teme/lokalna-samouprava/fiskalno-izravnanje/202), [datoteka](https://mfin.gov.hr/UserDocsImages//dokumenti/o-ministarstvu/lokalna-samouprava//Tablica%20udjela%20po%20JLP(R)S%20za%20fiskalno%20izravnanje%20u%202027.%20godini.xlsx) | [nije navedena; ponovna uporaba prema ZPPI (čl. 27. i 31.) uz uvjete Otvorene dozvole (Pravilnik NN 67/17, čl. 4.)](https://narodne-novine.nn.hr/clanci/sluzbeni/full/2017_07_67_1577.html) | datoteka (XLSX/ZIP) | Simulator spajanja: kapacitet poreznih prihoda po stanovniku, referentne vrijednosti i puni iznos fiskalnog izravnanja po jedinici (Zakon o financiranju JLP(R)S, čl. 8. i 9.). Zakonska formula na toj tablici daje iste iznose kao MF za svih 576 jedinica (docs/research/07). |
 
 ## Planirano, još nije u kodu (1)
 
@@ -40,6 +41,7 @@ Provjereno 4.11.2026. Datum za datoteke MF-a dolazi automatski iz zaglavlja Last
 | OpenStreetMap, vektorske pločice OpenFreeMap (stil Positron) | [openfreemap.org](https://openfreemap.org) | — |
 | Gemma 4 31B-it (QAT Q4_0, GGUF) | [www.kaggle.com](https://www.kaggle.com/models/google/gemma-4) | — |
 | Izvješća o obavljenim financijskim revizijama jedinica lokalne i područne (regionalne) samouprave | [www.revizija.hr](https://www.revizija.hr/pristup-informacijama/nacin-ostvarivanja-prava-na-pristup-informacijama/28) | — |
+| Tablica udjela po JLP(R)S za fiskalno izravnanje u 2027. godini (kapacitet, referentne vrijednosti, puni iznos i udio) | [mfin.gov.hr](https://mfin.gov.hr/uvjeti-koristenja/76) | 2026-10-06 |
 
 ## Izjava o izvoru
 

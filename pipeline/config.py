@@ -15,6 +15,12 @@ MF_BASE = ("https://mfin.gov.hr/UserDocsImages//dokumenti/o-ministarstvu/lokalna
 MF_PRRAS_ZIP = MF_BASE + "Lokalci%20FINALI%202019%202024%20EURO.zip"
 MF_BILANCA = MF_BASE + "Bilanca_2019_do_2025_R22_EURO.xlsx"
 
+# Fiscal equalization: MF table of shares per unit (capacity, reference value, full amount).
+# List of all years: https://mfin.gov.hr/istaknute-teme/lokalna-samouprava/fiskalno-izravnanje/202
+MF_FI_YEAR = 2027
+MF_FI_XLSX = ("https://mfin.gov.hr/UserDocsImages//dokumenti/o-ministarstvu/lokalna-samouprava//"
+              "Tablica%20udjela%20po%20JLP(R)S%20za%20fiskalno%20izravnanje%20u%202027.%20godini.xlsx")
+
 CKAN = "https://data.gov.hr/ckan/api/3/action/"
 
 # DZS INSPIRE WFS, Popis 2021 by town/municipality (pd:StatisticalDistribution)
