@@ -50,7 +50,7 @@ Provjereno 4.11.2026. Datum za datoteke MF-a i Porezne uprave dolazi automatski 
 | Skup | Gdje izdavatelj navodi licencu ili uvjete | Zadnja izmjena (prema izdavatelju) |
 |---|---|---|
 | Financijski izvještaji JLP(R)S: PR-RAS i RAS-funkcijski 2019.–2025. (EUR, razina 22) | [mfin.gov.hr](https://mfin.gov.hr/uvjeti-koristenja/76) | 2026-07-24 |
-| Bilanca JLP(R)S 2019.–2025. (EUR, razina 22) | [mfin.gov.hr](https://mfin.gov.hr/uvjeti-koristenja/76) | 2026-06-26 |
+| Bilanca JLP(R)S 2019.–2025. (EUR, razina 22) | [mfin.gov.hr](https://mfin.gov.hr/uvjeti-koristenja/76) | 2026-07-01 |
 | Raspodjela stanovništva prema dobnim skupinama i spolu na razini gradova/općina iz Popisa stanovništva 2021. INSPIRE | [data.gov.hr](https://data.gov.hr/ckan/api/3/action/package_show?id=raspodjela-stanovnitva-prema-dobnim-skupinama-i-spolu-na-razni-gradova-opina-iz-popisa-stanovni) | 2024-09-12 |
 | Kućanstva - ukupno na razini gradova/općina iz Popisa stanovništva 2021. INSPIRE (granice gradova i općina) | [data.gov.hr](https://data.gov.hr/ckan/api/3/action/package_show?id=kuanstva-ukupno-na-razini-gradova-opina-iz-popisa-stanovnitva-2021-inspire) | 2024-07-19 |
 | Katalog Portala otvorenih podataka (CKAN API, package_search) | [narodne-novine.nn.hr](https://narodne-novine.nn.hr/clanci/sluzbeni/full/2017_07_67_1577.html) | — |

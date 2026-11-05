@@ -18,7 +18,8 @@
 - [ ] Sitnice s karte koje je agent primijetio: teški obrubi oko malih otoka, na mobitelu zaglavlje prekriva natpis Karte reforme, natpis na karti na 1280 px prekriva sjever.
 - [x] Snimka naslovnice u README, nakon karte i ikone. (5.11. noću, `docs/snimke/naslovnica.png`; uključuje prijedloge U-a)
 - [ ] **8.11.: ponovno snimiti naslovnicu za README** (do tada će biti još promjena).
-- [ ] AI tekstovi: ponovno generiranje 5.11., nakon ostalih promjena. **Sada 0 od 576** (paketi i prompt promijenjeni u UI sesiji 5.11. popodne, vidi dolje); `test_ai_texts_cover_almost_every_profile` pada lokalno dok se batch ne ponovi.
+- [x] AI tekstovi: ponovno generiranje 5.11. navečer, nakon UI sesije (Gemma 4 31B, `kaggle/results/gemma_batch_2025_31b_q4_0_v2.json`): **561 od 576** prolazi provjeru (550 iz prvog pokušaja), ostalih 15 ide na predložak. 253 teksta imaju rečenicu konteksta (stanovništvo, dohodak).
+- [ ] Sitnica u AI tekstovima: kad je medijan skupine negativan slobodni saldo, model prepiše vrijednost doslovno ("uz medijan skupine od nedostaje 1,7 % tekućih prihoda", npr. Međimurska županija; 14 tekstova). Popravak traži promjenu paketa, a time i novi batch; ne isplati se prije predaje.
 
 # UI sesija 5.11. popodne (lokalno, necommitano)
 

@@ -37,7 +37,7 @@ Uz smirenu brzinu (oko 130 riječi u minuti) govor traje oko 2:35, pa ostaje oko
 **Naracija:**
 > Ana živi u Povljani na Pagu. Otvori pregled svoje općine: ocjena dva, nestabilno. Lani je bila pet. Ocjenu spuštaju dospjele neplaćene obveze: milijun i četrdeset šest tisuća eura, gotovo pola godišnjih rashoda. Kod sličnih općina medijan je dva posto.
 
-**Kadar [nakon regeneracije]:** "Ukratko" s oznakom "AI tekst · Gemma 4 31B · N/N brojki provjereno". Klik na "1.045.908 €" otvara "Kako je izračunato": DO = 23 D + 24 D + 26 D, s ćelijama LU324 i MA324 na listu 2025 Bilance i rashodima poslovanja iz `13 Zadarska.xlsx`, redak 156.
+**Kadar [nakon regeneracije]:** "Ukratko" s oznakom "AI tekst · Gemma 4 31B · N/N brojki provjereno". Klik na "1.045.908 €" otvara izračun pokazatelja (gumb "Prikaži izračun"): DO = 23 D + 24 D + 26 D, s ćelijama LU324 i MA324 na listu 2025 Bilance i rashodima poslovanja iz `13 Zadarska.xlsx`, redak 156.
 
 **Naracija:**
 > Kratko objašnjenje piše otvoreni jezični model, ali brojke ne smišlja on. Program ih izračuna i provjeri svaku. Klik na broj vodi do retka u datoteci Ministarstva financija.
@@ -92,8 +92,8 @@ Uz smirenu brzinu (oko 130 riječi u minuti) govor traje oko 2:35, pa ostaje oko
 Snima se zaslon 1920×1080, preglednik bez traka i kursor uvećan.
 
 1. Naslovnica i animacija godina ("Pokreni 2019.–2025.", s pretapanjem boja).
-2. Pretraga "povlj" i pregled Povljane (ocjena, sastavnice, trend).
-3. **[nakon regeneracije]** "Ukratko" s oznakom provjere; klik na "1.045.908 €" i ploča "Kako je izračunato" za dospjele obveze.
+2. Pretraga "povlj" i pregled Povljane (ocjena, pokazatelji, trend).
+3. **[nakon regeneracije]** "Ukratko" s oznakom provjere; klik na "1.045.908 €" i ploča s izračunom za dospjele obveze.
 4. Kartica "Stanovništvo i gospodarstvo" Povljane s oznakom "uživo s API-ja DZS-a" (prije snimanja provjeriti da se oznaka pojavi; DZS nakon desetak brzih upita vraća HTTP 429, a tada se prikazuje spremljena kopija bez oznake).
 5. Kartica "Fiskalno izravnanje" Grada Samobora (niža stopa poreza).
 6. Simulator Povljana + Pag, ulaz preko poveznice s pregleda jedinice.

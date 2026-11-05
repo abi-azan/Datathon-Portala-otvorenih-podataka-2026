@@ -211,14 +211,19 @@ def test_context_tied_to_the_grade_or_mixed_with_fiscal_numbers_fails():
 
 
 def test_the_committed_texts_raise_no_context_issue():
-    """None of the 576 accepted texts (written before context existed) trips a context rule, with or
-    without context items in the pack: the new rules add no false rejections."""
+    """Every accepted AI text keeps to the context rules against its own current pack: a unit with
+    context items may mention them, a unit without them writes no context sentence. (Until the batch
+    of 5.11. the texts predated context, so they were checked against CTX_PACK and NO_CTX_PACK; the
+    texts now carry context for the units whose packs have it, so only their own pack is a fair test.)"""
     import json
     from pipeline import config
     path = config.ROOT / "data" / "ai" / "objasnjenja-2025.json"
     if not path.exists():
         pytest.skip("no imported texts")
-    texts = [t["tekst"] for t in json.loads(path.read_text(encoding="utf-8"))["tekstovi"].values()]
+    if not (config.BUILD / "results.parquet").exists():
+        pytest.skip("no build")
+    packs = {p["oib"]: p for p in explain.load_packs()[0]}
+    texts = {o: t["tekst"] for o, t in json.loads(path.read_text(encoding="utf-8"))["tekstovi"].items()
+             if t["izvor"] == "ai" and t["pack_sha256"] == explain.pack_sha256(packs[o])}
     assert len(texts) >= 500
-    for pack in (CTX_PACK, NO_CTX_PACK):
-        assert [t for t in texts if verify.context_issues(t, pack)] == []
+    assert {o: i for o, t in texts.items() if (i := verify.context_issues(t, packs[o]))} == {}
