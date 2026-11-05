@@ -12,7 +12,7 @@ import { topoUrl, type UnitIndex } from '../lib/data'
 import { grade, num } from '../lib/format'
 import { go, unitHref } from '../lib/router'
 import { GradeChip } from './Grade'
-import { BASEMAP, BLANK, CROATIA, SEQUENTIAL_CLASS, classFill, fitPadding, quietBasemap, reducedMotion } from './mapStyle'
+import { BASEMAP, BLANK, CROATIA, LAND, SEQUENTIAL_CLASS, classFill, fitPadding, quietBasemap, reducedMotion } from './mapStyle'
 import { classOf, contextView, quintiles, type ViewKey } from '../lib/views'
 
 maplibregl.setWorkerUrl(workerUrl)
@@ -26,7 +26,11 @@ export type MapColorBy = ViewKey
 // top layer 'jls-fill-next' (feature-state `gb`) fades in over it with the new colours, and the next
 // change fades it out again over new colours in the bottom layer. Both read feature-state, so a
 // change of colours needs no tile re-layout and starts on the next frame.
-const FILL = 0.94
+// Both layers are opaque, with every colour mixed beforehand as MIX of it over the land: the map at
+// rest looks like a fill at 0.94, and a shown top layer hides the bottom one completely, so a step
+// of the animation never shows 5.6 % of last year's colour nor makes the map more saturated.
+const MIX = 0.94
+const FILL = 1
 const DIM = 0.22
 const FADE_MS = 650
 
@@ -134,13 +138,13 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
       m.addSource('jls', { type: 'geojson', data: jls, promoteId: 'sifra' })
       m.addSource('zup', { type: 'geojson', data: zup })
       // hover and click read the bottom layer, which is always drawn
-      m.addLayer({ id: 'jls-fill', type: 'fill', source: 'jls', paint: { 'fill-color': classFill('ga'), 'fill-opacity': FILL } }, firstLabel)
+      m.addLayer({ id: 'jls-fill', type: 'fill', source: 'jls', paint: { 'fill-color': classFill('ga', MIX), 'fill-opacity': FILL } }, firstLabel)
       m.addLayer(
         {
           id: 'jls-fill-next',
           type: 'fill',
           source: 'jls',
-          paint: { 'fill-color': classFill('gb'), 'fill-opacity': 0, 'fill-opacity-transition': { duration: 0, delay: 0 } },
+          paint: { 'fill-color': classFill('gb', MIX), 'fill-opacity': 0, 'fill-opacity-transition': { duration: 0, delay: 0 } },
         },
         firstLabel,
       )
@@ -151,9 +155,10 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
           type: 'fill',
           source: 'jls',
           paint: {
-            'fill-color': '#fdfdfc',
+            'fill-color': LAND,
             'fill-antialias': false,
-            'fill-opacity': ['case', ['boolean', ['feature-state', 'dim'], false], 1 - DIM / FILL, 0],
+            // over a colour mixed at MIX this leaves DIM of it, as before
+            'fill-opacity': ['case', ['boolean', ['feature-state', 'dim'], false], 1 - DIM / MIX, 0],
           },
         },
         firstLabel,
