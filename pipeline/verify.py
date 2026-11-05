@@ -74,7 +74,8 @@ def claimed_grades(text):
 
 # Content claims the prompt asks for with fixed phrases, so they can be checked (Gemma test v4):
 # the weakest component, the strengths, and a capped grade, which only rule 2 can cause.
-WEAKEST = re.compile(r"spušta sastavnica\s+[„\"“]([^”\"“]+)[”\"“]", re.IGNORECASE)
+# "sastavnica" is the word of the texts written before 5.11.; the prompt now says "pokazatelj"
+WEAKEST = re.compile(r"spušta (?:pokazatelj|sastavnica)\s+[„\"“]([^”\"“]+)[”\"“]", re.IGNORECASE)
 STRENGTHS = re.compile(r"jake strane jedinice su:\s*([^.;]+)", re.IGNORECASE)
 CAPPED = re.compile(r"\bograničen\w*", re.IGNORECASE)
 
@@ -83,8 +84,9 @@ def content_issues(text, pack):
     facts = {f["label"]: f["value"] for f in pack["facts"]}
     issues = []
     for name in WEAKEST.findall(text):
-        if name.strip().lower() != facts.get("Najslabija sastavnica", "").lower():
-            issues.append(f"najslabija sastavnica „{name.strip()}”")
+        weakest = facts.get("Najslabiji pokazatelj", facts.get("Najslabija sastavnica", ""))
+        if name.strip().lower() != weakest.lower():
+            issues.append(f"najslabiji pokazatelj „{name.strip()}”")
     strong = facts.get("Jake strane", "").lower()
     for listed in STRENGTHS.findall(text):
         for part in re.split(r",| i | te ", listed):
@@ -115,7 +117,7 @@ SIDE = re.compile(r"\b(iznad|ispod)\s+medijan", re.IGNORECASE)
 # "ne objašnjava je", "nisu dio ocjene", "ne utječe na ocjenu") are taken out first
 NEGATED = re.compile(r"\b(?:ne|nisu|nije|niti)\s+(?:\w+\s+){0,3}?(?:ocjen\w*|(?:utje|utječ|objašnjav|uzrok|doprinos|"
                      r"pridonos|odraž|povezan)\w*(?:\s+(?:na|u|s|sa|za)\s+(?:\w+\s+)?ocjen\w*)?)", re.IGNORECASE)
-CAUSAL = re.compile(r"\b(?:ocjen\w*|sastavnic\w*|zbog|uslijed|uzrok\w*|posljedic\w*|utje\w*|utječ\w*|doprinos\w*|"
+CAUSAL = re.compile(r"\b(?:ocjen\w*|sastavnic\w*|pokazatelj\w*|zbog|uslijed|uzrok\w*|posljedic\w*|utje\w*|utječ\w*|doprinos\w*|"
                     r"pridonos\w*|objašnjav\w*|stoga|zato|rezultir\w*|odraž\w*|povezan\w*)", re.IGNORECASE)
 
 
@@ -182,7 +184,7 @@ def context_issues(text, pack):
             if f"{side.lower()} medijana" not in ctx_text:
                 issues.append(f"„{side} medijana” ne slaže se s činjenicama")
         if CAUSAL.search(NEGATED.sub(" ", s)):
-            issues.append("kontekst povezan s ocjenom ili sastavnicama")
+            issues.append("kontekst povezan s ocjenom ili pokazateljima")
     return issues
 
 

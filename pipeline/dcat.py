@@ -76,7 +76,7 @@ def catalogue(generated, sources, year_from, year_to, exists=lambda path: True):
         "dct:conformsTo": _ref(API + "openapi.json"),
     }
     datasets = [
-        ("ocjene", "Ocjena financijske stabilnosti općina, gradova i županija",
+        ("ocjene", "Ocjena financijske održivosti proračuna općina, gradova i županija",
          f"Ocjena 1-5 i bodovi 0-100 za svih 576 JLP(R)S po godini {year_from}.-{year_to}., pokazatelji I1-I5, "
          "zastavice, rang u usporednoj skupini i pregled svake jedinice s objašnjenjem.",
          ["financijska stabilnost", "proračun", "općine", "gradovi", "županije", "lokalna samouprava"],
@@ -112,7 +112,7 @@ def catalogue(generated, sources, year_from, year_to, exists=lambda path: True):
         "@id": API + "dcat.jsonld",
         "@type": "dcat:Catalog",
         "dct:title": _hr("Fiskalna karta JLS: otvoreni podaci"),
-        "dct:description": _hr("Ocjene financijske stabilnosti, šifrarnik, simulator spajanja i Karta reforme za "
+        "dct:description": _hr("Ocjene financijske održivosti proračuna, šifrarnik, simulator spajanja i Karta reforme za "
                                "576 jedinica lokalne i područne (regionalne) samouprave u Hrvatskoj, izračunati iz "
                                "otvorenih podataka javnog sektora."),
         "dct:publisher": publisher,

@@ -117,7 +117,7 @@ Poziv: `pregled_jedinice(jedinica="Povljana")`
 Izvadak izlaza:
 
 ```json
-{"godina": 2025, "ocjena": 2, "ocjena_rijec": "pod pritiskom", "bodovi": 39.9,
+{"godina": 2025, "ocjena": 2, "ocjena_rijec": "nestabilno", "bodovi": 39.9,
  "bodovi_bez_ogranicenja": 68.6, "ogranicenje_do": true,
  "usporedna_skupina": {"naziv": "općine do 2.000", "rang": 179, "od": 202, "medijan_bodova": 80.75},
  "sastavnice": [..., {"oznaka": "I5", "naziv": "Dospjele obveze", "vrijednost": 0.494105, "bodovi": 0.0, "medijan_skupine": 0.019621}],
@@ -125,7 +125,7 @@ Izvadak izlaza:
  "poveznice": {"stranica": "https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/#/jedinica/opcina-povljana"}}
 ```
 
-Odgovor asistenta: "Povljana za 2025. ima ocjenu 2 (pod pritiskom) i 39,9 boda, 179. mjesto od 202 općine do 2.000 stanovnika. Bez ograničenja imala bi 68,6 boda, ali dospjele neplaćene obveze iznose 49,4 % rashoda poslovanja (medijan skupine 2,0 %), pa je ocjena ograničena na najviše 2. Izvor: [pregled jedinice](https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/#/jedinica/opcina-povljana)."
+Odgovor asistenta: "Povljana za 2025. ima ocjenu 2 (nestabilno) i 39,9 boda, 179. mjesto od 202 općine do 2.000 stanovnika. Bez ograničenja imala bi 68,6 boda, ali dospjele neplaćene obveze iznose 49,4 % rashoda poslovanja (medijan skupine 2,0 %), pa je ocjena ograničena na najviše 2. Izvor: [pregled jedinice](https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/#/jedinica/opcina-povljana)."
 
 ### 2. "Što bi bilo da se Povljana spoji s Pagom?"
 

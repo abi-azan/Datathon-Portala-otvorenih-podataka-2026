@@ -12,7 +12,7 @@
                            data/ai/objasnjenja-<year>.json when it still matches, else template),
                            and the context blocks of pipeline/kontekst.py (population and economy,
                            fiscal equalization, local tax rates), which are not in the score
-  skupine.json             peer-group medians per year (points and the five indicators)
+  skupine.json             peer-group medians per year (points, the five indicators and their points S1-S5)
   metodologija.json        the methodology as the code applies it: formulas, thresholds, weights,
                            rules, flags, the AI prompt and the verifier (pipeline/metodologija.py)
   geo/jls.topo.json        boundaries (layers jls, zupanije)
@@ -75,8 +75,11 @@ def write(path, obj):
 
 
 def group_medians(res):
-    """skupine.json from the same medians the fact packs use (facts.peer_medians)."""
-    med = facts.peer_medians(res).reset_index()
+    """skupine.json from the same medians the fact packs use (facts.peer_medians), plus the median
+    points S1-S5 for the peer mark on the profile's component bars. Those are added here, not in
+    peer_medians, so the fact packs (and the AI texts checked against them) stay as they are."""
+    points = [f"S{i}" for i in range(1, 6)]
+    med = facts.peer_medians(res).join(res.groupby(["skupina", "year"])[points].median()).reset_index()
     out = {}
     for r in med.to_dict("records"):
         out.setdefault(r["skupina"], {})[str(int(r["year"]))] = {c: r[c] for c in med.columns if c not in ("skupina", "year")}

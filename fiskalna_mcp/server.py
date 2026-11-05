@@ -18,8 +18,8 @@ from .api import DEFAULT_API, DEFAULT_TIMEOUT, Api, ApiError
 from .tools import Fiskalna
 
 INSTRUCTIONS = (
-    "Fiskalna karta JLS: ocjena financijske stabilnosti svih 576 općina, gradova i županija u Hrvatskoj "
-    "(1 = ozbiljan pritisak, 5 = vrlo stabilno), iz podataka Ministarstva financija (PR-RAS i Bilanca). "
+    "Fiskalna karta JLS: ocjena financijske održivosti proračuna svih 576 općina, gradova i županija u Hrvatskoj "
+    "(1 = vrlo nestabilno, 5 = vrlo stabilno), iz podataka Ministarstva financija (PR-RAS i Bilanca). "
     "Odgovaraj samo brojkama koje vrate alati i uvijek navedi poveznicu na stranicu jedinice ili izvor. "
     "Ne računaj nove brojke i ne nagađaj. Jedinicu zadaj slugom, nazivom ili šifrom DGU (npr. 05738). "
     "Kad nisi siguran koja je jedinica, prvo pozovi pronadi_jedinicu. "
@@ -64,7 +64,7 @@ def create_server(api: Api | str | None = None, timeout: float = DEFAULT_TIMEOUT
         return f.pronadi_jedinicu(naziv, zupanija)
 
     @server.tool(annotations=READ_ONLY, description=(
-        "Pregled jedinice: ocjena 1-5 i bodovi 0-100, pet sastavnica (I1-I5) s bodovima i medijanom usporedne "
+        "Pregled jedinice: ocjena 1-5 i bodovi 0-100, pet pokazatelja (I1–I5) s bodovima i medijanom usporedne "
         "skupine, rang u skupini, zastavice upozorenja, kontekst koji ne ulazi u ocjenu (stanovništvo, neto dohodak, "
         "fiskalno izravnanje, revizija DUR-a) i kratko objašnjenje s oznakom AI tekst ili predložak. "
         "Sadrži poveznice na stranicu jedinice i na izvor.json."))
@@ -73,7 +73,7 @@ def create_server(api: Api | str | None = None, timeout: float = DEFAULT_TIMEOUT
         return f.pregled_jedinice(jedinica, godina)
 
     @server.tool(annotations=READ_ONLY, description=(
-        "Usporedba 2-5 jedinica jedna uz drugu: ocjena, bodovi, rang i sastavnice I1-I5, uz medijane njihovih "
+        "Usporedba 2-5 jedinica jedna uz drugu: ocjena, bodovi, rang i pokazatelji I1–I5, uz medijane njihovih "
         "usporednih skupina."))
     @_safe
     def usporedi(jedinice: Units, godina: Year = None) -> dict[str, Any]:

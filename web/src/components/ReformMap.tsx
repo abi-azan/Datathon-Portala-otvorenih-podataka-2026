@@ -7,13 +7,18 @@ import { feature, merge } from 'topojson-client'
 import type { GeometryCollection, MultiPolygon, Polygon, Topology } from 'topojson-specification'
 import type { Feature, FeatureCollection, MultiPolygon as GeoMultiPolygon, Polygon as GeoPolygon, Position } from 'geojson'
 import { ZAGREB_SIFRA as ZAGREB, topoUrl, type ReformUnit } from '../lib/data'
-import { num } from '../lib/format'
-import { GradeChip } from './Grade'
-import { BASEMAP, BLANK, CROATIA, MIN_ZOOM, fitPadding, gradeFill, quietBasemap, reducedMotion } from './mapStyle'
+import { gradeRows, num } from '../lib/format'
+import { GradeChip, MapLegend } from './Grade'
+import { BASEMAP, BLANK, CROATIA, MIN_ZOOM, addOutsideVeil, fitPadding, gradeFill, quietBasemap, reducedMotion } from './mapStyle'
 
 maplibregl.setWorkerUrl(workerUrl)
 
 const reformKey = (u: ReformUnit) => u.clanice.join('-')
+/** Croatian plural after a number: 1 jedinica, 2–4 jedinice, 5 jedinica (11–14 take the last form). */
+const unitCount = (n: number) => {
+  const [d, h] = [n % 10, n % 100]
+  return `${n} ${d >= 2 && d <= 4 && (h < 12 || h > 14) ? 'jedinice' : 'jedinica'}`
+}
 
 interface Props {
   units: ReformUnit[]
@@ -157,6 +162,7 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
       if (removed) return
       const t = topo.current
       const firstLabel = m.getStyle().layers.find((l: maplibregl.LayerSpecification) => l.type === 'symbol')?.id
+      addOutsideVeil(m, t, firstLabel)
       m.addSource('reform', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, promoteId: 'key' })
       m.addSource('reform-outline', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
       m.addSource('jls', { type: 'geojson', data: feature(t, t.objects.jls) as FeatureCollection })
@@ -363,68 +369,81 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
   // a key from the previous threshold (until the pointer is re-read) shows no tooltip
   const h = hover ? byKey.get(hover.key) : undefined
   const tip = hover && (h || hover.key === ZAGREB) ? hover : null
+  // no counts here: the panel next to the map shows them before and after
+  const legend = gradeRows()
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl border border-hairline bg-surface">
-      <div ref={box} className="h-full w-full" aria-label={`Karta reforme za prag od ${num(prag)} stanovnika`} role="region" />
-      {/* top left on phones (the fit leaves room under it), bottom left over the Italian coast from lg */}
-      <div
-        ref={caption}
-        className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur lg:top-auto lg:bottom-12"
-      >
-        <div className="text-sm font-semibold">Ocjena poslije reforme, prag {num(prag)} stanovnika</div>
-        <div className="text-xs text-muted">tamni obrub: spojena jedinica · klikni za pojedinosti</div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={onlyMerged}
-          disabled={!ready}
-          onClick={() => setOnlyMerged((v) => !v)}
-          className="pointer-events-auto mt-1.5 -ml-1 flex items-center gap-2 rounded-md px-1 py-0.5 text-xs font-medium text-ink-2 hover:text-ink disabled:opacity-50"
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-hairline bg-surface">
+      <div className="relative min-h-0 flex-1">
+        {/* the wrapper is absolute, not the map box: maplibre-gl.css sets the box to position: relative */}
+        <div className="absolute inset-0">
+          <div ref={box} className="h-full w-full" aria-label={`Karta reforme za prag od ${num(prag)} stanovnika`} role="region" />
+        </div>
+        {/* top left on phones (the fit leaves room under it), bottom left over the Italian coast from lg */}
+        <div
+          ref={caption}
+          className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur lg:top-auto lg:bottom-12"
         >
-          <span
-            aria-hidden
-            className={`relative h-3.5 w-6 shrink-0 rounded-full transition-colors motion-reduce:transition-none ${onlyMerged ? 'bg-ink' : 'bg-axis'}`}
+          <div className="text-sm font-semibold">Ocjena poslije reforme, prag {num(prag)} stanovnika</div>
+          <div className="mt-2 mb-1.5 hidden lg:block">
+            <MapLegend rows={legend} layout="list" label="Legenda ocjena poslije reforme" />
+          </div>
+          <div className="text-xs text-muted">tamni obrub: spojena jedinica · klikni za pojedinosti</div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={onlyMerged}
+            disabled={!ready}
+            onClick={() => setOnlyMerged((v) => !v)}
+            className="pointer-events-auto mt-1.5 -ml-1 flex items-center gap-2 rounded-md px-1 py-0.5 text-xs font-medium text-ink-2 hover:text-ink disabled:opacity-50"
           >
             <span
-              className={`absolute top-0.5 left-0.5 h-2.5 w-2.5 rounded-full bg-card shadow-sm transition-transform motion-reduce:transition-none ${onlyMerged ? 'translate-x-2.5' : ''}`}
-            />
-          </span>
-          Prikaži samo spojene
-        </button>
-        {notice && (
-          <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-ink-2">
-            {notice.loading && <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden />}
-            {notice.text}
+              aria-hidden
+              className={`relative h-3.5 w-6 shrink-0 rounded-full transition-colors motion-reduce:transition-none ${onlyMerged ? 'bg-ink' : 'bg-axis'}`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 h-2.5 w-2.5 rounded-full bg-card shadow-sm transition-transform motion-reduce:transition-none ${onlyMerged ? 'translate-x-2.5' : ''}`}
+              />
+            </span>
+            Prikaži samo spojene
+          </button>
+          {notice && (
+            <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-ink-2">
+              {notice.loading && <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden />}
+              {notice.text}
+            </div>
+          )}
+        </div>
+        {!ready && (
+          <div className="absolute inset-0 grid place-items-center text-sm text-muted">
+            {failed ? 'Karta se nije učitala. Osvježi stranicu.' : 'Učitavam kartu…'}
+          </div>
+        )}
+        {tip && (
+          <div
+            className="pointer-events-none absolute z-10 rounded-xl border border-hairline bg-card/95 p-3 shadow-lg backdrop-blur"
+            style={{ left: tip.left, top: tip.top, width: TOOLTIP_W }}
+          >
+            {h ? (
+              <>
+                <div className="font-serif text-lg leading-tight font-semibold">{h.naziv}</div>
+                <div className="mt-0.5 text-xs text-muted">
+                  {h.clanice.length > 1 ? `${unitCount(h.clanice.length)} · ` : 'bez spajanja · '}
+                  {num(h.stanovnici)} stanovnika
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <GradeChip g={h.ocjena} />
+                  <span className="tabular text-sm text-ink-2">{num(h.bodovi, 1)} / 100</span>
+                </div>
+              </>
+            ) : (
+              <div className="text-sm">Grad Zagreb nije uključen u scenarij.</div>
+            )}
           </div>
         )}
       </div>
-      {!ready && (
-        <div className="absolute inset-0 grid place-items-center text-sm text-muted">
-          {failed ? 'Karta se nije učitala. Osvježi stranicu.' : 'Učitavam kartu…'}
-        </div>
-      )}
-      {tip && (
-        <div
-          className="pointer-events-none absolute z-10 rounded-xl border border-hairline bg-card/95 p-3 shadow-lg backdrop-blur"
-          style={{ left: tip.left, top: tip.top, width: TOOLTIP_W }}
-        >
-          {h ? (
-            <>
-              <div className="font-serif text-lg leading-tight font-semibold">{h.naziv}</div>
-              <div className="mt-0.5 text-xs text-muted">
-                {h.clanice.length > 1 ? `${h.clanice.length} jedinice · ` : 'bez spajanja · '}
-                {num(h.stanovnici)} stanovnika
-              </div>
-              <div className="mt-2 flex items-center gap-2">
-                <GradeChip g={h.ocjena} />
-                <span className="tabular text-sm text-ink-2">{num(h.bodovi, 1)} / 100</span>
-              </div>
-            </>
-          ) : (
-            <div className="text-sm">Grad Zagreb nije uključen u scenarij.</div>
-          )}
-        </div>
-      )}
+      <div className="border-t border-hairline bg-card px-3 py-2 lg:hidden">
+        <MapLegend rows={legend} layout="strip" label="Legenda ocjena poslije reforme" />
+      </div>
     </div>
   )
 }

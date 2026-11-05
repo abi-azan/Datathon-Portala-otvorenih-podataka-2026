@@ -30,6 +30,11 @@ const signedPct = (x: number | null | undefined) => (x == null ? '–' : `${sign
 /** A yearly count with its rate per 1.000 inhabitants of Popis 2021 (the base of every per-capita figure). */
 const withRate = (x: number | null | undefined, popis: number) =>
   x == null ? '–' : `${sign(x)}${num(Math.abs(x))} (${sign(x)}${num(Math.abs(x / popis) * 1000, 1)} na 1.000)`
+/** Croatian plural after a number: 1 članica, 2–4 članice, 5 članica (11–14 take the last form). */
+const memberCount = (n: number) => {
+  const [d, h] = [n % 10, n % 100]
+  return `${n} ${d >= 2 && d <= 4 && (h < 12 || h > 14) ? 'članice' : 'članica'}`
+}
 
 // where each threshold comes from in Croatian rules (docs/research/08 §7.3); there is no official minimum size
 const THRESHOLD_SOURCE: Record<number, string> = {
@@ -174,12 +179,12 @@ export function Reforma({ index }: { index: IndexFile }) {
     <main className="mx-auto grid max-w-[1440px] gap-8 px-6 pt-8 lg:grid-cols-[minmax(0,460px)_1fr] lg:px-10">
       <div className="flex min-w-0 flex-col gap-6">
         <div>
-          <Eyebrow>Karta reforme · scenarij, ne prijedlog granica</Eyebrow>
+          <Eyebrow>Karta reforme · scenarij za raspravu, ne prijedlog granica</Eyebrow>
           <h1 className="mt-3 font-serif text-[2.4rem] leading-[1.05] font-semibold tracking-tight text-balance">
             Kako bi izgledala karta s manje jedinica?
           </h1>
           <p className="mt-4 leading-relaxed text-ink-2">
-            Unutar svake županije najmanja općina ili grad ispod praga spaja se s najmanjim susjedom, sve dok sve jedinice ne
+            Unutar svake županije najmanja općina ili grad ispod praga spaja se s najmanjim susjedom, dok sve jedinice ne
             dosegnu prag. Spojene jedinice ocjenjuju se istom metodom kao postojeće.
           </p>
         </div>
@@ -218,7 +223,7 @@ export function Reforma({ index }: { index: IndexFile }) {
             ))}
           </div>
           <p className="mt-2 text-xs text-muted">
-            {THRESHOLD_SOURCE[prag]} Službeni hrvatski minimum veličine jedinice ne postoji.
+            {THRESHOLD_SOURCE[prag]} Hrvatski propisi ne određuju najmanju veličinu jedinice.
           </p>
         </div>
 
@@ -264,12 +269,12 @@ export function Reforma({ index }: { index: IndexFile }) {
               <dt className="text-ink-2">
                 Ušteda na općoj upravi
                 <div className="text-xs text-muted">
-                  samo od veličine; jaz koji postoji i bez spajanja {mil(file.jaz_bez_spajanja_zbroj)}
+                  samo zbog veličine; članice već sada troše {mil(file.jaz_bez_spajanja_zbroj)} više od sličnih jedinica
                 </div>
               </dt>
               <dd className="tabular text-right">0 – {mil(file.usteda_realno_do_zbroj)} godišnje</dd>
               <dt className="text-ink-2">
-                Poticaj države po NN 88/2022
+                Poticaj države (NN 88/2022)
                 <div className="text-xs text-muted">pet godina; prijenos iz proračuna, ne ušteda</div>
               </dt>
               <dd className="tabular text-right">{mil(file.poticaj_godisnje_zbroj)} godišnje</dd>
@@ -295,14 +300,14 @@ export function Reforma({ index }: { index: IndexFile }) {
               )}
             </dl>
             <p className="mt-3 text-xs leading-relaxed text-muted">
-              Nacionalni plan oporavka kao smjer navodi 20 % stvarno spojenih jedinica, oko 111; ovaj scenarij uklanja{' '}
-              {num(file.n_prije - file.n_poslije)}. Do 2026. nije spojena nijedna jedinica, a od planiranih poticaja za spajanje
+              Nacionalni plan oporavka i otpornosti okvirno spominje stvarno spajanje 20 % jedinica (oko 111). Ovaj scenarij
+              ih ukida {num(file.n_prije - file.n_poslije)}. Do 2026. nije spojena nijedna jedinica, a od planiranih poticaja za spajanje
               isplaćeno je oko 17 %.
             </p>
             {savingsAbove10k > 0 && (
               <p className="mt-3 flex gap-2 text-xs text-muted">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                Od toga {mil(savingsAbove10k)} otpada na spojene jedinice iznad 10.000 stanovnika, gdje se dodatna ušteda od
+                Od toga {mil(savingsAbove10k)} otpada na spojene jedinice iznad 10.000 stanovnika, gdje se dodatna ušteda zbog
                 veličine ne očekuje.
               </p>
             )}
@@ -367,7 +372,7 @@ export function Reforma({ index }: { index: IndexFile }) {
         <p className="text-xs leading-relaxed text-muted">
           Scenarij za raspravu, ne prijedlog granica. Pravilo je namjerno jednostavno, pa ponekad stvara velike jedinice: mala
           općina kojoj je jedini susjed velik grad spaja se s njim. Susjedi su jedinice koje dijele granicu ili su povezane
-          vezom preko mora; spaja se samo unutar županije. Ušteda i izravnanje računaju se kao u{' '}
+          preko mora (otoci); spaja se samo unutar županije. Ušteda i izravnanje računaju se kao u{' '}
           <a href="#/simulator" className="underline underline-offset-2">
             simulatoru spajanja
           </a>
@@ -424,9 +429,9 @@ function Selected({
         Stanovništvo, {d.od}. → {d.do}.
       </dt>
       <dd className="tabular text-right">{signedPct(d.promjena)}</dd>
-      <dt className="text-ink-2">Rođeni manje umrli, {d.do}.</dt>
+      <dt className="text-ink-2">Prirodni prirast, {d.do}.</dt>
       <dd className="tabular text-right">{withRate(d.prirodna, u.stanovnici)}</dd>
-      <dt className="text-ink-2">Doseljeni manje odseljeni, {d.do}.</dt>
+      <dt className="text-ink-2">Migracijski saldo, {d.do}.</dt>
       <dd className="tabular text-right">{withRate(d.migracije, u.stanovnici)}</dd>
     </>
   )
@@ -439,7 +444,7 @@ function Selected({
     <Card>
       <div className="flex items-start justify-between gap-4">
         <Eyebrow>
-          {u.clanice.length > 1 ? `Spojena jedinica · ${u.clanice.length} članice` : 'Bez spajanja'} · {VRSTA[u.vrsta]} ·{' '}
+          {u.clanice.length > 1 ? `Spojena jedinica · ${memberCount(u.clanice.length)}` : 'Bez spajanja'} · {VRSTA[u.vrsta]} ·{' '}
           {num(u.stanovnici)} stanovnika
         </Eyebrow>
         <button type="button" onClick={onClose} className="-mt-1 -mr-2 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted hover:bg-hairline/60" aria-label="Zatvori">
@@ -501,7 +506,7 @@ function Selected({
           </dl>
           {demoNote}
           {u.usteda?.iznad_10000 && (
-            <p className="mt-2 text-xs text-muted">Iznad 10.000 stanovnika dodatna ušteda od veličine se ne očekuje.</p>
+            <p className="mt-2 text-xs text-muted">Iznad 10.000 stanovnika dodatna ušteda zbog veličine se ne očekuje.</p>
           )}
           {u.clanice.length <= 4 && (
             <a href={simulatorHref(u.clanice)} className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium underline decoration-axis underline-offset-4 hover:decoration-ink">

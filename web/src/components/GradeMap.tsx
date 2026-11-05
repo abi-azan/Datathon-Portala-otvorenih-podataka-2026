@@ -4,16 +4,16 @@ import * as maplibregl from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 // Imported here, not in index.css, so the stylesheet ships in the lazy map chunk.
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { feature } from 'topojson-client'
 import type { Topology } from 'topojson-specification'
 import type { FeatureCollection } from 'geojson'
 import { topoUrl, type UnitIndex } from '../lib/data'
-import { grade, num } from '../lib/format'
+import { grade, gradeRows, num, type LegendRow } from '../lib/format'
 import { go, unitHref } from '../lib/router'
-import { GradeChip } from './Grade'
-import { BASEMAP, BLANK, CROATIA, LAND, MIN_ZOOM, SEQUENTIAL_CLASS, classFill, fitPadding, quietBasemap, reducedMotion } from './mapStyle'
-import { classOf, contextView, quintiles, type ViewKey } from '../lib/views'
+import { GradeChip, MapLegend } from './Grade'
+import { BASEMAP, BLANK, CROATIA, LAND, MIN_ZOOM, SEQUENTIAL_CLASS, addOutsideVeil, classFill, fitPadding, quietBasemap, reducedMotion } from './mapStyle'
+import { SEQUENTIAL, classOf, contextView, quintiles, type ViewKey } from '../lib/views'
 
 maplibregl.setWorkerUrl(workerUrl)
 
@@ -135,6 +135,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
       const zup = feature(topo, topo.objects.zupanije) as FeatureCollection
       geo.current = jls
       const firstLabel = m.getStyle().layers.find((l: maplibregl.LayerSpecification) => l.type === 'symbol')?.id
+      addOutsideVeil(m, topo, firstLabel)
       m.addSource('jls', { type: 'geojson', data: jls, promoteId: 'sifra' })
       m.addSource('zup', { type: 'geojson', data: zup })
       // hover and click read the bottom layer, which is always drawn
@@ -303,51 +304,92 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
     if (w < e) m.fitBounds([w, s, e, n], { padding: 48, maxZoom: 9.5, duration: 600 })
   }, [ready, focusKey])
 
+  // legend rows: the grades, or a context view's five classes with their ranges; both with unit counts
+  const legend = useMemo<LegendRow[]>(() => {
+    const jls = units.filter((u) => u.vrsta !== 'zupanija')
+    const v = contextView(colorBy)
+    if (!v) {
+      const counts: Record<number, number> = {}
+      for (const u of jls) {
+        const g = u.ocjena[year]
+        if (g) counts[g] = (counts[g] ?? 0) + 1
+      }
+      return gradeRows(counts)
+    }
+    const cuts = quintiles(jls, v, year)
+    const vals = jls.map((u) => v.value(u, year))
+    const finite = vals.filter((x): x is number => x != null && Number.isFinite(x))
+    if (!finite.length) return []
+    const edges = [Math.min(...finite), ...cuts, Math.max(...finite)]
+    return SEQUENTIAL.map((color, i) => ({
+      key: i,
+      color,
+      label: v.range(edges[i], edges[i + 1]),
+      n: vals.filter((x) => classOf(x, cuts) === i + 1).length,
+    }))
+  }, [units, year, colorBy])
+
   const h = hover && grade(hover.unit.ocjena[year])
   const view = contextView(colorBy)
   const hoverSelected = hover != null && (selected ?? []).includes(hover.unit.sifra)
+  const legendLabel = view ? `Legenda: ${view.label}, ${year}.` : `Legenda ocjena, ${year}.`
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl border border-hairline bg-surface">
-      <div ref={box} className="h-full w-full" aria-label="Karta ocjena općina i gradova" role="region" />
-      {/* max width keeps the caption clear of the zoom buttons on narrow screens; from lg it sits bottom
-          left, over the Italian coast, so it does not cover the north of Croatia */}
-      <div
-        ref={caption}
-        className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg lg:top-auto lg:bottom-12 bg-card/90 px-3 py-2 shadow-sm backdrop-blur"
-      >
-        <div className="text-sm font-semibold">{view ? view.label : 'Ocjena financijske održivosti proračuna'}, {year}.</div>
-        <div className="text-xs text-muted">
-          556 općina i gradova · prijeđi mišem, klikni za {selectable ? 'odabir' : 'pregled'}
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-hairline bg-surface">
+      <div className="relative min-h-0 flex-1">
+        {/* the wrapper is absolute, not the map box: maplibre-gl.css sets the box to position: relative */}
+        <div className="absolute inset-0">
+          <div ref={box} className="h-full w-full" aria-label="Karta ocjena općina i gradova" role="region" />
         </div>
-      </div>
-      {!ready && (
-        <div className="absolute inset-0 grid place-items-center text-sm text-muted">
-          {failed ? 'Karta se nije učitala. Osvježi stranicu ili koristi pretragu.' : 'Učitavam kartu…'}
-        </div>
-      )}
-      {hover && (
+        {/* max width keeps the caption clear of the zoom buttons on narrow screens; from lg it sits bottom
+            left, over the Italian coast, so it does not cover the north of Croatia, and holds the legend */}
         <div
-          className="pointer-events-none absolute z-10 rounded-xl border border-hairline bg-card/95 p-3 shadow-lg backdrop-blur"
-          style={{ left: hover.left, top: hover.top, width: TOOLTIP_W }}
+          ref={caption}
+          className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg lg:top-auto lg:bottom-10 bg-card/90 px-3 py-2 shadow-sm backdrop-blur"
         >
-          <div className="font-serif text-lg leading-tight font-semibold">{hover.unit.naziv}</div>
-          <div className="mt-0.5 text-xs text-muted">
-            {hover.unit.zupanija} · {num(hover.unit.stanovnici)} stanovnika
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            {h ? <GradeChip g={h.value} /> : <span className="text-sm text-muted">nema podataka</span>}
-            <span className="tabular text-sm text-ink-2">{num(hover.unit.bodovi[year], 1)} / 100 bodova</span>
-          </div>
-          {view && (
-            <div className="mt-1.5 text-sm">
-              <span className="text-muted">{view.short}: </span>
-              <span className="tabular font-medium">{view.format(view.value(hover.unit, year))}</span>
+          <div className="text-sm font-semibold">{view ? view.label : 'Ocjena financijske održivosti proračuna'}, {year}.</div>
+          {legend.length > 0 && (
+            <div className="mt-2 mb-1.5 hidden lg:block">
+              <MapLegend rows={legend} layout="list" label={legendLabel} />
             </div>
           )}
-          <div className="mt-2 text-xs text-muted">
-            {hint?.(hover.unit.sifra) ??
-              (!selectable ? 'Klikni za pregled jedinice' : hoverSelected ? 'Klikni za uklanjanje iz odabira' : 'Klikni za odabir jedinice')}
+          <div className="text-xs text-muted">
+            556 općina i gradova{view ? ' · tamnije = veća vrijednost' : ''} · klikni jedinicu za {selectable ? 'odabir' : 'pregled'}
           </div>
+        </div>
+        {!ready && (
+          <div className="absolute inset-0 grid place-items-center text-sm text-muted">
+            {failed ? 'Karta se nije učitala. Osvježi stranicu ili koristi pretragu.' : 'Učitavam kartu…'}
+          </div>
+        )}
+        {hover && (
+          <div
+            className="pointer-events-none absolute z-10 rounded-xl border border-hairline bg-card/95 p-3 shadow-lg backdrop-blur"
+            style={{ left: hover.left, top: hover.top, width: TOOLTIP_W }}
+          >
+            <div className="font-serif text-lg leading-tight font-semibold">{hover.unit.naziv}</div>
+            <div className="mt-0.5 text-xs text-muted">
+              {hover.unit.zupanija} · {num(hover.unit.stanovnici)} stanovnika
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              {h ? <GradeChip g={h.value} /> : <span className="text-sm text-muted">nema podataka</span>}
+              <span className="tabular text-sm text-ink-2">{num(hover.unit.bodovi[year], 1)} / 100 bodova</span>
+            </div>
+            {view && (
+              <div className="mt-1.5 text-sm">
+                <span className="text-muted">{view.short}: </span>
+                <span className="tabular font-medium">{view.format(view.value(hover.unit, year))}</span>
+              </div>
+            )}
+            <div className="mt-2 text-xs text-muted">
+              {hint?.(hover.unit.sifra) ??
+                (!selectable ? 'Klikni za pregled jedinice' : hoverSelected ? 'Klikni za uklanjanje iz odabira' : 'Klikni za odabir jedinice')}
+            </div>
+          </div>
+        )}
+      </div>
+      {legend.length > 0 && (
+        <div className="border-t border-hairline bg-card px-3 py-2 lg:hidden">
+          <MapLegend rows={legend} layout="strip" label={legendLabel} />
         </div>
       )}
     </div>

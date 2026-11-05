@@ -35,7 +35,7 @@ Uz smirenu brzinu (oko 130 riječi u minuti) govor traje oko 2:35, pa ostaje oko
 **Kadar:** pretraga, upisuje se "povlj"; zatim pregled Općine Povljana: ocjena 2, 39,9 boda, "Prošle godine 5 · vrlo stabilno".
 
 **Naracija:**
-> Ana živi u Povljani na Pagu. Otvori pregled svoje općine: ocjena dva, pod pritiskom. Lani je bila pet. Ocjenu spuštaju dospjele neplaćene obveze: milijun i četrdeset šest tisuća eura, gotovo pola godišnjih rashoda. Kod sličnih općina medijan je dva posto.
+> Ana živi u Povljani na Pagu. Otvori pregled svoje općine: ocjena dva, nestabilno. Lani je bila pet. Ocjenu spuštaju dospjele neplaćene obveze: milijun i četrdeset šest tisuća eura, gotovo pola godišnjih rashoda. Kod sličnih općina medijan je dva posto.
 
 **Kadar [nakon regeneracije]:** "Ukratko" s oznakom "AI tekst · Gemma 4 31B · N/N brojki provjereno". Klik na "1.045.908 €" otvara "Kako je izračunato": DO = 23 D + 24 D + 26 D, s ćelijama LU324 i MA324 na listu 2025 Bilance i rashodima poslovanja iz `13 Zadarska.xlsx`, redak 156.
 

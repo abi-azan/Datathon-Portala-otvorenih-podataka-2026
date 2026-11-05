@@ -18,7 +18,19 @@
 - [ ] Sitnice s karte koje je agent primijetio: teški obrubi oko malih otoka, na mobitelu zaglavlje prekriva natpis Karte reforme, natpis na karti na 1280 px prekriva sjever.
 - [x] Snimka naslovnice u README, nakon karte i ikone. (5.11. noću, `docs/snimke/naslovnica.png`; uključuje prijedloge U-a)
 - [ ] **8.11.: ponovno snimiti naslovnicu za README** (do tada će biti još promjena).
-- [ ] AI tekstovi: ponovno generiranje 5.11., nakon ostalih promjena.
+- [ ] AI tekstovi: ponovno generiranje 5.11., nakon ostalih promjena. **Sada 0 od 576** (paketi i prompt promijenjeni u UI sesiji 5.11. popodne, vidi dolje); `test_ai_texts_cover_almost_every_profile` pada lokalno dok se batch ne ponovi.
+
+# UI sesija 5.11. popodne (lokalno, necommitano)
+
+- [x] Nazivi ocjena 2 i 1: "nestabilno", "vrlo nestabilno" (PLAN §11, odluka 18); isti u pipelineu, API-ju, paketima, MCP-u i sučelju.
+- [x] Naslovnica: h1 "Fiskalna karta" + opis; "Za početak" (Povljana, Pag i Povljana, Karta reforme; brojke iz podataka).
+- [x] Legenda na karti (naslovnica, simulator, Karta reforme); na mobitelu traka ispod karte. Područje izvan Hrvatske izblijeđeno.
+- [x] Trake pokazatelja obojene prema rasponu ocjene, crtica medijana skupine (`skupine.json` dobiva S1-S5) i "medijan N" uz bodove.
+- [x] Graf kretanja bodova: vrijednosti napisane na točkama, dodir otvara detalje; oznake više ne odrezane.
+- [x] Metodologija → Pet pokazatelja: četiri koraka, primjer Grad Split (iz API-ja), kartica po pokazatelju s pitanjem i ljestvicom, formule sklopljene.
+- [x] Jezični pregled (`.gstack/ui-review/jezicni-pregled.md`) primijenjen; "sastavnica" → "pokazatelj", "financijska održivost proračuna", predložak u punim rečenicama.
+- [ ] Jezik, čeka potvrdu tima: `Reforma.tsx` "Zadnji razred s dodatkom u Vladinoj odluci…" i `metodologija.py` "Zakonska osnovica je približna…" (što je točno približno).
+- [ ] Mobitel: dodir na kartu odmah otvara pregled; prijedlog je da prvi dodir pokaže karticu s gumbom "Pregled →".
 
 # Čeka odluku
 

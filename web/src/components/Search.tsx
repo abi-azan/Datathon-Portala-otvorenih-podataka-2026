@@ -142,7 +142,7 @@ export function Search({
         }
       >
         {open && q.trim() !== '' && hits.length === 0
-          ? `Nema jedinice s nazivom „${q.trim()}”. Provjerite pravopis ili upišite početak naziva, npr. „povlj”.`
+          ? `Nema jedinice s nazivom „${q.trim()}”. Provjeri pravopis ili upiši početak naziva, npr. „povlj”.`
           : ''}
       </p>
     </div>

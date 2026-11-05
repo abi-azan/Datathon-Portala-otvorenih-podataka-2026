@@ -54,13 +54,14 @@ def _population_economy():
     """Card "Stanovništvo i gospodarstvo" (pipeline/kontekst.py); the symbol rule is read from pxweb."""
     nema = ("broji se kao 0, i u medijanu" if pxweb.NEMA_JE_NULA else "ostaje prazno")
     return ("Kretanje broja stanovnika od 2021. računa se iz procjena "
-            "Državnog zavoda za statistiku (stanje 31.12.); preglednik niz pri otvaranju stranice traži i izravno "
-            "s API-ja DZS-a." + _dzs_sources() + " Prirodni prirast (živorođeni − umrli), neto migracija (doseljeni − odseljeni) i "
-            "građevinske dozvole (broj zgrada) iskazuju se na 1.000 stanovnika, a noćenja turista u komercijalnom "
-            "smještaju i neto dohodak stanovnika (Porezna uprava, po prebivalištu) po stanovniku. Nazivnik je "
+            "Državnog zavoda za statistiku (stanje 31. prosinca); pri otvaranju stranice preglednik taj niz traži i "
+            "izravno s API-ja DZS-a." + _dzs_sources() + " Prirodni prirast (rođeni − umrli), migracijski saldo "
+            "(doseljeni − odseljeni) i građevinske dozvole (broj zgrada) iskazuju se na 1.000 stanovnika, a noćenja "
+            "turista u komercijalnom smještaju i neto dohodak (Porezna uprava, po prebivalištu) iskazuju se po "
+            "stanovniku. Nazivnik je "
             "uvijek Popis 2021., kao u ocjeni. Udio mirovina je neto dohodak umirovljenika u ukupnom neto dohotku. "
             f"Oznaka DZS-a \"{pxweb.NEMA}\" znači da pojave nema (nema smještaja, nema dozvola) i {nema}; oznaka "
-            f"\"{pxweb.TAJNO}\" znači da je podatak tajan, pa ostaje prazan i ne ulazi u medijan. Uz svaku brojku je "
+            f"\"{pxweb.TAJNO}\" znači da je podatak povjerljiv (DZS ga ne objavljuje), pa ostaje prazan i ne ulazi u medijan. Uz svaku brojku je "
             "medijan usporedne skupine iz ocjene; županije se uspoređuju sa županijama, a Grad Zagreb nema skupinu.")
 
 
@@ -71,21 +72,23 @@ def _dec(x):
 
 def _equalization_unit():
     """Card "Fiskalno izravnanje" (pipeline/kontekst.py), amounts read from pipeline/izravnanje.py."""
-    return ("Po čl. 8. i 9. Zakona o financiranju JLP(R)S jedinica ima pravo na izravnanje kad joj "
-            "je kapacitet poreznih prihoda po stanovniku ispod referentne vrijednosti za njezinu vrstu (općine, gradovi, "
-            "županije; Grad Zagreb mjeri se s gradovima). Kapacitet i referentne vrijednosti su iz tablice Ministarstva "
-            f"financija za {config.MF_FI_YEAR}. Prikazuje se procjena godišnje isplate: udio jedinice u zbroju punih iznosa "
-            "svih jedinica puta iznos u državnom proračunu "
+    return ("Po čl. 8. i 9. Zakona o financiranju jedinica lokalne i područne (regionalne) samouprave jedinica ima "
+            "pravo na izravnanje kad joj je kapacitet poreznih prihoda po stanovniku ispod referentne vrijednosti za "
+            "njezinu vrstu (općine, gradovi, županije; Grad Zagreb mjeri se s gradovima). Kapacitet i referentne "
+            f"vrijednosti su iz tablice Ministarstva financija za {config.MF_FI_YEAR}. Prikazuje se procjena godišnje "
+            "isplate: iznos u državnom proračunu "
             f"({_int(round(izravnanje.ISPLATA_2026))} € za {kontekst.PRORACUN_GODINA}.; za {config.MF_FI_YEAR}. još nije "
-            "utvrđen, pa se uzima isti), kao u simulatoru spajanja. Kapacitet se računa uz najvišu dopuštenu stopu poreza "
-            "na dohodak, pa porez koji jedinica s nižom stopom sama ne naplati izravnanje ne nadoknađuje; stope su iz "
-            "odluka jedinica koje objavljuje Porezna uprava. Za jedinice s nižom stopom procjenjuje se koliko bi proračun "
-            "godišnje imao više uz najviše stope: porez stanovnika samo na plaće, mirovine, obrt i drugi dohodak (kapital, "
-            "najam i prodaja nekretnina te paušalisti plaćaju fiksnu stopu), podijeljen na niži i viši razred prema broju "
-            f"obveznika iznad granice (Pareto, α {_dec(kontekst.PARETO_ALFA)}), puta razlika do najviše stope, puta udio "
-            "jedinice u porezu (konto 611 / porez stanovnika iste godine). Raspon: od najmanje procjene uz druge "
-            f"pretpostavke o višem razredu umanjene za {_pc(1 - kontekst.PONASANJE)} (ljudi uz višu stopu prijave nešto "
-            "manje dohotka) do najveće. Procjena ne ulazi u ocjenu, kartu ni usporedbu sa skupinom.")
+            "utvrđen, pa se uzima isti) × udio jedinice u zbroju punih iznosa svih jedinica, kao u simulatoru spajanja. "
+            "Kapacitet se računa uz najvišu dopuštenu stopu poreza na dohodak, pa izravnanje ne nadoknađuje porez koji "
+            "jedinica s nižom stopom sama ne naplati; stope su iz odluka jedinica koje objavljuje Porezna uprava. Za "
+            "jedinice s nižom stopom procjenjuje se koliko bi proračun godišnje imao više uz najviše stope, u četiri "
+            "koraka. (1) Uzima se porez stanovnika samo na plaće, mirovine, obrt i drugi dohodak (kapital, najam i "
+            "prodaja nekretnina te paušalisti plaćaju fiksnu stopu). (2) Taj se porez dijeli na niži i viši razred "
+            f"prema broju obveznika iznad granice (Pareto, α {_dec(kontekst.PARETO_ALFA)}). (3) Za svaki razred računa "
+            "se koliko bi poreza bilo više uz najvišu stopu. (4) Zbroj se množi udjelom jedinice u porezu (konto 611 / "
+            "porez stanovnika iste godine). Raspon: od najmanje procjene (uz druge pretpostavke o višem razredu, "
+            f"umanjene za {_pc(1 - kontekst.PONASANJE)} jer uz višu stopu ljudi prijave nešto manje dohotka) do "
+            "najveće. Procjena ne ulazi u ocjenu, kartu ni usporedbu sa skupinom.")
 
 
 def doc(ai_texts_path=None, shown_ai=None, n_units=None):
@@ -105,7 +108,7 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
     return {
         "godina": config.LAST_YEAR,
         "prozor": {"ponderi": w,
-                   "opis": f"Pokazatelji I1-I4 su ponderirani prosjek zadnje {len(w)} godine (ponderi "
+                   "opis": f"Pokazatelji I1–I4 su ponderirani prosjek zadnje {len(w)} godine (ponderi "
                            f"{', '.join(map(str, w[:-1]))} i {w[-1]}, od najnovije), a I5 je stanje na kraju zadnje godine."},
         "velicine": [{"oznaka": k, "formula": v} for k, v in provenance.QUANTITIES.items()],
         "pokazatelji": [{"oznaka": k, "naziv": n, "formula": f,
@@ -116,10 +119,11 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
         "scenariji": methodology.SCENARIOS,
         "pravila": [
             {"oznaka": "pravilo 1",
-             "tekst": f"Kredit iskazan kao cijeli dospio (barem {_pc(methodology.LOAN_ALL_DUE_SHARE)} stanja, stanje veće od "
-                      f"{_int(methodology.LOAN_ALL_DUE_MIN)} €) ne ulazi u dospjele obveze kad se glavnica redovno otplaćuje "
-                      f"(barem {_pc(methodology.LOAN_REPAID_SHARE)} stanja na početku godine) ili kad se kredit još povlači "
-                      f"(stanje veće nego prethodne godine). Jedinica dobiva oznaku kvalitete podataka."},
+             "tekst": f"Neke jedinice u Bilanci cijeli kredit iskažu kao dospio. Takav kredit (barem "
+                      f"{_pc(methodology.LOAN_ALL_DUE_SHARE)} stanja iskazano kao dospjelo, stanje veće od "
+                      f"{_int(methodology.LOAN_ALL_DUE_MIN)} €) ne broji se u dospjele obveze ako se glavnica redovno "
+                      f"otplaćuje (barem {_pc(methodology.LOAN_REPAID_SHARE)} stanja s početka godine) ili se kredit još "
+                      f"povlači (stanje veće nego prethodne godine). Jedinica tada dobiva napomenu o podacima."},
             {"oznaka": "pravilo 2",
              "tekst": f"Dospjele obveze od barem {_pc(methodology.DO_CAP_SHARE)} rashoda poslovanja ograničavaju bodove na "
                       f"{str(methodology.DO_CAP_POINTS).replace('.', ',')}, pa je ocjena najviše "
@@ -129,33 +133,35 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
                       "iste godine, broji se umanjena za novi kredit (54 − 84)."},
         ],
         "zastavice": [{"oznaka": k, "tekst": v} for k, v in facts.FLAGS.items()],
-        "kriterij_10": "Kriterij od 10 % (Z5) uveo je zaključak Vlade od 16.4.2026. za pomoći iz državnog proračuna "
-                       "koje se dodjeljuju na temelju poziva (ne za izravnanje, decentralizirane funkcije ni EU ugovore). "
-                       "Manjak prihoda nad rashodima bez EU izvora smije biti najviše "
-                       f"{_pc(methodology.Z5_SHARE)} prihoda bez EU izvora, prema zadnjem godišnjem izvještaju. "
+        # three paragraphs separated by a blank line (what the conclusion asks; how we compute it; where it is shown)
+        "kriterij_10": f"Kriterij od {_pc(methodology.Z5_SHARE)} uveo je zaključak Vlade od 16. travnja 2026. za pomoći "
+                       "iz državnog proračuna koje se dodjeljuju na javnim pozivima (ne za izravnanje, decentralizirane "
+                       "funkcije ni EU ugovore). Manjak prihoda nad rashodima bez EU izvora smije biti najviše "
+                       f"{_pc(methodology.Z5_SHARE)} prihoda bez EU izvora, prema zadnjem godišnjem izvještaju.\n\n"
                        "Računamo ga kao ((3 + 4) − (6 + 7)) / (6 + 7 − " + " − ".join(methodology.EU_REVENUE) + "). "
-                       "PR-RAS ne razdvaja rashode po izvoru, pa se rashodi iz EU izvora uzimaju jednaki EU prihodima "
-                       "iste godine; kod jedinica s velikim EU projektima rezultat je približan. Zaključak ne kaže je li riječ "
-                       "o manjku same godine ili o ukupnom manjku s prenesenim rezultatom; uzimamo manjak godine, jer je "
-                       "svrha zaključka fiskalni rezultat opće države, koji se mjeri po godinama. Izračun je naš, a ne "
-                       "MF-ov, i ne ulazi u ocjenu. Prikazuje se među dodatnim pokazateljima, a ne među upozorenjima, "
-                       "jer je izračun približan, a zaključak ne kaže je li kriterij uvjet ili samo jedan od kriterija.",
+                       "PR-RAS ne razdvaja rashode po izvoru, pa uzimamo da su rashodi iz EU izvora jednaki EU prihodima "
+                       "iste godine. Zato je kod jedinica s velikim EU projektima rezultat približan. Zaključak ne kaže je "
+                       "li riječ o manjku same godine ili o ukupnom manjku s prenesenim rezultatom. Uzimamo manjak godine "
+                       "jer je svrha zaključka fiskalni rezultat opće države, a on se mjeri po godinama.\n\n"
+                       "Izračun je naš, a ne službeni, i ne ulazi u ocjenu. Prikazuje se među dodatnim pokazateljima, a ne "
+                       "među upozorenjima: izračun je približan, a zaključak ne kaže je li kriterij uvjet ili samo jedan "
+                       "od kriterija.",
         "skupine": {"razredi": [label for _, _, label in methodology.SIZE_CLASSES],
                     "opis": f"Općine i gradovi uspoređuju se unutar vrste i razreda veličine; gradovi od {_int(big)} "
                             "stanovnika naviše čine skupinu velikih gradova, županije svoju skupinu, a Grad Zagreb nema "
                             "usporedne skupine. Rang se prikazuje samo unutar skupine."},
         "ai": {
-            "opis": "Python izračuna sve brojke i složi paket činjenica (pipeline/facts.py). Model napiše 3-5 rečenica oko "
-                    "njih. Provjera (pipeline/verify.py) odbija tekst u kojem je ijedna brojka koje nema u paketu, ocjena "
-                    "koja nije stvarna, ili najslabija sastavnica, jake strane i ograničenje ocjene drukčiji od paketa. "
-                    f"Odbijeni tekst piše se ponovno uz povratnu informaciju, najviše {explain.MAX_RETRIES} puta, a zatim "
-                    "se koristi predložak. Na stranici se AI tekst prikazuje samo ako je napisan iz istog paketa "
-                    "(sha256) i ako ga prihvaća trenutna verzija provjere, koja se ponovno pokreće pri uvozu i pri objavi. "
-                    "Kada se kretanje stanovništva (barem "
-                    f"{_dec(facts.CONTEXT_POP_PP_PER_YEAR)} postotnih bodova godišnje od medijana) ili neto dohodak po "
-                    f"stanovniku (barem {_pc(facts.CONTEXT_INCOME_REL)} iznad ili ispod medijana) jedinice izrazito "
-                    "razlikuju od medijana usporedne skupine, mogu se spomenuti u jednoj završnoj rečenici kao kontekst, "
-                    "koji ne ulazi u ocjenu i ne objašnjava je.",
+            "opis": "Naš kod izračuna sve brojke i složi popis činjenica (pipeline/facts.py). Model od njih napiše 3–5 "
+                    "rečenica. Provjera (pipeline/verify.py) odbija tekst s ijednom brojkom koje nema na popisu, s "
+                    "pogrešnom ocjenom ili s drukčijim najslabijim pokazateljem, jakim stranama ili ograničenjem ocjene. "
+                    f"Model tada dobiva popis grešaka i piše ponovno, najviše {explain.MAX_RETRIES} puta, a zatim se "
+                    "koristi predložak. Na stranici se AI tekst prikazuje samo ako je napisan iz istog popisa činjenica "
+                    "(isti sha256) i ako ga prihvaća trenutna verzija provjere, koja se ponovno pokreće pri uvozu i pri "
+                    "objavi. Kretanje stanovništva i neto dohodak po stanovniku mogu se spomenuti u jednoj završnoj "
+                    "rečenici kad se jedinica izrazito razlikuje od medijana usporedne skupine: kretanje stanovništva za "
+                    f"barem {_dec(facts.CONTEXT_POP_PP_PER_YEAR)} postotnih bodova godišnje, a dohodak za barem "
+                    f"{_pc(facts.CONTEXT_INCOME_REL)} iznad ili ispod medijana. Taj kontekst ne ulazi u ocjenu i ne "
+                    "objašnjava je.",
             "model": (f"{', '.join(ai['modeli'])} ({', '.join(ai['gguf'] or [])}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"
                       if ai and ai.get("modeli") else
                       f"Gemma 4 ({explain.BATCH_MODEL_SOURCE}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"),
@@ -171,34 +177,38 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
             "batch": ai,
         },
         "simulator": {
-            "usteda": "Ušteda samo na općoj upravi (funkcija 01 bez 017 i 018) i samo od veličine. Svaka članica "
-                      "vrednuje se medijanom troška po stanovniku jedinica svoje veličine iste vrste kao spojena jedinica "
-                      "(općina koja ulazi u grad mjeri se s gradovima svoje veličine), a spojena jedinica medijanom svoje "
-                      "skupine. Razlika je učinak veličine. Realističan raspon je 0 do manjeg od učinka veličine i "
+            "usteda": "Ušteda samo na općoj upravi (funkcija 01 bez 017 i 018) i samo zbog veličine. Za svaku članicu "
+                      "uzima se medijan troška uprave po stanovniku u jedinicama njezine veličine, i to iste vrste kao "
+                      "spojena jedinica (općina koja ulazi u grad mjeri se s gradovima). Za spojenu jedinicu uzima se "
+                      "medijan njezine skupine. Razlika je najveća ušteda zbog veličine. Realističan raspon ide od 0 do "
+                      "manjeg od dvaju iznosa: te razlike ili "
                       f"{_pc(merge.SAVINGS_SHARE)} zbroja troška uprave. Koliko članice troše iznad sličnih jedinica "
                       "prikazuje se odvojeno: taj jaz postoji i bez spajanja i ne pripisuje se spajanju. Iznad "
                       f"{_int(merge.NO_SAVINGS_ABOVE)} stanovnika dodatna ušteda se ne očekuje.",
             "poticaj": "Poticaj za stvarno spajanje po Odluci NN 88/2022 (t. IX., na snazi i u 2026.). Pretpostavljamo da "
-                       "najveća članica pripaja ostale. Pripojena jedinica iz razvojne skupine I.-V. donosi pet godina "
-                       f"godišnje {merge.INCENTIVE_FACTOR} × svoje fiskalno izravnanje iz godine prije spajanja i do "
-                       f"{_int(round(merge.INCENTIVE_CAPITAL))} € za kapitalne projekte; podmiruju se i njezine dospjele obveze "
-                       "i krediti sa stanjem 30.6.2022. Isplatu izravnanja procjenjujemo kao udio u zbroju punih iznosa "
-                       "tablice MF-a puta stavku proračuna za 2026. Poticaj je prijenos iz državnog proračuna, ne ušteda.",
-            "izravnanje": "Fiskalno izravnanje po čl. 8. i 9. Zakona o financiranju JLP(R)S. Puni iznos (pravo) = max(0, "
+                       "najveća članica pripaja ostale. Za svaku pripojenu jedinicu iz I.–V. skupine razvijenosti jedinica "
+                       f"koja pripaja pet godina dobiva {merge.INCENTIVE_FACTOR} × godišnji iznos njezina fiskalnog "
+                       f"izravnanja iz godine prije spajanja i do {_int(round(merge.INCENTIVE_CAPITAL))} € za kapitalne "
+                       "projekte; podmiruju se i dospjele obveze i krediti pripojene jedinice sa stanjem na dan 30. lipnja "
+                       "2022. Isplatu izravnanja procjenjujemo raspodjelom iznosa iz proračuna za 2026. po udjelima u "
+                       "zbroju punih iznosa iz tablice Ministarstva financija. Poticaj je prijenos iz državnog proračuna, "
+                       "ne ušteda.",
+            "izravnanje": "Fiskalno izravnanje po čl. 8. i 9. Zakona o financiranju jedinica lokalne i područne "
+                          "(regionalne) samouprave. Puni iznos (pravo) = max(0, "
                           "(referentna vrijednost − kapacitet) × stanovnici), s kapacitetima i referentnim vrijednostima iz "
                           "tablice Ministarstva financija; formula na toj tablici daje iste pune iznose za svih 576 jedinica. "
-                          "Prikazuje se isplata: udio jedinice u zbroju svih punih iznosa puta iznos u državnom proračunu "
-                          "(za 2026. 280,4 mil. €; za 2027. još nije utvrđen, pa se uzima isti). Iznos u proračunu je fiksan, "
+                          "Prikazuje se isplata = iznos u državnom proračunu (za 2026. 280,4 mil. €; za 2027. još nije "
+                          "utvrđen, pa se uzima isti) × udio jedinice u zbroju svih punih iznosa. Iznos u proračunu je fiksan, "
                           "pa spajanje državi ne štedi: što spojena jedinica izgubi, dobivaju ostale jedinice.",
             "reforma": "Unutar županije najmanja jedinica ispod praga spaja se s najmanjim susjedom dok sve "
-                       "ne dosegnu prag (2.500, 5.000 ili 10.000 stanovnika). Scenarij, ne prijedlog granica.",
+                       "ne dosegnu prag (2.500, 5.000 ili 10.000 stanovnika). Scenarij za raspravu, ne prijedlog granica.",
             "demografija": "Kretanje stanovništva prikazuje se uz rezultat, ali ne ulazi u ocjenu: ocjena i iznosi po "
                            "stanovniku i dalje koriste Popis 2021. Za spojenu jedinicu zbraja se broj stanovnika članica "
-                           "na kraju svake godine (31.12.) prema Državnom zavodu za statistiku, a promjena se računa od "
-                           "2021. do zadnje godine; za svaku članicu prikazuje se njezina promjena. Prirodna promjena (živorođeni "
-                           "manje umrli) i migracijski saldo (doseljeni manje odseljeni) zbrajaju se za zadnju godinu i "
+                           "na kraju svake godine (31. prosinca) prema Državnom zavodu za statistiku, a promjena se računa "
+                           "od 2021. do zadnje godine; za svaku članicu prikazuje se njezina promjena. Prirodni prirast "
+                           "(rođeni − umrli) i migracijski saldo (doseljeni − odseljeni) zbrajaju se za zadnju godinu i "
                            "prikazuju i na 1.000 stanovnika prema Popisu 2021. Oznaka DZS-a \"-\" (pojave nema) broji "
-                           "se kao 0, a skriveni podatak (\"z\") znači da zbroj nije poznat." + _dzs_sources(),
+                           "se kao 0, a povjerljiv podatak (\"z\") znači da zbroj nije poznat." + _dzs_sources(),
         },
         "stanovnistvo_gospodarstvo": _population_economy(),
         "izravnanje_jedinice": _equalization_unit(),
@@ -209,7 +219,8 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
             "Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja ni razina usluga.",
             "Podaci su razina 22: proračun jedinice bez proračunskih korisnika i bez komunalnih društava, pa dug "
             "društava u vlasništvu jedinice nije uključen.",
-            "Dospjele obveze jedinice iskazuju same; pravilo 1 ispravlja čestu grešku s kreditom, ali ne sve.",
+            "Dospjele obveze jedinice iskazuju same. Pravilo o kreditu iskazanom kao dospio ispravlja čestu grešku, ali "
+            "ne i sve druge.",
             "Zakonska osnovica je približna (zakon koristi prosječni anuitet i jamstva, a ovdje se uzimaju stvarne isplate).",
             "Pragovi bodova preuzeti su iz austrijske (KDZ) i slovačke (INEKO) prakse i kalibrirani na hrvatskim podacima.",
             "Simulator i Karta reforme su scenariji: ne uključuju troškove prijelaza, promjenu stopa poreza ni nefinancijsku "

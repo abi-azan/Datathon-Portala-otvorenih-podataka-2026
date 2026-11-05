@@ -13,26 +13,35 @@ out from its peer group (context_facts), and every context item carries "konteks
 """
 import math
 
+import re
+
 import pandas as pd
 
 from . import kontekst
 
-GRADE_WORDS = {5: "vrlo stabilno", 4: "stabilno", 3: "umjereno", 2: "pod pritiskom", 1: "ozbiljan pritisak"}
+GRADE_WORDS = {5: "vrlo stabilno", 4: "stabilno", 3: "umjereno stabilno", 2: "nestabilno", 1: "vrlo nestabilno"}
 
 COMPONENTS = {
     "I1": "operativni saldo",
-    "I2": "slobodni saldo nakon otplate glavnice",
-    "I3": "godine otplate neto duga",
+    "I2": "slobodni saldo",
+    "I3": "godine otplate duga",
     "I4": "servis duga",
-    "I5": "dospjele neplaćene obveze",
+    "I5": "dospjele obveze",
 }
 
 FLAGS = {
     "Z1": "preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda",
-    "Z2": "otplata duga i dospjele obveze blizu zakonskog limita (više od 20 % zakonske osnovice)",
+    "Z2": "otplata duga i dospjele obveze iznad 20 % zakonske osnovice",
     "Z3": "rashodi poslovanja veći od tekućih prihoda dvije godine zaredom",
     "Z4": "novca na računu manje nego za mjesec dana rashoda poslovanja",
 }
+
+
+def group_label(skupina):
+    """Peer-group name for reading: "općine do 2.000" -> "općine do 2.000 stanovnika", with an en
+    dash in a range ("gradovi 2.000–5.000 stanovnika"). The group key itself stays as it is."""
+    s = re.sub(r"(?<=\d)-(?=\d)", "–", skupina)
+    return f"{s} stanovnika" if s[-1:].isdigit() else s
 
 
 def num(x, dec=0):
@@ -208,22 +217,23 @@ def fact_pack(unit, history, med, year, context=None):
     n_peer = int(r["n_skupine"])
     peers = n_peer > 1                      # Grad Zagreb is a group of one: no comparison (PLAN §3.6)
     pop = int(unit["stanovnici_2021"])
+    county = "" if unit["zupanija"] == unit["naziv"] else f" ({unit['zupanija']})"   # not "Grad Zagreb (Grad Zagreb)"
     facts = [
-        ("Jedinica", f"{names['nom']} ({unit['zupanija']}), {num(pop)} "
+        ("Jedinica", f"{names['nom']}{county}, {num(pop)} "
                      f"{plural(pop, 'stanovnik', 'stanovnika', 'stanovnika')} (Popis 2021.)"),
-        (f"Ocjena financijske stabilnosti za {year}.",
-         f"{int(r['ocjena'])} ({r['ocjena_rijec']}) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno)"),
+        (f"Ocjena financijske održivosti proračuna za {year}.",
+         f"{int(r['ocjena'])} ({r['ocjena_rijec']}) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno)"),
     ]
     if peers:
         facts += [
-            ("Usporedna skupina", f"{r['skupina']} ({n_peer} {plural(n_peer, 'jedinica', 'jedinice', 'jedinica')})"),
+            ("Usporedna skupina", f"{group_label(r['skupina'])} ({n_peer} {plural(n_peer, 'jedinica', 'jedinice', 'jedinica')})"),
             ("Bodovi", f"{points(r['bodovi'])} od 100; medijan skupine {points(m['bodovi'])}"),
             ("Mjesto u skupini", f"{int(r['rang'])}. od {n_peer}"),
         ]
     else:
         facts += [
             ("Bodovi", f"{points(r['bodovi'])} od 100"),
-            ("Usporedba", "jedinica nema usporedive skupine, pa se ocjenjuje samo prema pragovima"),
+            ("Usporedba", "jedinica nema usporedne skupine, pa nema ni usporedbe s medijanom"),
         ]
     if prev is not None and pd.notna(prev.get("ocjena")):
         facts.append((f"Ocjena za {year - 1}.", f"{int(prev['ocjena'])} ({prev['ocjena_rijec']})"))
@@ -234,14 +244,14 @@ def fact_pack(unit, history, med, year, context=None):
         line = describe(c, r[c], r)
         if peers:
             line += "; " + median_phrase(c, m[c])
-        facts.append((f"Sastavnica: {label}", line))
+        facts.append((f"Pokazatelj: {label}", line))
     # the story: the weakest component (if it is weak at all) and the clear strengths.
     # A strength must score high and, where there is a peer group, not be worse than its median.
     valid = {c: s for c, s in scores.items() if s is not None and not pd.isna(s)}
     weakest = min(valid, key=valid.get)
     # always named: "it pulls the grade down most" is true even for a high grade, and the model
     # names one anyway (Istarska županija in Gemma v5), so the check needs the right answer
-    facts.append(("Najslabija sastavnica", COMPONENTS[weakest]))
+    facts.append(("Najslabiji pokazatelj", COMPONENTS[weakest]))
     strong = [COMPONENTS[c] for c, s in valid.items()
               if s >= 90 and (not peers or not_worse_than_median(c, r[c], m[c]))]
     if strong:                      # no "nijedna ..." line: the model turned it into "Jake strane su: nijedna" (v4)
@@ -252,8 +262,8 @@ def fact_pack(unit, history, med, year, context=None):
     if r.get("ogranicenje_do"):
         facts.append(("Pravilo", "ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja"))
     if r.get("kredit_iskazan_dospio"):
-        facts.append(("Napomena o podacima", "u Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, "
-                                              "pa se ne broji u dospjele obveze"))
+        facts.append(("Napomena o podacima", "u Bilanci je kredit iskazan u cijelosti kao dospio, ali se redovno "
+                                              "otplaćuje ili se još povlači, pa se ne broji u dospjele obveze"))
     # Fiscal context (grants, administration cost) is on the profile page, not in the pack: in the
     # Gemma test it only produced filler and invented phrases ("kućne pomoći"). Population and income
     # come last, only when notable, and marked, so the check can hold the context sentence to them.

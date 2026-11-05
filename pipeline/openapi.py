@@ -136,7 +136,7 @@ SCHEMAS = {
                     "ok": {"type": "boolean"}, "n_brojki": {"type": "integer"},
                     "nepoznate": {"type": "array", "items": {"type": "string"}},
                     "sadrzaj": {"type": "array", "items": {"type": "string"},
-                                "description": "Neslaganja sa činjenicama: najslabija sastavnica, jake strane, ograničenje "
+                                "description": "Neslaganja sa činjenicama: najslabiji pokazatelj, jake strane, ograničenje "
                                                "ocjene. Činjenice s \"kontekst\": true (stanovništvo, dohodak) ne ulaze u "
                                                "ocjenu."}}}}},
             "stanovnistvo_gospodarstvo": {"$ref": "#/components/schemas/StanovnistvoGospodarstvo"},
@@ -154,7 +154,7 @@ SCHEMAS = {
         "properties": {
             "godina": {"type": "integer"},
             "od_godine": {"type": "integer", "description": "Samo za promjenu stanovništva: prva godina niza."},
-            "vrijednost": {**NUM, "description": "null kad podatka nema ili je tajan (oznaka z)."},
+            "vrijednost": {**NUM, "description": "null kad podatka nema ili je povjerljiv (oznaka z)."},
             "oznaka": {"enum": ["-", "z", None],
                        "description": "Simbol DZS-a: \"-\" pojava ne postoji (broji se kao 0), \"z\" tajnost (vrijednost je null)."},
             "broj": {**NUM, "description": "Iznos prije dijeljenja: razlika stanovnika, broj rođenih minus umrlih, "
@@ -267,7 +267,7 @@ SCHEMAS = {
     },
     "Skupine": {
         "type": "object",
-        "description": "Medijani po usporednoj skupini i godini: bodovi, I1-I5, trošak uprave, udio pomoći.",
+        "description": "Medijani po usporednoj skupini i godini: bodovi, I1-I5, bodovi S1-S5, trošak uprave, udio pomoći.",
         "additionalProperties": {"type": "object", "additionalProperties": {
             "type": "object", "additionalProperties": NUM}},
     },
@@ -372,16 +372,17 @@ SCHEMAS = {
             "poticaj": {
                 "type": ["object", "null"],
                 "description": "Poticaj za stvarno spajanje po Odluci NN 88/2022, t. IX. (na snazi i u 2026.). "
-                               "Pretpostavka: najveća članica pripaja ostale. Pripojena članica u razvojnoj skupini "
-                               "I.-V. donosi pet godina godišnje 2 × svoje fiskalno izravnanje iz godine prije spajanja "
-                               "i do 995.421 € za kapitalne projekte; podmiruju se i njezine dospjele obveze i krediti "
-                               "sa stanjem 30.6.2022. To je prijenos iz državnog proračuna, ne ušteda.",
+                               "Pretpostavka: najveća članica pripaja ostale. Za svaku pripojenu članicu iz I.–V. "
+                               "skupine razvijenosti jedinica koja pripaja pet godina dobiva godišnje 2 × njezino "
+                               "fiskalno izravnanje iz godine prije spajanja i do 995.421 € za kapitalne projekte; "
+                               "podmiruju se i njezine dospjele obveze i krediti sa stanjem 30. lipnja 2022. To je "
+                               "prijenos iz državnog proračuna, ne ušteda.",
                 "required": ["pripaja", "s_pravom", "izravnanje_isplata", "godisnje", "ukupno", "kapitalni_do",
                              "omjer_isplate"],
                 "properties": {
                     "pripaja": {"type": "string", "pattern": "^[0-9]{5}$", "description": "Šifra članice koja pripaja."},
                     "s_pravom": {"type": "array", "items": {"type": "string", "pattern": "^[0-9]{5}$"},
-                                 "description": "Pripojene članice u razvojnoj skupini I.-V."},
+                                 "description": "Pripojene članice u I.–V. skupini razvijenosti."},
                     "izravnanje_isplata": {**NUM, "minimum": 0,
                                            "description": "Procjena godišnje isplate izravnanja pripojenih članica s pravom, "
                                                           "€: puni iznos × omjer_isplate."},
@@ -649,7 +650,7 @@ def spec(generated):
         "info": {
             "title": "Fiskalna karta JLS: otvoreni API",
             "version": "1.0.0",
-            "summary": "Ocjena financijske stabilnosti 576 općina, gradova i županija, kao statične datoteke.",
+            "summary": "Ocjena financijske održivosti proračuna 576 općina, gradova i županija, kao statične datoteke.",
             "description": (
                 "Statični API bez ključa i bez poslužitelja (GitHub Pages, CORS otvoren). Svi podaci izračunati su iz "
                 "otvorenih podataka Ministarstva financija (PR-RAS, Bilanca, fiskalno izravnanje), DZS-a (Popis 2021., "

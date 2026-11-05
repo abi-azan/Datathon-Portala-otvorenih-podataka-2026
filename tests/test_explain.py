@@ -66,7 +66,7 @@ def test_kaggle_script_carries_the_packs_and_metadata(tmp_path):
 def test_publish_uses_the_ai_text_only_when_it_still_fits():
     from pipeline import publish
     pack = {"oib": "1", "year": 2025, "naziv": {"nom": "Općina Primjerovo"}, "ocjene": [4],
-            "facts": [{"label": "Ocjena financijske stabilnosti", "value": "4 (stabilno) na ljestvici od 1 do 5"},
+            "facts": [{"label": "Ocjena financijske održivosti proračuna", "value": "4 (stabilno) na ljestvici od 1 do 5"},
                       {"label": "Ukupni bodovi", "value": "72,5 boda od 100"}]}
     text = "Općina Primjerovo ima ocjenu 4 (stabilno) i 72,5 boda od 100."
     ai = {"tekst": text, "izvor": "ai", "pack_sha256": explain.pack_sha256(pack), "model": "Gemma 4 31B"}
@@ -96,7 +96,7 @@ def test_resumed_batch_reruns_units_whose_pack_changed(tmp_path, monkeypatch):
     first = explain.write_kaggle_batch(dest=tmp_path / "s1.py")
     out = batch_output(tmp_path / "out1.json", [{"oib": o, "text": "T.", "source": "ai"} for o in "12"],
                        load_script(first).RUN_META["paketi"])
-    a2 = {**a, "facts": [{"label": "Ocjena", "value": "3 (umjereno)"}]}      # unit 1 changed after its text
+    a2 = {**a, "facts": [{"label": "Ocjena", "value": "3 (umjereno stabilno)"}]}      # unit 1 changed after its text
     monkeypatch.setattr(explain, "load_packs", lambda year=None: ([a2, b, c], None))
     mod = load_script(explain.write_kaggle_batch(skip=[out], dest=tmp_path / "s2.py"))
     assert [p["oib"] for p in mod.PACKS] == ["1", "3"]
@@ -105,7 +105,7 @@ def test_resumed_batch_reruns_units_whose_pack_changed(tmp_path, monkeypatch):
 
 
 GOOD = {"oib": "1", "year": 2025, "naziv": {"nom": "Općina Primjerovo"}, "ocjene": [4], "ocjena": 4,
-        "facts": [{"label": "Ocjena financijske stabilnosti", "value": "4 (stabilno) na ljestvici od 1 do 5"},
+        "facts": [{"label": "Ocjena financijske održivosti proračuna", "value": "4 (stabilno) na ljestvici od 1 do 5"},
                   {"label": "Ukupni bodovi", "value": "72,5 boda od 100"}]}
 OK_TEXT = "Općina Primjerovo ima ocjenu 4 (stabilno) i 72,5 boda od 100."
 BAD_TEXT = OK_TEXT.replace("72,5", "75,2")
@@ -218,23 +218,23 @@ GRADEC_TEXT = (
     "slobodni saldo nakon otplate glavnice, godine otplate neto duga, servis duga, dospjele neplaćene obveze.")
 GRADEC_PACK = {"oib": GRADEC, "year": 2025, "ocjena": 5, "ocjene": [5, 5], "facts": [
     {"label": "Jedinica", "value": "Općina Gradec (Zagrebačka županija), 3.189 stanovnika (Popis 2021.)"},
-    {"label": "Ocjena financijske stabilnosti za 2025.",
-     "value": "5 (vrlo stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno)"},
+    {"label": "Ocjena financijske održivosti proračuna za 2025.",
+     "value": "5 (vrlo stabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno)"},
     {"label": "Usporedna skupina", "value": "općine 2.000-5.000 (193 jedinice)"},
     {"label": "Bodovi", "value": "99 bodova od 100; medijan skupine 87,8 boda"},
     {"label": "Mjesto u skupini", "value": "14. od 193"},
     {"label": "Ocjena za 2024.", "value": "5 (vrlo stabilno)"},
-    {"label": "Sastavnica: operativni saldo",
+    {"label": "Pokazatelj: operativni saldo",
      "value": "operativni višak iznosi 30,4 % tekućih prihoda; medijan skupine: višak 20,0 % tekućih prihoda"},
-    {"label": "Sastavnica: slobodni saldo nakon otplate glavnice",
+    {"label": "Pokazatelj: slobodni saldo nakon otplate glavnice",
      "value": "nakon otplate glavnice kredita ostaje 29,3 % tekućih prihoda; medijan skupine: ostaje 16,9 % tekućih prihoda"},
-    {"label": "Sastavnica: godine otplate neto duga",
+    {"label": "Pokazatelj: godine otplate neto duga",
      "value": "jedinica nema neto duga (novac na računu pokriva kredite); većina jedinica u skupini nema neto duga"},
-    {"label": "Sastavnica: servis duga",
+    {"label": "Pokazatelj: servis duga",
      "value": "otplata kredita i kamata iznosi 2,2 % zakonske osnovice; medijan skupine 3,8 % zakonske osnovice"},
-    {"label": "Sastavnica: dospjele neplaćene obveze",
+    {"label": "Pokazatelj: dospjele neplaćene obveze",
      "value": "na kraju godine nema dospjelih neplaćenih obveza; medijan skupine 1,5 % rashoda poslovanja"},
-    {"label": "Najslabija sastavnica", "value": "servis duga"},
+    {"label": "Najslabiji pokazatelj", "value": "servis duga"},
     {"label": "Jake strane", "value": "operativni saldo, slobodni saldo nakon otplate glavnice, godine otplate neto "
                                       "duga, servis duga, dospjele neplaćene obveze"},
     {"label": "Upozorenja", "value": "nema upozorenja"}]}
@@ -264,9 +264,9 @@ def test_verify_stays_standard_library_only():
 # --- context (population, income): template, prompt and the Kaggle script ------------------------
 
 CTX_PACK = {"oib": "9", "year": 2025, "naziv": {"nom": "Općina Bogdanovci"}, "ocjena": 4, "ocjene": [4], "facts": [
-    {"label": "Ocjena financijske stabilnosti za 2025.",
-     "value": "4 (stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno)"},
-    {"label": "Najslabija sastavnica", "value": "dospjele neplaćene obveze"},
+    {"label": "Ocjena financijske održivosti proračuna za 2025.",
+     "value": "4 (stabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno)"},
+    {"label": "Najslabiji pokazatelj", "value": "dospjele neplaćene obveze"},
     {"label": "Upozorenja", "value": "nema upozorenja"},
     {"label": "Kontekst", "value": "ne ulazi u ocjenu i ne objašnjava je", "kontekst": True},
     {"label": "Kontekst: broj stanovnika", "kontekst": True,
@@ -277,14 +277,14 @@ CTX_PACK = {"oib": "9", "year": 2025, "naziv": {"nom": "Općina Bogdanovci"}, "o
 
 def test_template_closes_with_one_context_sentence():
     text = explain.template(CTX_PACK)
-    assert text == ("Općina Bogdanovci za 2025. godinu ima ocjenu 4 (stabilno). Najslabija sastavnica: dospjele "
-                    "neplaćene obveze. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2024. smanjio "
+    assert text == ("Općina Bogdanovci za 2025. godinu ima ocjenu 4 (stabilno). Ocjenu najviše spušta pokazatelj "
+                    "„dospjele neplaćene obveze”. Kontekst koji ne ulazi u ocjenu: broj stanovnika od 2021. do 2024. smanjio "
                     "se za 8,3 %, što je ispod medijana skupine (−2,9 %), a neto dohodak po stanovniku u 2025. iznosio "
                     "je 6.592 €, što je ispod medijana skupine (9.164 €).")
     assert verify.verify(text, CTX_PACK)["ok"]
     only_income = {**CTX_PACK, "facts": [f for f in CTX_PACK["facts"] if "broj stanovnika" not in f["label"]]}
     assert explain.template(only_income).endswith(
-        "Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 6.592 €, "
+        "Kontekst koji ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 6.592 €, "
         "što je ispod medijana skupine (9.164 €).")
     fiscal = {**CTX_PACK, "facts": [f for f in CTX_PACK["facts"] if not f.get("kontekst")]}
     assert "kontekst" not in explain.template(fiscal)

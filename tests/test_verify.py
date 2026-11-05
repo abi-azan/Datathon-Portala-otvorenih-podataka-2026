@@ -41,7 +41,7 @@ def test_croatian_forms():
 
 def test_generate_retries_with_feedback_then_falls_back_to_the_template():
     pack = {**PACK, "naziv": {"nom": "Općina X", "gen": "Općine X", "lok": "Općini X"}, "year": 2025,
-            "facts": PACK["facts"] + [{"label": "Ocjena financijske stabilnosti za 2025.", "value": "5 (vrlo stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno)"},
+            "facts": PACK["facts"] + [{"label": "Ocjena financijske održivosti proračuna za 2025.", "value": "5 (vrlo stabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno)"},
                                       {"label": "Jake strane", "value": "operativni saldo"}]}
     seen = []
 
@@ -62,11 +62,11 @@ def test_english_decimals_and_dates_cannot_hide_behind_their_first_part():
 
 
 def test_grade_claims_are_found_beyond_filler_words_and_the_scale_is_not_a_claim():
-    pack = {"ocjene": [4], "facts": [{"label": "Ocjena", "value": "4 (stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno); 2025."}]}
-    r = verify.verify("Jedinica ima ocjenu financijske stabilnosti 1 (ozbiljan pritisak).", pack)
+    pack = {"ocjene": [4], "facts": [{"label": "Ocjena", "value": "4 (stabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno); 2025."}]}
+    r = verify.verify("Jedinica ima ocjenu financijske stabilnosti 1 (vrlo nestabilno).", pack)
     assert not r["ok"] and r["nepoznate"] == ["ocjena 1"]
     assert verify.verify("Ocjene od 1 do 5 opisuju stabilnost; jedinica ima ocjenu 4.", pack)["ok"]
-    assert verify.verify("Ocjena za 2025. godinu je 4 (stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno).", pack)["ok"]
+    assert verify.verify("Ocjena za 2025. godinu je 4 (stabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno).", pack)["ok"]
 
 
 def test_no_false_grade_claims_in_real_model_texts():
@@ -95,8 +95,12 @@ def test_no_false_grade_claims_in_real_model_texts():
             texts += [(r["oib"], r["text"]) for r in m["results"] if r["source"] == "ai"]   # wrong texts may claim wrong grades
     assert len(texts) >= 60
 
+    # the stored test texts were written with the grade words before 5.11. (PLAN §11, decision 18)
+    legacy = {3: "umjereno", 2: "pod pritiskom", 1: "ozbiljan pritisak"}
+
     def stated(t):
-        return {d for d, w in re.findall(r"(?<![\d,.])([1-5])\s*\(([^)]+)\)", t) if w.strip() == facts.GRADE_WORDS[int(d)]}
+        return {d for d, w in re.findall(r"(?<![\d,.])([1-5])\s*\(([^)]+)\)", t)
+                if w.strip() in (facts.GRADE_WORDS[int(d)], legacy.get(int(d)))}
 
     bad = [(packs[o]["naziv"]["nom"], g) for o, t in texts for g in verify.claimed_grades(t)
            if int(g) not in packs[o]["ocjene"] and g not in stated(t)]
@@ -108,15 +112,15 @@ def test_no_false_grade_claims_in_real_model_texts():
 
 def test_an_amount_after_the_word_ocjena_is_not_a_grade():
     """Regression from the 12B run: 'Ocjenu najviše spuštaju … 1.767.926 €' is not grade 1."""
-    pack = {"ocjene": [2], "facts": [{"label": "x", "value": "2 (pod pritiskom); 1.767.926 €; 80,9 %"}]}
+    pack = {"ocjene": [2], "facts": [{"label": "x", "value": "2 (nestabilno); 1.767.926 €; 80,9 %"}]}
     assert verify.verify("Ocjenu najviše spuštaju obveze od 1.767.926 €, odnosno 80,9 %, a ocjena je 2.", pack)["ok"]
 
 
 def test_content_claims_must_match_the_pack():
     """Gemma v4: 'zbog prenesenog manjka ocjena je ograničena' (no rule), invented strengths."""
     pack = {"ocjene": [2], "facts": [
-        {"label": "Ocjena", "value": "2 (pod pritiskom); 34,2 boda"},
-        {"label": "Najslabija sastavnica", "value": "dospjele neplaćene obveze"},
+        {"label": "Ocjena", "value": "2 (nestabilno); 34,2 boda"},
+        {"label": "Najslabiji pokazatelj", "value": "dospjele neplaćene obveze"},
         {"label": "Jake strane", "value": "operativni saldo, servis duga"},
         {"label": "Upozorenja", "value": "preneseni manjak"}]}
     good = ("Jedinica ima ocjenu 2 i 34,2 boda. Ocjenu najviše spušta sastavnica „dospjele neplaćene obveze”. "
@@ -125,7 +129,7 @@ def test_content_claims_must_match_the_pack():
     r = verify.verify(good + " Zbog prenesenog manjka ocjena je ograničena.", pack)
     assert not r["ok"] and r["sadrzaj"] == ["ograničenje ocjene bez pravila"]
     r = verify.verify("Ocjena je 2. Ocjenu najviše spušta sastavnica „servis duga”.", pack)
-    assert r["sadrzaj"] == ["najslabija sastavnica „servis duga”"]
+    assert r["sadrzaj"] == ["najslabiji pokazatelj „servis duga”"]
     r = verify.verify("Ocjena je 2. Jake strane jedinice su: ovisnost o pomoćima.", pack)
     assert r["sadrzaj"] == ["jaka strana „ovisnost o pomoćima”"]
     with_rule = {**pack, "facts": pack["facts"] + [{"label": "Pravilo", "value": "ocjena je ograničena na najviše 2"}]}
@@ -135,9 +139,9 @@ def test_content_claims_must_match_the_pack():
 # --- context: population and income (facts.context_facts) ---------------------------------------
 
 FISCAL = [{"label": "Jedinica", "value": "Općina Bogdanovci (Vukovarsko-srijemska županija), 1.893 stanovnika (Popis 2021.)"},
-          {"label": "Ocjena financijske stabilnosti za 2025.", "value": "4 (stabilno) na ljestvici od 1 (ozbiljan pritisak) do 5 (vrlo stabilno)"},
+          {"label": "Ocjena financijske održivosti proračuna za 2025.", "value": "4 (stabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno)"},
           {"label": "Bodovi", "value": "72,5 boda od 100; medijan skupine 78,8 boda"},
-          {"label": "Najslabija sastavnica", "value": "dospjele neplaćene obveze"}]
+          {"label": "Najslabiji pokazatelj", "value": "dospjele neplaćene obveze"}]
 CONTEXT = [{"label": "Kontekst", "value": "ne ulazi u ocjenu i ne objašnjava je", "kontekst": True},
            {"label": "Kontekst: broj stanovnika",
             "value": "od 2021. do 2024. smanjio se za 8,3 %, što je ispod medijana skupine (−2,9 %)", "kontekst": True},
@@ -197,9 +201,9 @@ def test_context_only_when_the_pack_has_it():
 
 def test_context_tied_to_the_grade_or_mixed_with_fiscal_numbers_fails():
     cause = f"{FIRST} Zbog pada stanovništva od 8,3 % ocjena je niža."
-    assert "kontekst povezan s ocjenom ili sastavnicama" in check(cause)
+    assert "kontekst povezan s ocjenom ili pokazateljima" in check(cause)
     for link in ("što utječe na ocjenu", "pa je ocjena niža", "što objašnjava slabiju sastavnicu"):
-        assert "kontekst povezan s ocjenom ili sastavnicama" in check(f"{FIRST} {CTX[:-1]}, {link}."), link
+        assert "kontekst povezan s ocjenom ili pokazateljima" in check(f"{FIRST} {CTX[:-1]}, {link}."), link
     for negated in ("što ne ulazi u ocjenu i ne objašnjava je", "koji nisu dio ocjene", "što ne utječe na ocjenu"):
         assert check(f"{FIRST} {CTX.replace('što ne ulazi u ocjenu', negated)}") == [], negated
     mixed = f"Jedinica ima 72,5 boda, a broj stanovnika od 2021. do 2024. smanjio se za 8,3 %."

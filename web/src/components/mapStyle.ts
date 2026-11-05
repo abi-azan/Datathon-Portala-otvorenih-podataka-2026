@@ -1,4 +1,7 @@
 import * as maplibregl from 'maplibre-gl'
+import type { Feature, Polygon } from 'geojson'
+import { merge } from 'topojson-client'
+import type { GeometryObject, Topology } from 'topojson-specification'
 import { GRADES } from '../lib/format'
 import { SEQUENTIAL } from '../lib/views'
 
@@ -57,6 +60,26 @@ export const classFill = (key: string, share = 1) =>
     ...SEQUENTIAL.flatMap((c, i) => [SEQUENTIAL_CLASS + i + 1, overLand(c, share)]),
     overLand('#ffffff', share),
   ] as unknown as maplibregl.ExpressionSpecification
+
+/** How much the area outside Croatia is washed out: neighbouring countries stay recognisable
+ *  (their names and borders are drawn above the veil), but the eye goes to the grades. */
+const VEIL = 0.72
+
+/** A land-coloured veil over everything outside Croatia: a world-sized polygon with every land part
+ *  of Croatia (the merged counties: mainland, exclave, islands) cut out as a hole. Added below
+ *  `beforeId` (the first label layer), so all place and country names stay on top. */
+export function addOutsideVeil(m: maplibregl.Map, topo: Topology, beforeId?: string) {
+  const counties = (topo.objects.zupanije as { geometries: GeometryObject[] }).geometries
+  const croatia = merge(topo, counties as Parameters<typeof merge>[1])
+  const holes = croatia.coordinates.map((poly) => poly[0])
+  const veil: Feature<Polygon> = {
+    type: 'Feature',
+    properties: {},
+    geometry: { type: 'Polygon', coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]], ...holes] },
+  }
+  m.addSource('outside', { type: 'geojson', data: veil })
+  m.addLayer({ id: 'outside-veil', type: 'fill', source: 'outside', paint: { 'fill-color': LAND, 'fill-opacity': VEIL, 'fill-antialias': false } }, beforeId)
+}
 
 export const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 

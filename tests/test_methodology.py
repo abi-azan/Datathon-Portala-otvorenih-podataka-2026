@@ -122,7 +122,7 @@ def test_overdue_at_30_percent_caps_grade_at_2():
     assert ok["ocjena"] >= 3 and not ok["ogranicenje_do"]
     assert hit["I5"] >= 0.30 and hit["ogranicenje_do"]
     assert hit["bodovi_bez_ogranicenja"] > 40 and hit["bodovi"] == m.DO_CAP_POINTS
-    assert hit["ocjena"] == 2 and hit["ocjena_rijec"] == "pod pritiskom"
+    assert hit["ocjena"] == 2 and hit["ocjena_rijec"] == "nestabilno"
     assert max(hit["ocjene_scenarija"].values()) == 2      # the cap holds in every weight scenario
     worse = m.evaluate_unit({2025: unit_year(b_23_D=300.0, p_3=1300.0)}, 1000)[2025]
     assert not worse["ogranicenje_do"] and worse["bodovi"] == worse["bodovi_bez_ogranicenja"]

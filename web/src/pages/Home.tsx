@@ -1,13 +1,12 @@
-import { ChevronDown, Pause, Play } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { GradeLegend } from '../components/Grade'
+import { ArrowRight, Pause, Play } from 'lucide-react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Eyebrow } from '../components/Layout'
 import { Search } from '../components/Search'
 import { UnitTable } from '../components/UnitTable'
-import { loadDatasets, type IndexFile } from '../lib/data'
+import { loadDatasets, loadReform, type IndexFile } from '../lib/data'
 import { num } from '../lib/format'
-import { unitHref } from '../lib/router'
-import { CONTEXT_VIEWS, SEQUENTIAL, classOf, contextView, quintiles, type ViewKey } from '../lib/views'
+import { simulatorHref, unitHref } from '../lib/router'
+import { CONTEXT_VIEWS, contextView, type ViewKey } from '../lib/views'
 
 const YEARS = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']
 
@@ -36,10 +35,7 @@ export function Home({ index }: { index: IndexFile }) {
   const [playing, setPlaying] = useState(false)
   const [view, setView] = useState<ViewKey>('ocjena')
   const [mode, setMode] = useState<'karta' | 'tablica'>('karta')
-  const wide = useWide()
-  const [legendOpen, setLegendOpen] = useState(false)
   const ctx = contextView(view)
-  const jls = useMemo(() => index.jedinice.filter((u) => u.vrsta !== 'zupanija'), [index])
 
   useEffect(() => {
     if (!playing) return
@@ -56,46 +52,13 @@ export function Home({ index }: { index: IndexFile }) {
     return () => clearInterval(t)
   }, [playing])
 
-  const counts = useMemo(() => {
-    const c: Record<number, number> = {}
-    for (const u of jls) {
-      const g = u.ocjena[year]
-      if (g) c[g] = (c[g] ?? 0) + 1
-    }
-    return c
-  }, [jls, year])
-
-  const people = useMemo(() => {
-    const p: Record<number, number> = {}
-    for (const u of jls) {
-      const g = u.ocjena[year]
-      if (g) p[g] = (p[g] ?? 0) + u.stanovnici
-    }
-    return p
-  }, [jls, year])
-  const underPressure = (people[1] ?? 0) + (people[2] ?? 0)
-
-  // legend of a context view: the five quintile classes with their ranges and unit counts
-  const classes = useMemo(() => {
-    if (!ctx) return []
-    const cuts = quintiles(jls, ctx, year)
-    const vals = jls.map((u) => ctx.value(u, year))
-    const finite = vals.filter((v): v is number => v != null && Number.isFinite(v))
-    if (!finite.length) return []                  // no values for this year: no classes, no legend rows
-    const lo = Math.min(...finite)
-    const hi = Math.max(...finite)
-    const edges = [lo, ...cuts, hi]
-    return SEQUENTIAL.map((color, i) => ({
-      color,
-      from: edges[i],
-      to: edges[i + 1],
-      n: vals.filter((v) => classOf(v, cuts) === i + 1).length,
-    }))
-  }, [ctx, jls, year])
-
-  const examples = ['grad-zagreb', 'grad-split', 'opcina-sveta-marija', 'opcina-povljana']
+  const examples = ['grad-zagreb', 'grad-split', 'opcina-sveta-marija']
     .map((s) => index.jedinice.find((u) => u.slug === s))
     .filter(Boolean)
+  const years = useMemo(
+    () => [...new Set(index.jedinice.flatMap((u) => Object.keys(u.ocjena).filter((y) => u.ocjena[y] != null)))].sort(),
+    [index],
+  )
 
   const yearControls = (
     <div>
@@ -133,20 +96,21 @@ export function Home({ index }: { index: IndexFile }) {
     </div>
   )
 
-  // Below lg the page is one column: intro, search, map, then the view, and the legend with the years
-  // folded behind "Legenda i godine". From lg the left column holds everything but the map, and the
-  // years come before the legend, so "Pokreni" is in the first screen at 1280×800.
+  // Below lg the page is one column: intro, search, map, the examples, the view and the years (the
+  // legend is on the map). From lg the left column holds everything but the map, in the same order.
   return (
     <main className="mx-auto flex max-w-[1440px] flex-col gap-7 px-6 pt-8 lg:grid lg:grid-cols-[400px_1fr] lg:gap-8 lg:px-10">
       <div className="contents lg:flex lg:flex-col lg:gap-7">
         <div className="order-1">
-          <Eyebrow>576 općina, gradova i županija · otvoreni podaci</Eyebrow>
-          <h1 className="mt-3 font-serif text-[2.6rem] leading-[1.05] font-semibold tracking-tight text-balance">
-            Kako stoje financije tvoje općine?
-          </h1>
+          <Eyebrow>Otvoreni podaci · otvoreni kod</Eyebrow>
+          <h1 className="mt-3 font-serif text-[2.9rem] leading-[1.05] font-semibold tracking-tight">Fiskalna karta</h1>
+          <p className="mt-2 font-serif text-[1.35rem] leading-snug text-balance text-ink">
+            Financijska održivost proračuna svih {num(index.jedinice.length)} općina, gradova i županija
+            {years.length > 0 && `, ${years[0]}.–${years[years.length - 1]}.`}
+          </p>
           <p className="mt-4 text-[1.05rem] leading-relaxed text-ink-2">
-            Svaka općina, svaki grad i svaka županija dobivaju ocjenu financijske održivosti proračuna od 1 do 5,
-            izračunatu iz službenih izvještaja Ministarstva financija i uspoređenu sa sličnim jedinicama. Metoda i kod su otvoreni.
+            Svaka jedinica dobiva ocjenu od 1 do 5. Ocjena se računa iz službenih izvještaja Ministarstva financija, a uz
+            nju se prikazuje i usporedba sa sličnim jedinicama.
           </p>
           <p className="mt-3 border-l-2 border-axis pl-3 text-sm leading-relaxed text-muted">
             Ocjenjuje se financijska održivost proračuna, a ne kvaliteta upravljanja.
@@ -165,7 +129,9 @@ export function Home({ index }: { index: IndexFile }) {
           </div>
         </div>
 
-        <div className="order-4">
+        <Stories index={index} className="order-4" />
+
+        <div className="order-5">
           <Eyebrow>Prikaz na karti</Eyebrow>
           <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Prikaz na karti">
             {[{ key: 'ocjena' as ViewKey, short: 'Ocjena' }, ...CONTEXT_VIEWS].map((v) => (
@@ -183,59 +149,20 @@ export function Home({ index }: { index: IndexFile }) {
           </div>
         </div>
 
-        {/* open on desktop (the summary is hidden there); folded on phones until tapped */}
-        <details
-          open={wide || legendOpen}
-          onToggle={(e) => !wide && setLegendOpen(e.currentTarget.open)}
-          className="group order-5 rounded-2xl border border-hairline bg-card"
-        >
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-5 py-4 lg:hidden [&::-webkit-details-marker]:hidden">
-            <span className="text-sm font-medium">
-              Legenda i godine <span className="tabular font-normal text-muted">· {ctx ? ctx.label : 'ocjena'}, {year}.</span>
-            </span>
-            <ChevronDown className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180" aria-hidden />
-          </summary>
-          <div className="flex flex-col gap-5 px-5 pb-5 lg:pt-5">
-            {yearControls}
-            <div className="border-t border-hairline pt-4">
-              <div className="flex items-baseline justify-between gap-3">
-                <Eyebrow>{ctx ? `${ctx.label}, ${year}.` : `Ocjena za ${year}.`}</Eyebrow>
-                <span className="shrink-0 text-xs text-muted">broj jedinica</span>
-              </div>
-              {!ctx ? (
-                <>
-                  <div className="mt-3">
-                    <GradeLegend counts={counts} />
-                  </div>
-                  <p className="mt-3 text-sm leading-relaxed text-ink-2">
-                    U jedinicama s ocjenom 1 ili 2 živi{' '}
-                    <strong className="tabular font-semibold text-ink">{num(underPressure)}</strong> stanovnika.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <ul className="mt-3 space-y-1" aria-label={`Legenda: ${ctx.label}`}>
-                    {classes.map((c, i) => (
-                      <li key={i} className="flex items-center gap-3 text-sm">
-                        <span className="h-3.5 w-7 shrink-0 rounded" style={{ background: c.color }} aria-hidden />
-                        <span className="tabular flex-1 text-ink-2">{ctx.range(c.from, c.to)}</span>
-                        <span className="tabular text-muted">{c.n}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-3 text-sm leading-relaxed text-ink-2">
-                    Ovi pokazatelji služe za usporedbu i ne ulaze u ocjenu. Jedinice su podijeljene u pet razreda prema
-                    vrijednosti pokazatelja u {year}. godini. Tamnija boja znači veću vrijednost, ne nužno bolji rezultat.
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-        </details>
+        <div className="order-6 flex flex-col gap-4 rounded-2xl border border-hairline bg-card p-5">
+          {yearControls}
+          {ctx && (
+            <p className="border-t border-hairline pt-4 text-sm leading-relaxed text-ink-2">
+              Ovaj pokazatelj ne ulazi u ocjenu, nego služi za usporedbu. Jedinice su podijeljene u pet jednako brojnih
+              razreda prema vrijednosti u {year}. godini. Tamnija boja znači veću vrijednost, ne nužno bolji rezultat.
+            </p>
+          )}
+        </div>
 
-        <p className="order-6 text-xs leading-relaxed text-muted">
-          Ocjena nije rang-lista: jedinice se uspoređuju sa sličnima po vrsti i veličini, a ocjena se računa iz pet
-          pokazatelja (saldo, slobodni saldo, dug, servis duga, dospjele obveze). <a href="#/metodologija" className="underline underline-offset-2">Kako se računa?</a>
+        <p className="order-7 text-xs leading-relaxed text-muted">
+          Ocjena nije rang-lista: računa se iz pet pokazatelja prema stalnim pragovima (operativni saldo, slobodni saldo,
+          godine otplate duga, servis duga, dospjele obveze). Mjesto među sličnim jedinicama prikazuje se odvojeno.{' '}
+          <a href="#/metodologija" className="underline underline-offset-2">Kako se računa?</a>
         </p>
       </div>
 
@@ -316,15 +243,53 @@ function KeyFigures({ index, className = '' }: { index: IndexFile; className?: s
   )
 }
 
-const WIDE = '(min-width: 1024px)'
-/** Whether the viewport is lg or wider (Tailwind's lg breakpoint), following resizes. */
-function useWide() {
-  return useSyncExternalStore(
-    (cb) => {
-      const m = window.matchMedia(WIDE)
-      m.addEventListener('change', cb)
-      return () => m.removeEventListener('change', cb)
-    },
-    () => window.matchMedia(WIDE).matches,
+/** Three ways into the product, one per feature. Every number is read from the data, not typed in:
+ *  Povljana's grade last year and this year, and the unit counts of the reform at 5.000 people. */
+function Stories({ index, className = '' }: { index: IndexFile; className?: string }) {
+  const [reform, setReform] = useState<{ prije: number; poslije: number } | null>(null)
+  useEffect(() => {
+    loadReform(5000)
+      .then((r) => setReform({ prije: r.n_prije, poslije: r.n_poslije }))
+      .catch(() => setReform(null))
+  }, [])
+  const last = String(index.zadnja_godina)
+  const prev = String(index.zadnja_godina - 1)
+  const bySlug = (slug: string) => index.jedinice.find((u) => u.slug === slug)
+  const povljana = bySlug('opcina-povljana')
+  const pag = bySlug('grad-pag')
+  const rows: { href: string; lead: string; text: string }[] = []
+  if (povljana) {
+    const [a, b] = [povljana.ocjena[prev], povljana.ocjena[last]]
+    rows.push({
+      href: unitHref(povljana.slug),
+      lead: 'Povljana',
+      text: a && b && a !== b ? `ocjena s ${a} na ${b} u godinu dana` : `što stoji iza ocjene ${b ?? ''}`.trim(),
+    })
+  }
+  if (povljana && pag) rows.push({ href: simulatorHref([pag.sifra, povljana.sifra]), lead: 'Pag i Povljana', text: 'što bi dalo spajanje' })
+  rows.push({
+    href: '#/reforma?prag=5000',
+    lead: 'Karta reforme',
+    text: reform ? `${num(reform.prije)} jedinica postaje ${num(reform.poslije)}` : 'kako bi izgledala karta s manje jedinica',
+  })
+  return (
+    <nav className={className} aria-label="Za početak">
+      <Eyebrow>Za početak</Eyebrow>
+      <ul className="mt-2 space-y-1">
+        {rows.map((r) => (
+          <li key={r.href}>
+            <a href={r.href} className="group flex items-baseline gap-2 py-0.5 text-[15px] text-ink-2 hover:text-ink">
+              <ArrowRight
+                className="h-4 w-4 shrink-0 translate-y-[3px] text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
+                aria-hidden
+              />
+              <span>
+                <span className="font-medium text-ink">{r.lead}:</span> {r.text}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   )
 }

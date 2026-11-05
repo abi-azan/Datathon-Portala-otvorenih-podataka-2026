@@ -187,7 +187,7 @@ export function yearsBySource(bySource: Record<string, DzsSource> | null | undef
 /** Source line for the demography of the simulator and Karta reforme. */
 export function demographySource(bySource: Record<string, DzsSource> | null | undefined): string {
   const { pxweb, xlsx } = yearsBySource(bySource)
-  const what = 'stanovništvo 31.12., rođeni, umrli i migracije po općinama i gradovima'
+  const what = 'stanovništvo 31. prosinca, rođeni, umrli i migracije po općinama i gradovima'
   if (!xlsx.length) return `Izvor: Državni zavod za statistiku, PxWeb API: ${what}.`
   return `Izvor: Državni zavod za statistiku, ${what}: ${pxweb.length ? `PxWeb API (${yearSpan(pxweb)}) i ` : ''}publikacija „${PUBLICATION}” (${yearSpan(xlsx)}).`
 }

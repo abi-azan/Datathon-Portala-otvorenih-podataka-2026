@@ -105,8 +105,8 @@ Bodovi se računaju linearnom interpolacijom između pragova, na ljestvici 0-100
 | I5 | Dospjele obveze | DO / 3 | ≤ 0,5% → 100; 15% → 50; ≥ 30% → 0 | 30 |
 
 - **Prozor:** I1, I2 i I4 računaju se kao omjer ponderiranih zbrojeva za godine t..t−3 (ponderi 4-3-2-1). I3 je stanje na kraju godine t prema ponderiranom OS-u. I5 je jednogodišnji (stanje na kraju godine t prema rashodima poslovanja te godine). Na početku niza prozor je kraći (2019. ima jednu godinu); broj godina u prozoru se prikazuje.
-- **Ukupno:** ponderirani zbroj 0-100 pretvara se u ocjenu: ≥ 80 → **5 "vrlo stabilno"**, 60-80 → **4 "stabilno"**, 40-60 → **3 "umjereno"**, 20-40 → **2 "pod pritiskom"**, < 20 → **1 "ozbiljan pritisak"**.
-- **Pravilo 2, gornja granica zbog dospjelih obveza** (odluka 3.11.). Ako je I5 ≥ 30%, bodovi se ograničavaju na 39,9, pa je ocjena najviše 2 "pod pritiskom". Isto vrijedi u sva četiri scenarija pondera.
+- **Ukupno:** ponderirani zbroj 0-100 pretvara se u ocjenu: ≥ 80 → **5 "vrlo stabilno"**, 60-80 → **4 "stabilno"**, 40-60 → **3 "umjereno stabilno"**, 20-40 → **2 "nestabilno"**, < 20 → **1 "vrlo nestabilno"** (nazivi 2 i 1 promijenjeni 5.11., odluka 18).
+- **Pravilo 2, gornja granica zbog dospjelih obveza** (odluka 3.11.). Ako je I5 ≥ 30%, bodovi se ograničavaju na 39,9, pa je ocjena najviše 2 "nestabilno". Isto vrijedi u sva četiri scenarija pondera.
   - Razlog: na 30% S5 već daje 0, ali ostali pokazatelji mogu donijeti do 70 bodova. Bez pravila je 12 jedinica s DO ≥ 30% dobilo ocjenu 4.
   - Ograničavaju se i bodovi, ne samo ocjena, kako bi se ocjena, rang i percentil slagali. Neograničeni bodovi čuvaju se u `bodovi_bez_ogranicenja` i prikazuju u razradi s napomenom.
   - Za 2025. pravilo spušta 16 jedinica na ocjenu 2.
@@ -229,7 +229,7 @@ Prioriteti su iz `02` §5.
 
 **UX načela:**
 - 5 je najbolje, uvijek uz riječ.
-- Opisne kategorije ("pod pritiskom") umjesto moralnih ("loše").
+- Opisne kategorije ("nestabilno") umjesto moralnih ("loše").
 - Bez imena gradonačelnika i stranaka.
 - Uvijek usporedba sa sličnima i s vlastitom prošlosti.
 - Progresivno otkrivanje: ocjena → komponente → formule → sirovi podaci.
@@ -366,3 +366,4 @@ Korisnik je 2.11. potvrdio plan i nalaze Fable reviewa (neovisni pregled modelom
     - **Fiskalno izravnanje u simulatoru računa se po zakonskoj formuli** (§4.4 i `research/01` §5.5), ali se prikazuje samo ako formula na postojećim jedinicama reproducira objavljene iznose MF-a. Inače se prikazuje napomena.
     - **Ušteda na općoj upravi** (§4.3) računa se iz medijana po razredu, ne regresijom. Očekivani trošak uprave po stanovniku je medijan usporedne skupine spojene jedinice. Strukturni jaz (gornja granica) je stvarni zbroj umanjen za očekivani trošak, a realističan raspon je 0 do 10 % zbroja, najviše do jaza.
     - **Noćna smjena** radi na grani `noc-4-11` i pusha samo nju, kao sigurnosnu kopiju (push grane ne pokreće deploy). `main` i stranica ostaju netaknuti dok korisnik ne pregleda.
+18. **Odlučeno 5.11.: nazivi ocjena.** 5 "vrlo stabilno", 4 "stabilno", 3 "umjereno stabilno", 2 "nestabilno", 1 "vrlo nestabilno". Ista riječ u pipelineu, API-ju, AI paketima i sučelju (prije: "umjereno", "pod pritiskom", "ozbiljan pritisak", koje je sučelje prepisivalo pri prikazu). Mijenja pakete činjenica, pa AI tekstove treba ponovno generirati.

@@ -65,7 +65,7 @@ export function UnitEqualizationCard({ e, zagreb }: { e: UnitEqualization; zagre
       </p>
       {s?.ispod_maksimuma && (
         <p className="mt-3 rounded-xl bg-page p-3 text-sm leading-relaxed text-ink-2">
-          <strong className="font-semibold text-ink">Niža stopa poreza:</strong>{' '}
+          <strong className="font-semibold text-ink">Stope poreza na dohodak ispod najviših:</strong>{' '}
           <span className="tabular">
             {rate(s.niza)} i {rate(s.visa)} (dopušteno do {rate(s.niza_max)} i {rate(s.visa_max)}).
           </span>
@@ -82,13 +82,14 @@ export function UnitEqualizationCard({ e, zagreb }: { e: UnitEqualization; zagre
               .
             </>
           )}{' '}
-          To je odluka vijeća, a izravnanje to ne nadoknađuje.
+          Stope određuje vijeće, a izravnanje razliku ne nadoknađuje.
         </p>
       )}
       <p className="mt-3 text-xs leading-relaxed text-muted">
-        Zakon o financiranju jedinica lokalne i područne (regionalne) samouprave, čl. 8. i 9. Isplata je udio jedinice u zbroju
-        punih iznosa po zakonskoj formuli puta iznos u državnom proračunu ({eur(e.iznos_proracuna)} za {e.proracun_godina}.; za{' '}
-        {e.godina}. još nije utvrđen, pa se uzima isti). Kapacitet i referentne vrijednosti iz tablice Ministarstva financija za{' '}
+        Zakon o financiranju jedinica lokalne i područne (regionalne) samouprave, čl. 8. i 9. Isplata = iznos u državnom
+        proračunu ({eur(e.iznos_proracuna)} za {e.proracun_godina}.; za {e.godina}. još nije utvrđen, pa se uzima isti) × udio
+        jedinice u zbroju punih iznosa svih jedinica. Puni iznos je (referentna vrijednost − kapacitet) × broj stanovnika.
+        Kapacitet i referentne vrijednosti iz tablice Ministarstva financija za{' '}
         {e.godina}.{s ? ` Stope: Porezna uprava, odluke jedinica za ${s.godina}.` : ''}
         {more &&
           ` Procjena iz poreza stanovnika ${more.godina_poreza}. (Porezna uprava), samo dohodak na koji se plaća lokalna stopa.`}

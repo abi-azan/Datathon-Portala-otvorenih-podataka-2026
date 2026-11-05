@@ -1,8 +1,9 @@
 import { ChevronDown, ExternalLink } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { Card, Eyebrow } from '../components/Layout'
+import { IndicatorsExplained } from '../components/IndicatorsExplained'
+import { Eyebrow } from '../components/Layout'
 import { loadDatasets, loadMethodology, type Dataset, type MethodologyDoc } from '../lib/data'
-import { GRADES, num } from '../lib/format'
+import { num } from '../lib/format'
 
 const REPO = 'https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026'
 const SECTIONS = [
@@ -15,11 +16,10 @@ const SECTIONS = [
   ['ogranicenja', 'Ograničenja'],
 ] as const
 
-// whole percentages without decimals (−10 %, 0 %, 5 %), others with one (0,5 %)
-const threshold = (key: string, v: number) => {
-  if (key === 'I3') return `${num(v, 0)} god.`
-  const p = v * 100
-  return `${num(p, Math.abs(p - Math.round(p)) < 1e-9 ? 0 : 1)} %`
+// "pravilo 1/2" are identifiers in metodologija.json (the MCP server looks them up); on screen they get names
+const RULE_NAMES: Record<string, string> = {
+  'pravilo 1': 'Kredit iskazan kao dospio (pravilo 1)',
+  'pravilo 2': 'Ograničenje ocjene zbog dospjelih obveza (pravilo 2)',
 }
 const day = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('hr-HR') : '–')
 const link = 'underline decoration-axis underline-offset-4 hover:decoration-ink'
@@ -116,83 +116,18 @@ export function Methodology() {
       {doc && (
         <div className="mt-8 border-t border-hairline">
           <Section id="pokazatelji" title="Pet pokazatelja">
-            <p className="mt-3 leading-relaxed text-ink-2">
-              Svaki pokazatelj pretvara se u 0–100 bodova linearnom interpolacijom između pragova (KDZ, Austrija; INEKO,
-              Slovačka). Ukupni bodovi su ponderirani zbroj, a ocjena 5–1 slijedi iz bodova. {doc.prozor.opis}
-            </p>
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
-                <thead>
-                  <tr className="border-b border-hairline text-left text-xs text-muted">
-                    <th scope="col" className="py-2 pr-3 font-medium">Pokazatelj</th>
-                    <th scope="col" className="py-2 pr-3 font-medium">Formula</th>
-                    <th scope="col" className="py-2 pr-3 text-right font-medium">Ponder</th>
-                    <th scope="col" className="py-2 font-medium">Pragovi (vrijednost → bodovi)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {doc.pokazatelji.map((p) => (
-                    <tr key={p.oznaka} className="border-b border-hairline align-top">
-                      <th scope="row" className="py-2.5 pr-3 text-left font-medium">
-                        {p.oznaka} · {p.naziv}
-                      </th>
-                      <td className="py-2.5 pr-3 font-mono text-xs text-ink-2">{p.formula}</td>
-                      <td className="tabular py-2.5 pr-3 text-right">{p.ponder}</td>
-                      <td className="tabular py-2.5 text-xs text-ink-2">
-                        {p.pragovi.map((t) => `${threshold(p.oznaka, t.vrijednost)} → ${t.bodovi}`).join(' · ')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-6 grid gap-6 md:grid-cols-2">
-              <Card>
-                <Eyebrow>Pomoćne veličine (konta PR-RAS i Bilance)</Eyebrow>
-                <dl className="mt-3 space-y-2 text-sm">
-                  {doc.velicine.map((v) => (
-                    <div key={v.oznaka}>
-                      <dt className="font-medium">{v.oznaka}</dt>
-                      <dd className="text-ink-2">{v.formula}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </Card>
-              <Card>
-                <Eyebrow>Ljestvica</Eyebrow>
-                <ul className="mt-3 space-y-2">
-                  {doc.ocjene.map((g, i) => {
-                    const meta = GRADES.find((x) => x.value === g.ocjena)
-                    return (
-                      <li key={g.ocjena} className="flex items-center gap-3 text-sm">
-                        <span className="h-4 w-7 rounded" style={{ background: meta?.color, boxShadow: 'inset 0 0 0 1px rgb(0 0 0 / 0.12)' }} aria-hidden />
-                        <strong className="w-3">{g.ocjena}</strong>
-                        <span className="flex-1">{meta?.word ?? g.rijec}</span>
-                        <span className="tabular text-muted">
-                          {g.od_bodova}–{i === 0 ? 100 : doc.ocjene[i - 1].od_bodova} bodova
-                        </span>
-                      </li>
-                    )
-                  })}
-                </ul>
-                <p className="mt-4 text-sm text-ink-2">
-                  Ocjena se računa i u četiri scenarija pondera ({Object.keys(doc.scenariji).join(', ')}). Ako je ista u svima,
-                  na pregledu jedinice piše da je stabilna.
-                </p>
-              </Card>
-            </div>
-            <p className="mt-4 text-sm text-ink-2">{doc.skupine.opis} Razredi veličine: {doc.skupine.razredi.join(', ')}.</p>
+            <IndicatorsExplained doc={doc} />
           </Section>
 
           <Section id="pravila" title="Pravila i upozorenja">
             <ul className="mt-3 space-y-3">
               {doc.pravila.map((r) => (
                 <li key={r.oznaka} className="text-ink-2">
-                  <strong className="font-semibold text-ink">{r.oznaka.charAt(0).toUpperCase() + r.oznaka.slice(1)}.</strong> {r.tekst}
+                  <strong className="font-semibold text-ink">{RULE_NAMES[r.oznaka] ?? r.oznaka.charAt(0).toUpperCase() + r.oznaka.slice(1)}.</strong> {r.tekst}
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-sm text-muted">Znakovi upozorenja ne ulaze u bodove; upozoravaju na:</p>
+            <p className="mt-5 text-sm text-muted">Upozorenja (Z1–Z4) ne mijenjaju bodove. Prikazuju se za:</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-2">
               {doc.zastavice.map((z) => (
                 <li key={z.oznaka}>
@@ -200,7 +135,12 @@ export function Methodology() {
                 </li>
               ))}
             </ul>
-            {doc.kriterij_10 && <p className="mt-5 text-sm leading-relaxed text-ink-2">{doc.kriterij_10}</p>}
+            {doc.kriterij_10 &&
+              doc.kriterij_10.split(/\n\s*\n/).map((para, i) => (
+                <p key={i} className={`${i ? 'mt-2' : 'mt-5'} text-sm leading-relaxed text-ink-2`}>
+                  {para}
+                </p>
+              ))}
           </Section>
 
           <Section id="ai" title="AI objašnjenje i provjera brojki">
@@ -212,8 +152,8 @@ export function Methodology() {
                   ? ` AI tekst je objavljen za ${num(doc.ai.batch.prikazano_ai)} od ${num(doc.ai.batch.jedinica)} jedinica; ostale imaju predložak s oznakom.`
                   : ` AI tekst je objavljen za svih ${num(doc.ai.batch.jedinica)} jedinica.`)}
               {doc.ai.prompt_jednak_batchu === false && ' Prompt se od generiranja promijenio; prikazan je trenutni.'}{' '}
-              Na pregledu jedinice je svaka brojka u tekstu označena: pokazuje činjenicu iz koje dolazi, a brojka sastavnice vodi na
-              konta i retke u datotekama Ministarstva financija.
+              Na pregledu jedinice je svaka brojka u tekstu označena: pokazuje činjenicu iz koje dolazi, a brojka pokazatelja vodi
+              na konta i retke u datotekama Ministarstva financija.
             </p>
             <details className="mt-4 rounded-xl border border-hairline bg-card p-4">
               <summary className="cursor-pointer text-sm font-medium">Prompt modela (javno)</summary>
@@ -225,7 +165,7 @@ export function Methodology() {
             <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
               <a className={link} href={doc.ai.kod.prompt}>Prompt (explain.py)</a>
               <a className={link} href={doc.ai.kod.provjera}>Provjera (verify.py)</a>
-              <a className={link} href={doc.ai.kod.cinjenice}>Paket činjenica (facts.py)</a>
+              <a className={link} href={doc.ai.kod.cinjenice}>Činjenice (facts.py)</a>
               <a className={link} href={doc.ai.kod.biljeznica}>Kaggle bilježnica</a>
             </p>
           </Section>
@@ -233,9 +173,9 @@ export function Methodology() {
           <Section id="simulator" title="Simulator spajanja i Karta reforme">
             <ul className="mt-3 space-y-3 text-ink-2">
               <li>
-                <strong className="font-semibold text-ink">Spajanje.</strong> Tokovi i stanja članica zbrajaju se po godini, a
-                ocjena se računa istom metodom. Pravilo 1 primjenjuje se po članici prije zbrajanja; spojena jedinica je grad
-                ako je barem jedna članica grad.
+                <strong className="font-semibold text-ink">Spajanje.</strong> Prihodi, rashodi, dug i novac na računu članica
+                zbrajaju se za svaku godinu, a ocjena se računa istom metodom. Pravilo o kreditu iskazanom kao dospio primjenjuje
+                se na svaku članicu prije zbrajanja; spojena jedinica je grad ako je barem jedna članica grad.
               </li>
               <li>
                 <strong className="font-semibold text-ink">Ušteda.</strong> {doc.simulator.usteda}
@@ -263,11 +203,12 @@ export function Methodology() {
           {(doc.stanovnistvo_gospodarstvo || doc.izravnanje_jedinice) && (
             <Section id="kontekst" title="Kontekst u pregledu jedinice">
               <p className="mt-3 text-ink-2">
-                Dvije kartice u pregledu jedinice ne ulaze u ocjenu ni u AI objašnjenje. Daju kontekst uz brojke proračuna.
+                Dvije kartice u pregledu jedinice ne ulaze u ocjenu. Daju kontekst uz brojke proračuna. Kad jedinica jako
+                odstupa od svoje skupine u broju stanovnika ili dohotku, AI objašnjenje to spominje u zadnjoj rečenici.
               </p>
               {dzsApi && (
                 <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-sm shadow-sm ring-1 ring-hairline">
-                  Povučeno s PxWeb API-ja DZS-a {day(dzsApi.zadnje_preuzimanje)}
+                  Preuzeto s PxWeb API-ja DZS-a {day(dzsApi.zadnje_preuzimanje)}
                 </p>
               )}
               <ul className="mt-3 space-y-3 text-ink-2">
@@ -288,13 +229,13 @@ export function Methodology() {
           <Section id="podaci" title="Podaci">
             {ckan && (
               <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-sm shadow-sm ring-1 ring-hairline">
-                Povučeno s data.gov.hr API-ja (CKAN) {day(ckan.zadnje_preuzimanje)}
+                Preuzeto s data.gov.hr API-ja (CKAN) {day(ckan.zadnje_preuzimanje)}
               </p>
             )}
             {doc.revizija && <p className="mt-3 text-sm text-ink-2">{doc.revizija}</p>}
             <p className="mt-3 text-sm text-ink-2">
               Podaci Ministarstva financija, Porezne uprave, DZS-a i Portala otvorenih podataka preuzimaju se automatski pri
-              svakoj izgradnji;
+              svakoj obradi podataka;
               izvješća revizije i podaci za šifrarnik (DGU, indeks razvijenosti) osvježavaju se ručno. Vrijeme, ETag i sha256
               svakog preuzimanja su u <a className={link} href="./api/v1/izvori.json">zapisu izvora</a>.
             </p>
@@ -356,8 +297,8 @@ export function Methodology() {
               <a className={`${link} inline-flex items-center gap-1`} href={REPO}>
                 GitHubu <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               </a>{' '}
-              (EUPL-1.2), a podaci pod CC BY 4.0. U izradi koda korišten je Claude Code kao razvojni alat; u proizvodu se
-              koristi samo model otvorenog koda (Gemma 4).
+              (EUPL-1.2), a podaci pod CC BY 4.0. U izradi koda korišten je Claude Code kao razvojni alat. Aplikacija koristi
+              samo otvoreni model Gemma 4 (Apache-2.0).
             </p>
           </Section>
 

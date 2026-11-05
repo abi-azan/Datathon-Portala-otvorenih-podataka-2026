@@ -214,7 +214,7 @@ class Fiskalna:
                "jedinice": [self._brief(u, year) for u in found[:RESULT_LIMIT]],
                "izvor": self.api.url("jedinice.json")}
         if not found:
-            out["poruka"] = "Nema jedinice tog naziva." + (" Provjerite i naziv županije." if zupanija else "")
+            out["poruka"] = "Nema jedinice tog naziva." + (" Provjeri i naziv županije." if zupanija else "")
         elif len(found) > RESULT_LIMIT:
             out["poruka"] = f"Prikazano prvih {RESULT_LIMIT}; suzite upit ili dodajte županiju."
         return out
@@ -244,7 +244,7 @@ class Fiskalna:
             "godina": year,
             "ocjena": g.get("ocjena"),
             "ocjena_rijec": g.get("ocjena_rijec"),
-            "ljestvica": "1 (ozbiljan pritisak) do 5 (vrlo stabilno)",
+            "ljestvica": "1 (vrlo nestabilno) do 5 (vrlo stabilno)",
             "bodovi": g.get("bodovi"),
             "bodovi_bez_ogranicenja": g.get("bodovi_bez_ogranicenja"),
             "ogranicenje_do": g.get("ogranicenje_do"),

@@ -10,7 +10,7 @@ interface Point {
 
 const W = 640
 const H = 240
-const PAD = { l: 36, r: 112, t: 14, b: 28 }
+const PAD = { l: 36, r: 128, t: 14, b: 28 } // r: room for the longest band label, "3 · umjereno stabilno"
 // grade bands on the 0-100 points scale (PLAN §3.2)
 const BANDS = [
   { g: 5, lo: 80, hi: 100 },
@@ -34,7 +34,7 @@ export function TrendChart({ points, groupName }: { points: Point[]; groupName: 
 
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`Bodovi po godinama i medijan usporedne skupine ${groupName}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full overflow-visible" role="img" aria-label={`Bodovi po godinama i medijan usporedne skupine ${groupName}`}>
         {BANDS.map((b) => {
           const meta = GRADES.find((g) => g.value === b.g)!
           return (
@@ -66,6 +66,23 @@ export function TrendChart({ points, groupName }: { points: Point[]; groupName: 
             <circle key={p.year} cx={x(i)} cy={y(p.value)} r={hover === i ? 6 : 4.5} fill="#0b0b0b" stroke="#fcfcfb" strokeWidth={2} />
           ),
         )}
+        {/* each year's points written on the chart, so reading them does not need a hover */}
+        {points.map((p, i) =>
+          p.value == null ? null : (
+            <text
+              key={p.year}
+              x={x(i)}
+              y={y(p.value) < PAD.t + 16 ? y(p.value) + 19 : y(p.value) - 10}
+              textAnchor="middle"
+              stroke="#fcfcfb"
+              strokeWidth={3}
+              style={{ paintOrder: 'stroke' }}
+              className="tabular fill-[#0b0b0b] text-[11px] font-semibold"
+            >
+              {num(p.value, 0)}
+            </text>
+          ),
+        )}
         {hover != null && <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="#0b0b0b" strokeOpacity={0.25} />}
         {points.map((p, i) => (
           <rect
@@ -77,6 +94,8 @@ export function TrendChart({ points, groupName }: { points: Point[]; groupName: 
             fill="transparent"
             onMouseEnter={() => setHover(i)}
             onMouseLeave={() => setHover(null)}
+            // touch screens have no hover: a tap shows the year's details, a second tap hides them
+            onClick={() => setHover((h) => (h === i ? null : i))}
           />
         ))}
       </svg>

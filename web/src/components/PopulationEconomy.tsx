@@ -20,9 +20,9 @@ const buildings = (n: number) => {
   return d >= 2 && d <= 4 && (h < 12 || h > 14) ? 'zgrade' : 'zgrada'
 }
 
-/** Value text under the DZS symbol rule: "-" (none) reads "nema", "z" (confidential) "podatak nije javan". */
+/** Value text under the DZS symbol rule: "-" (none) reads "nema", "z" (confidential) "povjerljivo". */
 function shown(i: ContextIndicator, format: (x: number) => string) {
-  if (i.oznaka === 'z' || (i.vrijednost == null && i.oznaka !== '-')) return i.oznaka === 'z' ? 'podatak nije javan' : '–'
+  if (i.oznaka === 'z' || (i.vrijednost == null && i.oznaka !== '-')) return i.oznaka === 'z' ? 'povjerljivo' : '–'
   if (i.oznaka === '-') return 'nema'
   return format(i.vrijednost as number)
 }
@@ -145,13 +145,13 @@ export function PopulationEconomyCard({ data }: { data: PopulationEconomy }) {
       <dl className="mt-4 space-y-3 border-t border-hairline pt-3 text-sm">
         <StatRow
           label={`Prirodni prirast na 1.000 stanovnika (${p.prirodni_prirast.godina}.)`}
-          hint={p.prirodni_prirast.broj != null ? `Rođeni minus umrli: ${sNum(p.prirodni_prirast.broj, 0)}.` : undefined}
+          hint={p.prirodni_prirast.broj != null ? `Rođeni − umrli: ${sNum(p.prirodni_prirast.broj, 0)}.` : undefined}
           value={shown(p.prirodni_prirast, (x) => sNum(x))}
           median={med(p.prirodni_prirast.medijan, (x) => sNum(x))}
         />
         <StatRow
-          label={`Neto migracija na 1.000 stanovnika (${p.neto_migracija.godina}.)`}
-          hint={p.neto_migracija.broj != null ? `Doseljeni minus odseljeni: ${sNum(p.neto_migracija.broj, 0)}.` : undefined}
+          label={`Migracijski saldo na 1.000 stanovnika (${p.neto_migracija.godina}.)`}
+          hint={p.neto_migracija.broj != null ? `Doseljeni − odseljeni: ${sNum(p.neto_migracija.broj, 0)}.` : undefined}
           value={shown(p.neto_migracija, (x) => sNum(x))}
           median={med(p.neto_migracija.medijan, (x) => sNum(x))}
         />
@@ -159,7 +159,7 @@ export function PopulationEconomyCard({ data }: { data: PopulationEconomy }) {
           label={`Noćenja turista po stanovniku (${nights.godina}.)`}
           hint={
             nights.oznaka === 'z'
-              ? 'DZS ga ne objavljuje radi zaštite povjerljivosti.'
+              ? 'Povjerljiv podatak: DZS ga ne objavljuje.'
               : nights.oznaka === '-'
                 ? 'Nema komercijalnog smještaja.'
                 : nights.broj != null

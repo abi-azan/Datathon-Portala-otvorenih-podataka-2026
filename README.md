@@ -65,7 +65,7 @@ Pet pokazatelja, svaki se boduje 0-100 interpolacijom između pragova iz prakse 
 | Servis duga | 15 |
 | Dospjele neplaćene obveze | 30 |
 
-- Ponderirani zbroj daje ocjenu: 5 = vrlo stabilno, 4 = stabilno, 3 = umjereno, 2 = pod pritiskom, 1 = ozbiljan pritisak.
+- Ponderirani zbroj daje ocjenu: 5 = vrlo stabilno, 4 = stabilno, 3 = umjereno stabilno, 2 = nestabilno, 1 = vrlo nestabilno.
 - Uz to idu četiri crvene zastavice i dva pravila za dospjele obveze.
 - Detalji su u [docs/PLAN.md](docs/PLAN.md) §3 i u `pipeline/methodology.py`, uz testove. Odluke i provjere su u `docs/research/`.
 

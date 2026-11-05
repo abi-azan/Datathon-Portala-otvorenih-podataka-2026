@@ -26,8 +26,8 @@ SCENARIOS = {
     "ineko": {"I1": 30, "I2": 0, "I3": 30, "I4": 10, "I5": 30},
 }
 
-GRADES = [(80, 5, "vrlo stabilno"), (60, 4, "stabilno"), (40, 3, "umjereno"),
-          (20, 2, "pod pritiskom"), (-1, 1, "ozbiljan pritisak")]
+GRADES = [(80, 5, "vrlo stabilno"), (60, 4, "stabilno"), (40, 3, "umjereno stabilno"),
+          (20, 2, "nestabilno"), (-1, 1, "vrlo nestabilno")]
 
 # A principal repayment above this share of current revenue, financed by new
 # borrowing in the same year, is treated as refinancing.
@@ -150,7 +150,7 @@ def grade(total):
     for cut, g, word in GRADES:
         if total >= cut:
             return g, word
-    return 1, "ozbiljan pritisak"
+    return 1, "vrlo nestabilno"
 
 
 def equalization(r):

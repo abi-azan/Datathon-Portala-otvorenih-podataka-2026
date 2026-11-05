@@ -65,7 +65,8 @@ export function Footer({ generated }: { generated?: string }) {
             </a>
             : Ministarstvo financija (PR-RAS, Bilanca, fiskalno izravnanje), Porezna uprava (dohodak stanovnika, porezne
             stope), DZS (Popis 2021. i granice, INSPIRE WFS; stanovništvo, turizam i dozvole, PxWeb API), DGU (upravne
-            jedinice), Državni ured za reviziju (izvješća o reviziji) i data.gov.hr (CKAN API). Indeks razvijenosti: MRRFEU.
+            jedinice), Državni ured za reviziju (izvješća o reviziji) i data.gov.hr (CKAN API). Indeks razvijenosti:
+            Ministarstvo regionalnoga razvoja i fondova Europske unije.
           </p>
           <p className="mt-2">
             Podaci su preračunati u pokazatelje i ocjene, a granice pojednostavljene.{' '}

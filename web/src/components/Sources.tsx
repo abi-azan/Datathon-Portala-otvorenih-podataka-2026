@@ -147,8 +147,8 @@ export function SourcePanel({ src, k }: { src: SourceFile; k: string }) {
       )}
       {k === 'I5' && doq && (doq.pravilo1_iskljuceno ?? 0) > 0 && (
         <p className="mt-2 text-xs text-ink-2">
-          Iskazano u Bilanci {eur(doq.iskazano)}; pravilo 1 isključuje {eur(doq.pravilo1_iskljuceno)} kredita koji je iskazan
-          kao cijeli dospio, a redovno se otplaćuje ili se još povlači.
+          Iskazano u Bilanci {eur(doq.iskazano)}. Od toga se ne broji {eur(doq.pravilo1_iskljuceno)}: kredit je u Bilanci
+          iskazan u cijelosti kao dospio, a redovno se otplaćuje ili se još povlači.
         </p>
       )}
       <div className="mt-4 overflow-x-auto">
@@ -200,14 +200,21 @@ export function SourcePanel({ src, k }: { src: SourceFile; k: string }) {
   )
 }
 
-// Component facts in the fact pack, by the label pipeline/facts.py gives them.
+// Indicator facts in the fact pack, by the label pipeline/facts.py gives them. The longer names are
+// those of the packs before 5.11.; the longer ones come first so a prefix match takes them.
 const FACT_COMPONENT: Record<string, string> = {
-  'operativni saldo': 'I1',
   'slobodni saldo nakon otplate glavnice': 'I2',
   'godine otplate neto duga': 'I3',
-  'servis duga': 'I4',
   'dospjele neplaćene obveze': 'I5',
+  'operativni saldo': 'I1',
+  'slobodni saldo': 'I2',
+  'godine otplate duga': 'I3',
+  'servis duga': 'I4',
+  'dospjele obveze': 'I5',
 }
+// "Pokazatelj: …" and "Najslabiji pokazatelj" since 5.11.; "Sastavnica: …" and "Najslabija sastavnica" before
+const INDICATOR = /^(?:Pokazatelj|Sastavnica): /
+const WEAKEST = new Set(['Najslabiji pokazatelj', 'Najslabija sastavnica'])
 // Same number spellings as pipeline/verify.py (NUMBER), so the text is split where the check reads it.
 const NUMBER = /(?<![\d,.])-?\d+(?:[.,  ]\d+)*/g
 const value = (token: string) => Math.abs(Number(token.replace(/[.  ]/g, '').replace(',', '.')))
@@ -231,9 +238,9 @@ function factFor(token: string, unit: string, facts: Fact[], near: string[] = []
     facts.find((f) => tokens(f).some((x) => x.t === token)) ??
     facts.find((f) => tokens(f).some((x) => value(x.t) === v))
   if (!best) return null
-  const component = best.label.startsWith('Sastavnica: ')
-    ? FACT_COMPONENT[best.label.slice('Sastavnica: '.length)]
-    : best.label === 'Najslabija sastavnica'
+  const component = INDICATOR.test(best.label)
+    ? FACT_COMPONENT[best.label.replace(INDICATOR, '')]
+    : WEAKEST.has(best.label)
       ? Object.entries(FACT_COMPONENT).find(([n]) => best.value.startsWith(n))?.[1]
       : undefined
   return { fact: best, component }
@@ -244,7 +251,7 @@ function originOf(label: string, token: string): string | null {
   if (label.startsWith('Ocjena') && /^20\d\d$/.test(token)) return 'Godina izvještaja Ministarstva financija'
   if (label === 'Jedinica') return 'DZS, Popis stanovništva 2021.'
   if (label.startsWith('Ocjena') || label === 'Bodovi' || label === 'Jake strane')
-    return 'Izračun iz pet sastavnica; ulazi su PR-RAS i Bilanca Ministarstva financija'
+    return 'Izračun iz pet pokazatelja; podaci su iz PR-RAS-a i Bilance Ministarstva financija'
   if (label === 'Usporedna skupina') return 'Vrsta jedinice i broj stanovnika (Popis 2021.)'
   if (label === 'Mjesto u skupini') return 'Poredak po bodovima unutar usporedne skupine'
   if (label === 'Upozorenja') return 'Prag upozorenja iz metodologije'
@@ -427,13 +434,13 @@ export function CheckedText({
           >
             {cur.fact ? (
               <>
-                <div className="text-xs text-muted">Iz paketa činjenica</div>
+                <div className="text-xs text-muted">Izračunata činjenica</div>
                 <div className="mt-0.5 font-medium">{cur.fact.label}</div>
                 <div className="text-ink-2">{normalizeGradeLabels(cur.fact.value)}</div>
                 {curSource && <div className="mt-1.5 border-t border-hairline pt-1.5 text-xs text-ink-2">Izvor: {curSource}</div>}
               </>
             ) : (
-              <div>Broj nije u paketu činjenica.</div>
+              <div>Broja nema među izračunatim činjenicama.</div>
             )}
             {cur.component && <div className="mt-1.5 text-xs text-muted">Klik otvara konta i retke u datotekama Ministarstva financija.</div>}
           </div>
@@ -442,7 +449,7 @@ export function CheckedText({
       {listId && (
         <div id={listId} hidden={!listOpen} className="mt-4 rounded-xl border border-hairline bg-page p-4">
           <p className="text-sm font-medium">
-            Provjera brojki: {numbers.filter((n) => !n.unknown).length} od {numbers.length} nađeno u paketu činjenica
+            Provjera brojki: {numbers.filter((n) => !n.unknown).length} od {numbers.length} nađeno među izračunatim činjenicama
           </p>
           <ol className="mt-3 divide-y divide-hairline text-sm">
             {numbers.map((n, i) => {
@@ -477,7 +484,7 @@ export function CheckedText({
                         )}
                       </>
                     ) : (
-                      <div className="text-warn">Broj nije u paketu činjenica.</div>
+                      <div className="text-warn">Broja nema među izračunatim činjenicama.</div>
                     )}
                   </div>
                 </li>

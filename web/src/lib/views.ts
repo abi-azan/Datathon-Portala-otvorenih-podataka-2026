@@ -32,7 +32,7 @@ export const CONTEXT_VIEWS: ContextView[] = [
   },
   {
     key: 'udio_tekucih_pomoci',
-    label: 'Pomoći u prihodima',
+    label: 'Pomoći u tekućim prihodima',
     short: 'Pomoći u prihodima',
     value: (u, y) => u.udio_tekucih_pomoci_po_godini?.[y] ?? null,
     format: (v) => pct(v),

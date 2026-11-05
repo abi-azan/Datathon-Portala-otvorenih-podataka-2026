@@ -17,6 +17,7 @@ import {
   type UnitIndex,
 } from '../lib/data'
 import { COMPONENTS, FLAGS, QUALITY, VRSTA, criterion10, eur, num, pct } from '../lib/format'
+import { ComponentBar, ComponentPoints, MedianKey } from '../components/ComponentBar'
 import { demographySource } from '../lib/dzs'
 import { parseSelection, simulatorHref, unitHref } from '../lib/router'
 
@@ -255,13 +256,13 @@ export function Simulator({ index }: { index: IndexFile }) {
     <main className="mx-auto grid max-w-[1440px] gap-8 px-6 pt-8 lg:grid-cols-[minmax(0,560px)_1fr] lg:px-10">
       <div className="flex min-w-0 flex-col gap-6">
         <div>
-          <Eyebrow>Simulator spajanja · scenarij za raspravu</Eyebrow>
+          <Eyebrow>Simulator spajanja</Eyebrow>
           <h1 className="mt-3 font-serif text-[2.4rem] leading-[1.05] font-semibold tracking-tight text-balance">
             Što ako se susjedne jedinice spoje?
           </h1>
           <p className="mt-4 leading-relaxed text-ink-2">
-            Odaberi 2 do {MAX} susjedne općine ili grada iste županije. Prihodi, rashodi, dug i stanovnici se zbrajaju, a
-            ocjena se računa istom metodom kao za postojeće jedinice.
+            Odaberi 2 do {MAX} susjedne jedinice iz iste županije (općine ili gradove). Zbrajaju se prihodi, rashodi, dug i
+            broj stanovnika, a ocjena se računa istom metodom kao za postojeće jedinice.
           </p>
           <p className="mt-3 border-l-2 border-axis pl-3 text-sm leading-relaxed text-muted">
             Scenarij za raspravu, ne prijedlog granica.
@@ -453,7 +454,7 @@ function Result({
           <span className="tabular font-semibold text-ink">
             {z.rang}. od {z.n_skupine}
           </span>{' '}
-          u usporednoj skupini {r.skupina} (rang među postojećim jedinicama skupine, bez samih članica), {r.godina}.
+          među postojećim jedinicama skupine {r.skupina} u {r.godina}. (članice nisu u poretku)
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-4 text-sm">
           <span className="text-muted">Prije:</span>
@@ -523,8 +524,8 @@ function Result({
           </table>
         </div>
         <p className="mt-3 text-xs text-muted">
-          Dospjele obveze su neplaćene obveze kojima je prošao rok, kao udio u rashodima poslovanja. Opća uprava je funkcija 01
-          bez transfera (017 i 018).
+          Dospjele obveze su neplaćene obveze kojima je prošao rok, kao udio u rashodima poslovanja. Opća uprava su rashodi za
+          opće javne usluge (funkcija 01), bez transakcija za javni dug (017) i prijenosa između razina vlasti (018).
         </p>
         {(z5 || rows.some((x) => x.z5)) && (
           <div className="mt-4 border-t border-hairline pt-4">
@@ -540,9 +541,10 @@ function Result({
               <dd className="tabular text-right font-semibold">{z5 ? `${z5.value} · manjak ${pct(z.z5_manjak_udio)}` : '–'}</dd>
             </dl>
             <p className="mt-2 text-xs text-muted">
-              Zaključak Vlade od 16.4.2026.: manjak prihoda nad rashodima bez EU izvora smije biti najviše 10 % prihoda bez EU
-              izvora, inače jedinica ne dobiva pomoći iz državnog proračuna koje se dodjeljuju putem poziva. Naš izračun
-              {(z5?.approx || rows.some((x) => x.z5?.approx)) && '; približan kod jedinica s velikim EU projektima'}.
+              Zaključak Vlade od 16. travnja 2026.: manjak prihoda nad rashodima bez EU izvora smije biti najviše 10 % prihoda
+              bez EU izvora, inače jedinica ne može dobiti pomoći iz državnog proračuna koje se dodjeljuju na javnim pozivima.
+              Izračun je naš, ne službeni
+              {(z5?.approx || rows.some((x) => x.z5?.approx)) && ', a kod jedinica s velikim EU projektima približan'}.
             </p>
           </div>
         )}
@@ -550,7 +552,7 @@ function Result({
           <div className="mt-4 flex gap-2.5 rounded-xl bg-page p-3 text-sm">
             <Scale className="mt-0.5 h-4 w-4 shrink-0 text-ink-2" aria-hidden />
             <p>
-              <strong className="font-semibold">Dug ne nestaje spajanjem, nego se raspoređuje na veći proračun.</strong>{' '}
+              <strong className="font-semibold">Dospjele obveze ne nestaju spajanjem, nego se raspoređuju na veći proračun.</strong>{' '}
               Dospjele obveze ostaju {eur(z.DO)}, a njihov udio u rashodima pada s {pct(worst.I5)} ({short(worst.u.naziv)}) na{' '}
               {pct(z.I5)}.
             </p>
@@ -567,7 +569,7 @@ function Result({
             <span className="tabular">0 – {eur(u.realno_do)}</span> <span className="text-base font-normal text-muted">godišnje</span>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-ink-2">
-            Ušteda od veličine: veće jedinice iste vrste na upravu troše manje po stanovniku. U praksi se ostvari tek dio,
+            Ušteda zbog veličine: veće jedinice iste vrste na upravu troše manje po stanovniku. U praksi se ostvari tek dio,
             osobito kod dobrovoljnih spajanja.
           </p>
           <dl className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 border-t border-hairline pt-4 text-sm">
@@ -587,18 +589,18 @@ function Result({
               </div>
             </dt>
             <dd className="tabular text-right">{eur(u.ocekivano)}</dd>
-            <dt className="text-ink-2">Učinak veličine (razlika)</dt>
+            <dt className="text-ink-2">Najveća ušteda zbog veličine (razlika)</dt>
             <dd className="tabular text-right">{eur(u.razmjer)}</dd>
             <dt className="text-ink-2">
               Realističan raspon
-              <div className="text-xs text-muted">najviše učinak veličine i najviše 10 % troška uprave</div>
+              <div className="text-xs text-muted">do manjeg od dvaju iznosa: ušteda zbog veličine ili 10 % troška uprave</div>
             </dt>
             <dd className="tabular text-right font-semibold">0 – {eur(u.realno_do)}</dd>
           </dl>
           {u.razmjer === 0 && (
             <p className="mt-3 text-sm text-ink-2">
-              Spojena jedinica ne prelazi u razred veličine s nižim troškom uprave po stanovniku, pa se ušteda od veličine ne
-              očekuje.
+              Spojena jedinica ne prelazi u razred veličine s nižim troškom uprave po stanovniku, pa se ušteda zbog veličine
+              ne očekuje.
             </p>
           )}
           {u.jaz_bez_spajanja != null && u.jaz_bez_spajanja > 0 && (
@@ -621,7 +623,7 @@ function Result({
           <p className="mt-3 text-xs text-muted">
             Troškovi prijelaza (usklađivanje službi, sustava i propisa) nisu uključeni. Studije reformi u Danskoj, Njemačkoj i
             Nizozemskoj pokazuju da se u praksi ostvari tek dio potencijala ili ništa, a Svjetska banka upozorava da spojena
-            jedinica često preuzme viši trošak članica.
+            jedinica troškove često izjednači prema skupljoj članici.
           </p>
         </Card>
       )}
@@ -633,20 +635,20 @@ function Result({
       {/* components */}
       <Card>
         <Eyebrow>Od čega se sastoji ocjena spojene jedinice</Eyebrow>
+        {med?.S1 != null && <MedianKey />}
         <ul className="mt-4 space-y-4">
           {COMPONENTS.map((c) => {
             const score = z[c.score as keyof typeof z] as number | null
             const v = z[c.key as keyof typeof z] as number | null
             const m = median(c.key, med?.[c.key])
+            const peer = med?.[c.score] ?? null
             return (
               <li key={c.key}>
                 <div className="flex items-baseline justify-between gap-4">
                   <span className="font-medium">{c.name}</span>
-                  <span className="tabular shrink-0 text-sm font-semibold">{num(score, 0)}</span>
+                  <ComponentPoints score={score} peer={peer} />
                 </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-page" role="img" aria-label={`${c.name}: ${num(score, 0)} od 100 bodova`}>
-                  <div className="h-full rounded-full bg-ink-2" style={{ width: `${score ?? 0}%` }} />
-                </div>
+                <ComponentBar name={c.name} score={score} peer={peer} thin />
                 <p className="mt-1 text-sm text-ink-2">
                   {capitalize(describe(c.key, v, z))}
                   {m && `; ${m}`}
@@ -681,8 +683,8 @@ function Result({
       <div className="rounded-2xl border border-hairline bg-page p-5 text-sm leading-relaxed text-ink-2">
         <p>
           <strong className="font-semibold text-ink">Scenarij za raspravu, ne prijedlog granica.</strong> Spajanje ima i
-          nefinancijsku cijenu: manje vijećnika po stanovniku i veću udaljenost od uprave. Tokovi i stanja su zbrojeni
-          za {r.godina}., a ocjena je izračunata istom metodom kao za postojeće jedinice.{' '}
+          nefinancijsku cijenu: manje vijećnika po stanovniku i veću udaljenost od uprave. Prihodi, rashodi, dug i
+          novac na računu zbrojeni su za {r.godina}.{' '}
           <a href="#/metodologija?o=simulator" className="underline underline-offset-2">
             Kako se računa
           </a>
@@ -732,9 +734,9 @@ function Demography({
         <dd className="tabular text-right font-semibold">{signedPct(d.promjena)}</dd>
       </dl>
       <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">
-        <dt className="text-ink-2">Rođeni manje umrli, {d.do}.</dt>
+        <dt className="text-ink-2">Prirodni prirast, {d.do}.</dt>
         <dd className="tabular text-right">{withRate(d.prirodna, r.stanovnici)}</dd>
-        <dt className="text-ink-2">Doseljeni manje odseljeni, {d.do}.</dt>
+        <dt className="text-ink-2">Migracijski saldo, {d.do}.</dt>
         <dd className="tabular text-right">{withRate(d.migracije, r.stanovnici)}</dd>
       </dl>
       <p className="mt-2 text-xs text-muted">
@@ -767,8 +769,8 @@ function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] })
         </p>
       ) : e.oznake.includes('bez_prava_na_izravnanje') ? (
         <p className="mt-3 text-sm leading-relaxed text-ink-2">
-          Nijedna članica nema pravo na fiskalno izravnanje, jer im je porezni kapacitet iznad referentne vrijednosti, pa
-          spajanje tu ništa ne mijenja.
+          Sve članice imaju porezni kapacitet iznad referentne vrijednosti, pa nijedna nema pravo na izravnanje i spajanje
+          tu ništa ne mijenja.
         </p>
       ) : (
         <>
@@ -813,9 +815,11 @@ function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] })
           </>
         )}
       <p className="text-xs text-muted">
-        Zakon o financiranju jedinica lokalne i područne (regionalne) samouprave, čl. 8. i 9. Isplata je udio jedinice u zbroju
-        punih iznosa po zakonskoj formuli puta iznos u državnom proračunu
-        {e?.iznos_proracuna != null && ` (${eur(e.iznos_proracuna)} za 2026.; za ${e.godina}. još nije utvrđen, pa se uzima isti)`}.
+        Zakon o financiranju jedinica lokalne i područne (regionalne) samouprave, čl. 8. i 9. Isplata = iznos u državnom
+        proračunu
+        {e?.iznos_proracuna != null && ` (${eur(e.iznos_proracuna)} za 2026.; za ${e.godina}. još nije utvrđen, pa se uzima isti)`}{' '}
+        × udio jedinice u zbroju punih iznosa svih jedinica. Puni iznos je (referentna vrijednost − kapacitet) × broj
+        stanovnika.
         {e &&
           ` Puni iznosi iz tablice Ministarstva financija za ${e.godina}.: ${eur(e.puni_clanice)} prije i ${eur(e.puni_spojena)} poslije; formula ih daje jednako kao Ministarstvo za svih 576 jedinica.`}
       </p>
@@ -836,7 +840,7 @@ function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }
       <Eyebrow>Poticaj države za stvarno spajanje</Eyebrow>
       {p.s_pravom.length === 0 ? (
         <p className="mt-3 text-sm leading-relaxed text-ink-2">
-          {list(annexed.map((m) => short(m.naziv)))} {annexed.length > 1 ? 'nisu' : 'nije'} u razvojnoj skupini I.-V., pa
+          {list(annexed.map((m) => short(m.naziv)))} {annexed.length > 1 ? 'nisu' : 'nije'} u I.–V. skupini razvijenosti, pa
           poticaj za spajanje ne pripada.
         </p>
       ) : (
@@ -844,25 +848,25 @@ function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }
           {p.godisnje != null && (
             <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="tabular font-serif text-2xl font-semibold">{eur(p.godisnje)}</span>
-              <span className="text-sm text-ink-2">godišnje kroz 5 godina, ukupno {eur(p.ukupno)}</span>
+              <span className="text-sm text-ink-2">godišnje, pet godina (ukupno {eur(p.ukupno)})</span>
             </div>
           )}
           <p className="mt-2 text-sm leading-relaxed text-ink-2">
-            Jedinica koja pripaja ({name(p.pripaja)}) pet godina dobiva godišnje dvostruki iznos fiskalnog izravnanja
-            pripojenih jedinica iz razvojnih skupina I.-V. ({list(p.s_pravom.map(name))}).
+            Jedinica koja pripaja ({name(p.pripaja)}) pet godina dobiva dvostruki godišnji iznos fiskalnog izravnanja
+            pripojenih jedinica iz I.–V. skupine razvijenosti ({list(p.s_pravom.map(name))}).
           </p>
         </>
       )}
       <HowComputed>
         {p.s_pravom.length === 0 ? (
           <p className="text-sm leading-relaxed text-ink-2">
-            Po Vladinoj odluci (NN 88/2022) poticaj pripada samo kad je pripojena jedinica u razvojnoj skupini I.-V.
+            Po Vladinoj odluci (NN 88/2022) poticaj pripada samo kad je pripojena jedinica u I.–V. skupini razvijenosti.
           </p>
         ) : (
           <>
           <p className="text-sm leading-relaxed text-ink-2">
             Po Vladinoj odluci (NN 88/2022) uz to dobiva do {eur(p.kapitalni_do)} za kapitalne projekte te podmirenje
-            dospjelih obveza i kredita pripojenih jedinica sa stanjem 30.6.2022.
+            dospjelih obveza i kredita pripojenih jedinica sa stanjem na dan 30. lipnja 2022.
           </p>
           {p.izravnanje_isplata != null && (
             <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
@@ -880,7 +884,7 @@ function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }
         Pretpostavka: najveća članica pripaja ostale. Poticaj je prijenos iz državnog proračuna, a ne ušteda
         {r.usteda?.realno_do != null && ` (ušteda na upravi je 0 – ${eur(r.usteda.realno_do)} godišnje)`}.
         {p.omjer_isplate != null &&
-          ` Isplata izravnanja procijenjena je kao udio u zbroju punih iznosa puta stavka proračuna za 2026., što je ${pct(p.omjer_isplate)} punog iznosa.`}{' '}
+          ` Procijenjena isplata izravnanja je ${pct(p.omjer_isplate)} punog iznosa (iznos iz proračuna za 2026. raspodijeljen po udjelima).`}{' '}
         Odluka ostaje na snazi i u 2026. (NN 152/25, čl. 70.); od 2022. isplaćeno je oko 17 % planiranih poticaja, a stvarnog
         spajanja nije bilo.
       </p>

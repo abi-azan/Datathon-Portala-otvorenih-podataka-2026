@@ -8,7 +8,8 @@ import { TrendChart } from '../components/TrendChart'
 import { CheckedText, SourcePanel } from '../components/Sources'
 import { UnitEqualizationCard } from '../components/UnitEqualization'
 import { HttpError, ZAGREB_SIFRA, canMerge, loadGroups, loadSource, loadUnit, type GroupMedians, type SourceFile, type UnitDetail } from '../lib/data'
-import { COMPONENTS, FLAGS, QUALITY, VRSTA, criterion10, eur, normalizeGradeLabels, num, pct } from '../lib/format'
+import { COMPONENTS, FLAGS, QUALITY, VRSTA, criterion10, eur, groupLabel, normalizeGradeLabels, num, pct, roman } from '../lib/format'
+import { ComponentBar, ComponentPoints, MedianKey } from '../components/ComponentBar'
 import { simulatorHref, unitHref } from '../lib/router'
 
 const YEARS = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']
@@ -78,7 +79,8 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
   const prev = unit.godine[String(lastYear - 1)]
   const med = groups[unit.skupina]
   const facts = unit.cinjenice?.facts ?? []
-  const componentLines = facts.filter((f) => f.label.startsWith('Sastavnica:')).map((f) => f.value)
+  // "Pokazatelj: …" since 5.11., "Sastavnica: …" in the packs before
+  const componentLines = facts.filter((f) => /^(?:Pokazatelj|Sastavnica):/.test(f.label)).map((f) => f.value)
   const z5 = criterion10(r.z5_manjak_udio, r.z5_zadovoljava, r.oznake)
   const notes = [
     ...r.zastavice.map((z) => ({ kind: 'flag' as const, text: FLAGS[z] ?? z })),
@@ -107,8 +109,10 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             <span className="tabular">{num(unit.stanovnici_2021)} stanovnika (2021.)</span>
             {unit.povrsina_km2 != null && <span className="tabular">{num(unit.povrsina_km2, 1)} km²</span>}
             {unit.otok && <span>otočna jedinica</span>}
-            {unit.razvojna_skupina != null && <span>razvojna skupina {num(unit.razvojna_skupina)} od 8</span>}
-            <span>usporedna skupina: {unit.skupina}</span>
+            {unit.razvojna_skupina != null && (
+              <span>{roman(unit.razvojna_skupina)}. skupina razvijenosti (I. najslabije, VIII. najrazvijenije)</span>
+            )}
+            <span>usporedna skupina: {groupLabel(unit.skupina)}</span>
           </div>
           {wide() && (
             <div className="mt-6 hidden lg:block">
@@ -152,8 +156,8 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             <div className="col-span-2 flex items-center gap-2 text-ink-2">
               <ShieldCheck className="h-4 w-4 shrink-0" />
               {r.stabilnost === 'stabilna'
-                ? 'Ocjena ostaje ista u sva četiri načina vrednovanja pokazatelja.'
-                : `Ocjena ovisi o ponderima: od ${r.raspon_ocjena?.[0]} do ${r.raspon_ocjena?.[1]} u četiri scenarija.`}
+                ? 'Ocjena je ista uz sva četiri skupa pondera.'
+                : `Ocjena ovisi o ponderima: uz četiri skupa pondera kreće se od ${r.raspon_ocjena?.[0]} do ${r.raspon_ocjena?.[1]}.`}
             </div>
           </div>
           <p className="mt-4 border-t border-hairline pt-3 text-xs leading-relaxed text-muted">
@@ -210,12 +214,12 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
               />
               <p className="mt-3 text-sm text-ink-2">
                 {unit.objasnjenje.izvor === 'ai'
-                  ? 'Model nije smio izmisliti nijednu brojku: svaka brojka u tekstu mora biti u paketu činjenica koji je izračunao Python, inače se tekst odbacuje i prikazuje se predložak.'
-                  : 'Tekst je složen iz predloška, bez jezičnog modela. AI tekst prikazuje se samo kad prođe istu provjeru: model ne smije izmisliti nijednu brojku.'}
+                  ? 'Svaka brojka u tekstu provjerena je prema činjenicama koje je izračunao naš kod. Tekst s ijednom drugom brojkom odbacuje se, a umjesto njega prikazuje se predložak.'
+                  : 'Tekst je složen iz predloška, bez jezičnog modela. AI tekst prikazuje se samo kad prođe provjeru brojki.'}
               </p>
               <p className="mt-1.5 text-xs text-muted">
-                Prijeđi mišem preko brojke, dodirni je ili je odaberi tipkom Tab za njezin izvor; klik na brojku sastavnice otvara
-                konta i retke u datotekama Ministarstva financija. Popis svih brojki otvara oznaka iznad teksta.
+                Prijeđi mišem preko brojke ili je dodirni da vidiš odakle je. Brojke pokazatelja vode do konta i redaka u
+                datotekama Ministarstva financija. Popis svih brojki otvara se klikom na oznaku iznad teksta.
               </p>
             </Card>
           )}
@@ -223,10 +227,15 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           {/* components */}
           <Card className="order-3 lg:order-none">
             <Eyebrow>Od čega se sastoji ocjena</Eyebrow>
-            <p className="mt-1 text-sm text-muted">Bodovi 0–100 po sastavnici; prosjek zadnjih {r.prozor_godina} godina gdje je navedeno.</p>
+            <p className="mt-1 text-sm text-muted">
+              Bodovi od 0 do 100 za svaki pokazatelj. Prva četiri su ponderirani prosjek{' '}
+              {r.prozor_godina > 1 ? `zadnje ${r.prozor_godina} godine` : 'zadnje godine'}, a dospjele obveze stanje na kraju {year}.
+            </p>
+            {med?.[year]?.S1 != null && <MedianKey />}
             <ul className="mt-5 space-y-5">
               {COMPONENTS.map((c, i) => {
                 const score = r[c.score as keyof typeof r] as number | null
+                const peer = med?.[year]?.[c.score] ?? null
                 return (
                   <li key={c.key} id={`src-${c.key}`} className="scroll-mt-24">
                     <div className="flex items-baseline justify-between gap-4">
@@ -234,11 +243,9 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                         <span className="font-medium">{c.name}</span>
                         <span className="ml-2 text-xs text-muted">{c.hint}</span>
                       </div>
-                      <span className="tabular shrink-0 text-sm font-semibold">{num(score, 0)}</span>
+                      <ComponentPoints score={score} peer={peer} />
                     </div>
-                    <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-page" role="img" aria-label={`${c.name}: ${num(score, 0)} od 100 bodova`}>
-                      <div className="h-full rounded-full bg-ink-2" style={{ width: `${score ?? 0}%` }} />
-                    </div>
+                    <ComponentBar name={c.name} score={score} peer={peer} />
                     {componentLines[i] && <p className="mt-1.5 text-sm text-ink-2">{capitalize(componentLines[i])}</p>}
                     <button
                       type="button"
@@ -246,7 +253,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                       aria-expanded={openSrc === c.key}
                       className="mt-1 text-xs text-muted underline decoration-axis underline-offset-4 hover:text-ink hover:decoration-ink"
                     >
-                      {openSrc === c.key ? 'Sakrij izračun' : 'Kako je izračunato'}
+                      {openSrc === c.key ? 'Sakrij izračun' : 'Prikaži izračun'}
                     </button>
                     {openSrc === c.key &&
                       (src ? (
@@ -265,7 +272,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             <Eyebrow>Kretanje bodova</Eyebrow>
             <div className="mt-4">
               <TrendChart
-                groupName={unit.skupina}
+                groupName={groupLabel(unit.skupina)}
                 points={YEARS.map((y) => ({
                   year: y,
                   value: unit.godine[y]?.bodovi ?? null,
@@ -285,7 +292,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
 
           {unit.revizija !== undefined && (
           <Card className="order-8 lg:order-none">
-            <Eyebrow>Revizija Državnog ureda za reviziju</Eyebrow>
+            <Eyebrow>Mišljenje Državnog ureda za reviziju</Eyebrow>
             {unit.revizija ? (
               <>
                 <p className="mt-3 font-medium">{OPINION[unit.revizija.misljenje ?? ''] ?? 'Mišljenje nije pročitano iz izvješća'}</p>
@@ -345,13 +352,18 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                 value={pct(r.udio_tekucih_pomoci)}
                 median={pct(med?.[year]?.udio_tekucih_pomoci)}
               />
-              <Row label="Trošak opće uprave po stanovniku" value={eur(r.uprava_pc)} median={eur(med?.[year]?.uprava_pc)} />
+              <Row
+                label="Trošak opće uprave po stanovniku"
+                hint="Rashodi za opće javne usluge (funkcija 01), bez transakcija za javni dug (017) i prijenosa između razina vlasti (018)."
+                value={eur(r.uprava_pc)}
+                median={eur(med?.[year]?.uprava_pc)}
+              />
               <Row label="Tekući prihodi po stanovniku" value={eur(r.tekuci_prihodi_pc)} />
-              <Row label="Investicijska stopa" value={pct(r.investicijska_stopa)} />
+              <Row label="Investicijska stopa" hint="Udio ulaganja u imovinu (razred 4) u ukupnim rashodima." value={pct(r.investicijska_stopa)} />
               {z5 && (
                 <Row
                   label="Kriterij od 10 % za pomoći iz državnog proračuna"
-                  hint={`Zaključak Vlade od 16.4.2026.; ${z5.hint}.`}
+                  hint={`Zaključak Vlade od 16. travnja 2026.; ${z5.hint}.`}
                   value={z5.value}
                 />
               )}
@@ -418,7 +430,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           )}
 
           <p className="order-11 text-xs leading-relaxed text-muted lg:order-none">
-            Izvor: Ministarstvo financija, PR-RAS i Bilanca razine 22, {YEARS[0]}.–{year}.; DZS, Popis 2021. Kontekst uz ocjenu:
+            Izvor: Ministarstvo financija, PR-RAS i Bilanca (razina 22: proračun jedinice bez proračunskih korisnika), {YEARS[0]}.–{year}.; DZS, Popis 2021. Kontekst uz ocjenu:
             DZS (PxWeb), Porezna uprava i tablica fiskalnog izravnanja Ministarstva financija. Šifra jedinice{' '}
             {unit.sifra}, OIB {unit.oib}.{' '}
             <a href={reportHref(unit)} className="underline underline-offset-2 hover:text-ink">
@@ -446,7 +458,7 @@ const OPINION: Record<string, string> = {
   bezuvjetno: 'Bezuvjetno mišljenje',
   uvjetno: 'Uvjetno mišljenje',
   nepovoljno: 'Nepovoljno mišljenje',
-  suzdržano: 'Suzdržano mišljenje (suzdržavanje od izražavanja mišljenja)',
+  suzdržano: 'Suzdržavanje od izražavanja mišljenja',
 }
 
 // "Kanal za prijavu greške" (PLAN §6, SHOULD): a GitHub issue with the unit already filled in.
@@ -456,7 +468,7 @@ function reportHref(u: { naziv: string; oib: string; sifra: string; slug: string
     `Jedinica: ${u.naziv} (OIB ${u.oib}, šifra ${u.sifra})`,
     `Stranica: ${window.location.origin}${window.location.pathname}${unitHref(u.slug)}`,
     '',
-    'Što nije točno (brojka, godina, sastavnica):',
+    'Što nije točno (brojka, godina, pokazatelj):',
     '',
     'Odakle je točan podatak (npr. bilješke uz financijske izvještaje, poveznica):',
   ].join('\n')

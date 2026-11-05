@@ -1,4 +1,4 @@
-import { GRADES, grade } from '../lib/format'
+import { GRADES, grade, type LegendRow } from '../lib/format'
 
 /** Grade as number + word, never colour alone. */
 export function GradeChip({ g, size = 'sm' }: { g: number | null | undefined; size?: 'sm' | 'lg' }) {
@@ -20,27 +20,39 @@ export function GradeChip({ g, size = 'sm' }: { g: number | null | undefined; si
   )
 }
 
-/** Legend for the map: every grade with its word and how many units have it. */
-export function GradeLegend({ counts }: { counts: Record<number, number> }) {
-  const total = Object.values(counts).reduce((a, b) => a + b, 0)
+/** Legend drawn on a map: a list inside the map's caption (from lg), or a wrapped strip under the
+ *  map on phones, where a list over the map would cover half of Croatia. */
+export function MapLegend({ rows, layout, label }: { rows: LegendRow[]; layout: 'list' | 'strip'; label: string }) {
+  const label_ = (r: LegendRow) =>
+    r.value != null ? (
+      <>
+        <span className="tabular font-semibold text-ink">{r.value}</span> {r.label}
+      </>
+    ) : (
+      r.label
+    )
+  const swatch = (color: string) => (
+    <span className="h-3 w-5 shrink-0 rounded-sm" style={{ background: color, boxShadow: 'inset 0 0 0 1px rgb(0 0 0 / 0.12)' }} aria-hidden />
+  )
+  if (layout === 'strip')
+    return (
+      <ul className="flex flex-wrap gap-x-3.5 gap-y-1 text-xs text-ink-2" aria-label={label}>
+        {rows.map((r) => (
+          <li key={r.key} className="flex items-center gap-1.5">
+            {swatch(r.color)}
+            <span>{label_(r)}</span>
+            {r.n != null && <span className="tabular text-muted">{r.n}</span>}
+          </li>
+        ))}
+      </ul>
+    )
   return (
-    <ul className="space-y-1" aria-label="Legenda ocjena">
-      {GRADES.map((g) => (
-        <li key={g.value} className="flex items-center gap-3 text-sm">
-          <span
-            className="h-3.5 w-7 shrink-0 rounded"
-            style={{ background: g.color, boxShadow: 'inset 0 0 0 1px rgb(0 0 0 / 0.12)' }}
-            aria-hidden
-          />
-          <span className="tabular w-3 font-semibold">{g.value}</span>
-          <span className="flex-1 text-ink-2">{g.word}</span>
-          <span className="tabular text-muted">{counts[g.value] ?? 0}</span>
-          <span className="relative h-1.5 w-16 overflow-hidden rounded-full bg-hairline" aria-hidden>
-            <span
-              className="absolute inset-y-0 left-0 rounded-full bg-ink-2"
-              style={{ width: `${total ? ((counts[g.value] ?? 0) / total) * 100 : 0}%` }}
-            />
-          </span>
+    <ul className="space-y-0.5 text-[13px] leading-5" aria-label={label}>
+      {rows.map((r) => (
+        <li key={r.key} className="flex items-center gap-2">
+          {swatch(r.color)}
+          <span className="flex-1 text-ink-2">{label_(r)}</span>
+          {r.n != null && <span className="tabular pl-3 text-muted">{r.n}</span>}
         </li>
       ))}
     </ul>
