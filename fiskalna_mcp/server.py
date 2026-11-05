@@ -7,6 +7,7 @@ read-only and returns JSON; an error is a {"greska": ...} object, never an excep
 from __future__ import annotations
 
 import functools
+import json
 from typing import Annotated, Any
 
 from mcp.server.mcpserver import MCPServer
@@ -117,6 +118,6 @@ def create_server(api: Api | str | None = None, timeout: float = DEFAULT_TIMEOUT
         try:
             return f.metodologija()
         except ApiError as e:
-            return '{"greska": %r}' % str(e)
+            return json.dumps({"greska": str(e)}, ensure_ascii=False)
 
     return server

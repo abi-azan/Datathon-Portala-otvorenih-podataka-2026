@@ -114,3 +114,13 @@ def test_compare_and_reform_and_source(server):
     assert "greska" in bad
     assert src["pokazatelj"]["oznaka"] == "I5"
     assert any(x["konto"] == "26 D" and x["redak"] and x["list"] for x in src["ulazi"])
+
+
+def test_methodology_resource_error_is_valid_json(tmp_path):
+    """A broken metodologija.json (e.g. read while publish rewrites it) gives a JSON error object."""
+    (tmp_path / "metodologija.json").write_text("{", encoding="utf-8")
+
+    async def go():
+        async with Client(create_server(str(tmp_path))) as c:
+            return (await c.read_resource("fiskalna://metodologija")).contents[0].text
+    assert "greska" in json.loads(anyio.run(go))
