@@ -684,7 +684,7 @@ function Result({
           <strong className="font-semibold text-ink">Scenarij za raspravu, ne prijedlog granica.</strong> Spajanje ima i
           nefinancijsku cijenu: manje vijećnika po stanovniku i veću udaljenost od uprave. Tokovi i stanja su zbrojeni
           za {r.godina}., a ocjena je izračunata istom metodom kao za postojeće jedinice.{' '}
-          <a href="#/metodologija" className="underline underline-offset-2">
+          <a href="#/metodologija?o=simulator" className="underline underline-offset-2">
             Kako se računa
           </a>
         </p>
