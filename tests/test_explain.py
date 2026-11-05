@@ -193,6 +193,21 @@ def test_fresh_test_fails_clearly_when_too_few_untested_units_remain(monkeypatch
         explain.pick_test_units(packs, 2, fresh=True)
 
 
+def test_sample_with_context_has_at_least_the_asked_number_and_keeps_the_fixed_stories():
+    ctx = {"label": "Kontekst: broj stanovnika", "value": "od 2021. do 2025. smanjio se za 9,4 %", "kontekst": True}
+    fixed = {**PACK, "oib": "povljana", "ocjena": 2, "naziv": {**PACK["naziv"], "nom": "Općina Povljana"}}
+    packs = [fixed] + [{**PACK, "oib": str(i), "ocjena": i % 5 + 1, "naziv": {**PACK["naziv"], "nom": f"J{i}"},
+                        "facts": PACK["facts"] + ([ctx] if i % 4 == 0 else [])} for i in range(40)]
+    chosen = explain.pick_test_units(packs, 12, min_context=7)
+    assert len(chosen) == 12 and len({p["oib"] for p in chosen}) == 12
+    assert chosen[0]["oib"] == "povljana"
+    assert sum(map(explain.has_context, chosen)) >= 7
+    assert {p["ocjena"] for p in chosen} == {1, 2, 3, 4, 5}
+    # deterministic, and the old sample (no min_context) is unchanged by the new option
+    assert [p["oib"] for p in explain.pick_test_units(packs, 12, min_context=7)] == [p["oib"] for p in chosen]
+    assert explain.pick_test_units(packs, 12) == explain.pick_test_units(packs, 12, min_context=0)
+
+
 # Općina Gradec from the batch (kaggle/results/gemma_batch_2025_31b_q4_0.json): a correct text that the
 # check rejected 3 times, because a window of 120 characters after "Ocjenu" ended inside "3,8".
 GRADEC = "16296383026"

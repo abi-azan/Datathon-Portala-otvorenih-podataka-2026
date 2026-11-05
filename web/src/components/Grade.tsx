@@ -24,11 +24,11 @@ export function GradeChip({ g, size = 'sm' }: { g: number | null | undefined; si
 export function GradeLegend({ counts }: { counts: Record<number, number> }) {
   const total = Object.values(counts).reduce((a, b) => a + b, 0)
   return (
-    <ul className="space-y-1.5" aria-label="Legenda ocjena">
+    <ul className="space-y-1" aria-label="Legenda ocjena">
       {GRADES.map((g) => (
         <li key={g.value} className="flex items-center gap-3 text-sm">
           <span
-            className="h-4 w-7 shrink-0 rounded"
+            className="h-3.5 w-7 shrink-0 rounded"
             style={{ background: g.color, boxShadow: 'inset 0 0 0 1px rgb(0 0 0 / 0.12)' }}
             aria-hidden
           />

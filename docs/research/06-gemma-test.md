@@ -251,3 +251,37 @@ Sirovi izlaz: `kaggle/results/gemma_test_v7_31b_q4_0_ud.json`.
 - `--skip` sada preskače samo jedinice čiji tekst odgovara trenutnom paketu.
 
 **Ručni pregled 11 novih AI tekstova:** svih 11 je gramatički ispravno i slaže se s paketom: brojke, najslabija sastavnica, jake strane i upozorenja (Kostrena i Breznica). U 9 od 11 ponavlja se nespretnost 3 iz v8: "servis duga" je najslabija sastavnica i ujedno jaka strana. Galovac i Pirovac je nemaju.
+
+## v9: pilot konteksta (31B) (5.11. 0:33-0:45, noćna smjena)
+
+Svrha je provjeriti, prije punog batcha u petak, poštuje li Gemma 4 31B pravilo 8: jedna završna rečenica "Za kontekst, što ne ulazi u ocjenu: …", vrijednosti prepisane točno i bez povezivanja s ocjenom. Ništa se ne uvozi u `data/ai/`.
+
+**Postav:**
+- Bilježnica `albertmari/fiskalna-karta-jls-gemma-v9` (privatna), kao v6 i v7: izvor jezgre je `gemma-test` (llama.cpp `2cbca38` iz predmemorije), model `google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2`, 2× T4. Izlaz bilježnice `gemma-test` ostao je netaknut, jer o njemu ovisi petkovni batch.
+- Prompt s pravilom 8 (sha256 `32f2227d…`), paketi s kontekstom iz builda od 5.11. (online build, ocjene iste kao 4.11.).
+- Uzorak: `--kaggle-test 20 --kontekst 12`. `--fresh` više nije moguć, jer je batch v8 pokrio svih 576 jedinica. Zato je uzeto 8 fiksnih priča (Povljana, Sveta Marija, Senj…) i 12 jedinica, od kojih je **12 s kontekstom u paketu** (9 s jednom stavkom, 3 s dvije: Istarska županija, Jagodnjak, Gunja). Ocjene 1-5 su sve zastupljene.
+- Trajanje: sesija 672 s, od toga učitavanje modela 148 s, pa oko 26 s po tekstu (v8: 21,7 s). Potrošeno 678 s GPU kvote (11,3 min).
+- Sirovi izlaz: `kaggle/results/gemma_test_v9_31b_kontekst.json`.
+
+**Rezultat:**
+
+| | |
+|---|---|
+| Prošlo punu provjeru iz prvog pokušaja | **20/20** |
+| Od toga s kontekstom u paketu | **12/12** |
+| Bez konteksta u paketu, a model ga ipak dodao | 0/8 |
+
+- Svih 12 tekstova s kontekstom ima **točno jednu** rečenicu koja počinje s "Za kontekst, što ne ulazi u ocjenu:", i to kao **zadnju** rečenicu. Vrijednosti su prepisane doslovno (vrijednost stavke je podniz teksta u 12/12), smjer i strana medijana se slažu, a nijedna rečenica o kontekstu ne spominje ocjenu ni sastavnice (`verify.context_issues` prazno).
+- Dvije stavke model spaja s ", a", kao predložak (Istarska županija, Jagodnjak, Gunja).
+- Nijedno ponavljanje nije bilo potrebno, pa druga iteracija prompta iz programa nije pokrenuta.
+- Ponavljaju se dvije poznate nespretnosti iz v8, koje ne dolaze od konteksta: "uz medijan skupine od viška 13,3 % tekućih prihoda" (Jagodnjak, Dubravica) i "uz medijan skupine od nedostaje 1,7 % tekućih prihoda" (Bjelovarsko-bilogorska županija).
+
+**Pet primjera** (prva tri s kontekstom):
+
+1. Općina Povljana: "… Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 7,7 %, što je iznad medijana skupine (−3,9 %)."
+2. Istarska županija: "Istarska županija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 91,2 boda od 100. Ocjenu najviše spušta sastavnica „servis duga”: otplata kredita i kamata iznosi 4,8 % zakonske osnovice, uz medijan skupine od 3,5 % zakonske osnovice. Jake strane jedinice su: operativni saldo, godine otplate neto duga. Za kontekst, što ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 6,1 %, što je iznad medijana skupine (−0,9 %), a neto dohodak po stanovniku u 2025. iznosio je 10.792 €, što je iznad medijana skupine (8.618 €)."
+3. Općina Kloštar Podravski: "… U Bilanci je cijeli kredit iskazan kao dospio, ali se redovno otplaćuje, pa se ne broji u dospjele obveze. Za kontekst, što ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 5.420 €, što je ispod medijana skupine (7.284 €)."
+4. Grad Senj (bez konteksta): "Grad Senj za 2025. godinu ima ocjenu 2 (pod pritiskom) i 28,6 boda od 100. Ocjenu najviše spušta sastavnica „operativni saldo”: operativni manjak iznosi 12,5 % tekućih prihoda, dok je medijan skupine višak 8,1 % tekućih prihoda. Jake strane jedinice su: godine otplate neto duga, servis duga. Upozorenja: …"
+5. Općina Sveta Marija (bez konteksta): "Općina Sveta Marija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 97,2 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta sastavnica „servis duga”: otplata kredita i kamata iznosi 5,7 % zakonske osnovice, uz medijan skupine od 2,4 % zakonske osnovice. Jake strane jedinice su: operativni saldo, slobodni saldo nakon otplate glavnice, dospjele neplaćene obveze."
+
+**Za petkov batch:** uz 26 s po tekstu batch od 576 jedinica trajat će **oko 4,2 h** (v8: 3,48 h), jer su tekstovi s kontekstom dulji. Kvota nakon pilota: potrošeno 5,80 h od 30 h, ostaje 24,2 h do 7.11. u 01:00.

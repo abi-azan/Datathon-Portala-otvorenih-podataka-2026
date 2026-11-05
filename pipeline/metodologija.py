@@ -150,9 +150,11 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
                     f"Odbijeni tekst piše se ponovno uz povratnu informaciju, najviše {explain.MAX_RETRIES} puta, a zatim "
                     "se koristi predložak. Na stranici se AI tekst prikazuje samo ako je napisan iz istog paketa "
                     "(sha256) i ako ga prihvaća trenutna verzija provjere, koja se ponovno pokreće pri uvozu i pri objavi. "
-                    "Kada se kretanje stanovništva ili neto dohodak po stanovniku jedinice izrazito razlikuju od medijana "
-                    "usporedne skupine, mogu se spomenuti u jednoj završnoj rečenici kao kontekst, koji ne ulazi u ocjenu "
-                    "i ne objašnjava je.",
+                    "Kada se kretanje stanovništva (barem "
+                    f"{_dec(facts.CONTEXT_POP_PP_PER_YEAR)} postotnih bodova godišnje od medijana) ili neto dohodak po "
+                    f"stanovniku (barem {_pc(facts.CONTEXT_INCOME_REL)} iznad ili ispod medijana) jedinice izrazito "
+                    "razlikuju od medijana usporedne skupine, mogu se spomenuti u jednoj završnoj rečenici kao kontekst, "
+                    "koji ne ulazi u ocjenu i ne objašnjava je.",
             "model": (f"{', '.join(ai['modeli'])} ({', '.join(ai['gguf'] or [])}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"
                       if ai and ai.get("modeli") else
                       f"Gemma 4 ({explain.BATCH_MODEL_SOURCE}; Apache-2.0), llama.cpp (MIT) na Kaggle GPU-u"),

@@ -1,10 +1,10 @@
-import { Pause, Play } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { ChevronDown, Pause, Play } from 'lucide-react'
+import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { GradeLegend } from '../components/Grade'
 import { Eyebrow } from '../components/Layout'
 import { Search } from '../components/Search'
 import { UnitTable } from '../components/UnitTable'
-import type { IndexFile } from '../lib/data'
+import { loadDatasets, type IndexFile } from '../lib/data'
 import { num } from '../lib/format'
 import { unitHref } from '../lib/router'
 import { CONTEXT_VIEWS, SEQUENTIAL, classOf, contextView, quintiles, type ViewKey } from '../lib/views'
@@ -36,6 +36,8 @@ export function Home({ index }: { index: IndexFile }) {
   const [playing, setPlaying] = useState(false)
   const [view, setView] = useState<ViewKey>('ocjena')
   const [mode, setMode] = useState<'karta' | 'tablica'>('karta')
+  const wide = useWide()
+  const [legendOpen, setLegendOpen] = useState(false)
   const ctx = contextView(view)
   const jls = useMemo(() => index.jedinice.filter((u) => u.vrsta !== 'zupanija'), [index])
 
@@ -95,10 +97,49 @@ export function Home({ index }: { index: IndexFile }) {
     .map((s) => index.jedinice.find((u) => u.slug === s))
     .filter(Boolean)
 
+  const yearControls = (
+    <div>
+      <div className="flex items-center justify-between">
+        <Eyebrow>Godina</Eyebrow>
+        <button
+          type="button"
+          onClick={() => {
+            if (!playing && year === YEARS[YEARS.length - 1]) setYear(YEARS[0])
+            setPlaying((p) => !p)
+          }}
+          className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm text-ink-2 hover:bg-hairline/60"
+        >
+          {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          {playing ? 'Zaustavi' : 'Pokreni 2019.–2025.'}
+        </button>
+      </div>
+      <div className="mt-2 grid grid-cols-7 gap-0.5 rounded-xl bg-hairline/50 p-1 sm:gap-1" role="radiogroup" aria-label="Godina">
+        {YEARS.map((y) => (
+          <button
+            key={y}
+            type="button"
+            role="radio"
+            aria-checked={y === year}
+            onClick={() => {
+              setPlaying(false)
+              setYear(y)
+            }}
+            className={`tabular rounded-lg py-1.5 text-[13px] transition sm:text-sm ${y === year ? 'bg-card font-semibold shadow-sm' : 'text-ink-2 hover:text-ink'}`}
+          >
+            {y}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
+  // Below lg the page is one column: intro, search, map, then the view, and the legend with the years
+  // folded behind "Legenda i godine". From lg the left column holds everything but the map, and the
+  // years come before the legend, so "Pokreni" is in the first screen at 1280×800.
   return (
-    <main className="mx-auto grid max-w-[1440px] gap-8 px-6 pt-8 lg:grid-cols-[400px_1fr] lg:px-10">
-      <div className="flex flex-col gap-7">
-        <div>
+    <main className="mx-auto flex max-w-[1440px] flex-col gap-7 px-6 pt-8 lg:grid lg:grid-cols-[400px_1fr] lg:gap-8 lg:px-10">
+      <div className="contents lg:flex lg:flex-col lg:gap-7">
+        <div className="order-1">
           <Eyebrow>576 općina, gradova i županija · otvoreni podaci</Eyebrow>
           <h1 className="mt-3 font-serif text-[2.6rem] leading-[1.05] font-semibold tracking-tight text-balance">
             Kako stoje financije tvoje općine?
@@ -112,17 +153,19 @@ export function Home({ index }: { index: IndexFile }) {
           </p>
         </div>
 
-        <Search units={index.jedinice} year={year} />
-        <div className="-mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted">
-          <span>Na primjer:</span>
-          {examples.map((u) => (
-            <a key={u!.slug} href={unitHref(u!.slug)} className="text-ink-2 underline decoration-axis underline-offset-4 hover:decoration-ink">
-              {u!.naziv.replace(/^(Općina|Grad) /, '')}
-            </a>
-          ))}
+        <div className="order-2 flex flex-col gap-3">
+          <Search units={index.jedinice} year={year} />
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted">
+            <span>Na primjer:</span>
+            {examples.map((u) => (
+              <a key={u!.slug} href={unitHref(u!.slug)} className="text-ink-2 underline decoration-axis underline-offset-4 hover:decoration-ink">
+                {u!.naziv.replace(/^(Općina|Grad) /, '')}
+              </a>
+            ))}
+          </div>
         </div>
 
-        <div>
+        <div className="order-4">
           <Eyebrow>Prikaz na karti</Eyebrow>
           <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Prikaz na karti">
             {[{ key: 'ocjena' as ViewKey, short: 'Ocjena' }, ...CONTEXT_VIEWS].map((v) => (
@@ -140,85 +183,66 @@ export function Home({ index }: { index: IndexFile }) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-hairline bg-card p-5">
-          <div className="flex items-baseline justify-between gap-3">
-            <Eyebrow>{ctx ? `${ctx.label}, ${year}.` : `Ocjena za ${year}.`}</Eyebrow>
-            <span className="shrink-0 text-xs text-muted">broj jedinica</span>
-          </div>
-          {!ctx ? (
-            <>
-              <div className="mt-4">
-                <GradeLegend counts={counts} />
+        {/* open on desktop (the summary is hidden there); folded on phones until tapped */}
+        <details
+          open={wide || legendOpen}
+          onToggle={(e) => !wide && setLegendOpen(e.currentTarget.open)}
+          className="group order-5 rounded-2xl border border-hairline bg-card"
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-5 py-4 lg:hidden [&::-webkit-details-marker]:hidden">
+            <span className="text-sm font-medium">
+              Legenda i godine <span className="tabular font-normal text-muted">· {ctx ? ctx.label : 'ocjena'}, {year}.</span>
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180" aria-hidden />
+          </summary>
+          <div className="flex flex-col gap-5 px-5 pb-5 lg:pt-5">
+            {yearControls}
+            <div className="border-t border-hairline pt-4">
+              <div className="flex items-baseline justify-between gap-3">
+                <Eyebrow>{ctx ? `${ctx.label}, ${year}.` : `Ocjena za ${year}.`}</Eyebrow>
+                <span className="shrink-0 text-xs text-muted">broj jedinica</span>
               </div>
-              <p className="mt-4 border-t border-hairline pt-4 text-sm leading-relaxed text-ink-2">
-                U jedinicama s ocjenom 1 ili 2 živi{' '}
-                <strong className="tabular font-semibold text-ink">{num(underPressure)}</strong> stanovnika.
-              </p>
-            </>
-          ) : (
-            <>
-              <ul className="mt-4 space-y-1.5" aria-label={`Legenda: ${ctx.label}`}>
-                {classes.map((c, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm">
-                    <span className="h-4 w-7 shrink-0 rounded" style={{ background: c.color }} aria-hidden />
-                    <span className="tabular flex-1 text-ink-2">
-                      {ctx.range(c.from, c.to)}
-                    </span>
-                    <span className="tabular text-muted">{c.n}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 border-t border-hairline pt-4 text-sm leading-relaxed text-ink-2">
-                Ovi pokazatelji služe za usporedbu i ne ulaze u ocjenu. Jedinice su podijeljene u pet razreda prema
-                vrijednosti pokazatelja u {year}. godini. Tamnija boja znači veću vrijednost, ne nužno bolji rezultat.
-              </p>
-            </>
-          )}
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between">
-            <Eyebrow>Godina</Eyebrow>
-            <button
-              type="button"
-              onClick={() => {
-                if (!playing && year === YEARS[YEARS.length - 1]) setYear(YEARS[0])
-                setPlaying((p) => !p)
-              }}
-              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm text-ink-2 hover:bg-hairline/60"
-            >
-              {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              {playing ? 'Zaustavi' : 'Pokreni 2019.–2025.'}
-            </button>
+              {!ctx ? (
+                <>
+                  <div className="mt-3">
+                    <GradeLegend counts={counts} />
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-2">
+                    U jedinicama s ocjenom 1 ili 2 živi{' '}
+                    <strong className="tabular font-semibold text-ink">{num(underPressure)}</strong> stanovnika.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <ul className="mt-3 space-y-1" aria-label={`Legenda: ${ctx.label}`}>
+                    {classes.map((c, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm">
+                        <span className="h-3.5 w-7 shrink-0 rounded" style={{ background: c.color }} aria-hidden />
+                        <span className="tabular flex-1 text-ink-2">{ctx.range(c.from, c.to)}</span>
+                        <span className="tabular text-muted">{c.n}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-2">
+                    Ovi pokazatelji služe za usporedbu i ne ulaze u ocjenu. Jedinice su podijeljene u pet razreda prema
+                    vrijednosti pokazatelja u {year}. godini. Tamnija boja znači veću vrijednost, ne nužno bolji rezultat.
+                  </p>
+                </>
+              )}
+            </div>
           </div>
-          <div className="mt-2 grid grid-cols-7 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Godina">
-            {YEARS.map((y) => (
-              <button
-                key={y}
-                type="button"
-                role="radio"
-                aria-checked={y === year}
-                onClick={() => {
-                  setPlaying(false)
-                  setYear(y)
-                }}
-                className={`tabular rounded-lg py-1.5 text-sm transition ${y === year ? 'bg-card font-semibold shadow-sm' : 'text-ink-2 hover:text-ink'}`}
-              >
-                {y}
-              </button>
-            ))}
-          </div>
-        </div>
+        </details>
 
-        <p className="text-xs leading-relaxed text-muted">
+        <p className="order-6 text-xs leading-relaxed text-muted">
           Ocjena nije rang-lista: jedinice se uspoređuju sa sličnima po vrsti i veličini, a ocjena se računa iz pet
           pokazatelja (saldo, slobodni saldo, dug, servis duga, dospjele obveze). <a href="#/metodologija" className="underline underline-offset-2">Kako se računa?</a>
         </p>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-24 lg:self-start">
-        <div className="flex justify-end">
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Karta ili tablica">
+      <div className="order-3 flex min-w-0 flex-col gap-3 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:self-start">
+        <div className="flex items-center justify-end gap-4 lg:justify-between">
+          <KeyFigures index={index} className="hidden lg:flex" />
+          <div className="grid shrink-0 grid-cols-2 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Karta ili tablica">
             {(['karta', 'tablica'] as const).map((m) => (
               <button
                 key={m}
@@ -243,7 +267,64 @@ export function Home({ index }: { index: IndexFile }) {
             <UnitTable units={index.jedinice} year={year} ctx={ctx} />
           )}
         </div>
+        {/* phones: under the map, which comes right after the search */}
+        <KeyFigures index={index} className="flex lg:hidden" />
       </div>
     </main>
+  )
+}
+
+/** A strip of figures computed from the API files, never typed in: units, years, people in units
+ *  under pressure in the latest year, and the sources the build reads through an API.
+ *  `className` carries the display (flex) for the breakpoints where it shows. */
+function KeyFigures({ index, className = '' }: { index: IndexFile; className?: string }) {
+  const [apis, setApis] = useState<number | null>(null)
+  useEffect(() => {
+    loadDatasets()
+      .then((s) => setApis(s.filter((d) => d.koristi_se && d.pristup.startsWith('API')).length))
+      .catch(() => setApis(null))
+  }, [])
+  const f = useMemo(() => {
+    const last = String(index.zadnja_godina)
+    const years = [...new Set(index.jedinice.flatMap((u) => Object.keys(u.ocjena).filter((y) => u.ocjena[y] != null)))].sort()
+    // municipalities and towns only: a county's people also live in its municipalities
+    const pressed = index.jedinice
+      .filter((u) => u.vrsta !== 'zupanija' && (u.ocjena[last] === 1 || u.ocjena[last] === 2))
+      .reduce((a, u) => a + u.stanovnici, 0)
+    return { units: index.jedinice.length, years, last, pressed }
+  }, [index])
+  const item = (value: string, label: ReactNode, key: string) => (
+    <div key={key} className="flex flex-row-reverse items-baseline justify-end gap-1.5">
+      <dt className="text-ink-2">{label}</dt>
+      <dd className="tabular font-semibold text-ink">{value}</dd>
+    </div>
+  )
+  return (
+    <dl className={`flex-wrap gap-x-5 gap-y-1 text-sm ${className}`} aria-label="Brojke iz podataka">
+      {item(num(f.units), 'općina, gradova i županija', 'u')}
+      {f.years.length > 0 && item(num(f.years.length), `godina (${f.years[0]}.–${f.years[f.years.length - 1]}.)`, 'y')}
+      {item(num(f.pressed), `stanovnika u jedinicama s ocjenom 1 ili 2 (${f.last}.)`, 'p')}
+      {apis != null &&
+        item(
+          num(apis),
+          <a href="#/metodologija?o=podaci" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+            izvora preko API-ja
+          </a>,
+          'a',
+        )}
+    </dl>
+  )
+}
+
+const WIDE = '(min-width: 1024px)'
+/** Whether the viewport is lg or wider (Tailwind's lg breakpoint), following resizes. */
+function useWide() {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia(WIDE)
+      m.addEventListener('change', cb)
+      return () => m.removeEventListener('change', cb)
+    },
+    () => window.matchMedia(WIDE).matches,
   )
 }

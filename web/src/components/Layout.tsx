@@ -2,32 +2,41 @@ import type { ReactNode } from 'react'
 import type { Page } from '../lib/router'
 
 export function Header({ current }: { current: Page }) {
-  const link = (href: string, label: string, active: boolean) => (
+  // `short` is the label below sm, where the menu is a 2 × 2 grid of 160 px cells
+  const link = (href: string, label: string, active: boolean, short = label) => (
     <a
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`shrink-0 rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition ${active ? 'bg-ink text-white' : 'text-ink-2 hover:bg-hairline/60 hover:text-ink'}`}
+      className={`rounded-lg px-3 py-1.5 text-center text-sm whitespace-nowrap transition sm:shrink-0 ${active ? 'bg-ink text-white' : 'text-ink-2 hover:bg-hairline/60 hover:text-ink'}`}
     >
-      {label}
+      {short === label ? (
+        label
+      ) : (
+        <>
+          <span className="sm:hidden">{short}</span>
+          <span className="hidden sm:inline">{label}</span>
+        </>
+      )}
     </a>
   )
-  // Below lg the logo and the menu (about 760 px with padding) do not fit one row: the menu becomes a
-  // second row that scrolls sideways on its own, edge to edge, padded so focus rings are not clipped.
+  // Below lg the logo and the menu (about 760 px with padding) do not fit one row: the menu is a second
+  // row, from sm in one line and below sm a 2 × 2 grid, so every item shows without sideways scrolling.
+  // The header sticks only from lg; on a phone two rows of it would cover the top of the maps.
   return (
-    <header className="border-b border-hairline bg-page/90 backdrop-blur supports-[backdrop-filter]:bg-page/75 sticky top-0 z-30">
+    <header className="border-b border-hairline bg-page/90 backdrop-blur supports-[backdrop-filter]:bg-page/75 lg:sticky lg:top-0 lg:z-30">
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-6 px-6 lg:h-16 lg:flex-nowrap lg:px-10">
         <a href="#/" className="flex h-12 items-center gap-2.5 lg:h-auto">
           <img src="./favicon.svg" alt="" className="h-7 w-7" />
           <span className="font-serif text-xl font-semibold tracking-tight">Fiskalna karta</span>
         </a>
         <nav
-          className="-mx-6 flex w-[calc(100%+3rem)] items-center gap-1 overflow-x-auto px-6 pt-1 pb-2.5 lg:mr-0 lg:ml-auto lg:w-auto lg:overflow-visible lg:p-0"
+          className="grid w-full grid-cols-2 gap-1 pt-1 pb-2.5 sm:flex sm:items-center lg:ml-auto lg:w-auto lg:p-0"
           aria-label="Glavna navigacija"
         >
           {link('#/', 'Karta', current === 'home')}
           {link('#/simulator', 'Simulator spajanja', current === 'simulator')}
           {link('#/reforma', 'Karta reforme', current === 'reform')}
-          {link('#/metodologija', 'Metodologija i podaci', current === 'methodology')}
+          {link('#/metodologija', 'Metodologija i podaci', current === 'methodology', 'Metodologija')}
         </nav>
       </div>
     </header>

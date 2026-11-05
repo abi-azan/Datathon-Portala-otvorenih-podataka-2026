@@ -5,11 +5,11 @@ import { LoaderCircle } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { feature, merge } from 'topojson-client'
 import type { GeometryCollection, MultiPolygon, Polygon, Topology } from 'topojson-specification'
-import type { Feature, FeatureCollection } from 'geojson'
+import type { Feature, FeatureCollection, MultiPolygon as GeoMultiPolygon, Polygon as GeoPolygon, Position } from 'geojson'
 import { ZAGREB_SIFRA as ZAGREB, topoUrl, type ReformUnit } from '../lib/data'
 import { num } from '../lib/format'
 import { GradeChip } from './Grade'
-import { BASEMAP, BLANK, CROATIA, gradeFill, quietBasemap, reducedMotion } from './mapStyle'
+import { BASEMAP, BLANK, CROATIA, MIN_ZOOM, fitPadding, gradeFill, quietBasemap, reducedMotion } from './mapStyle'
 
 maplibregl.setWorkerUrl(workerUrl)
 
@@ -43,9 +43,35 @@ const FLASH_FILL = 0.5
 const FLASH_IN_MS = 250
 const FLASH_HOLD_MS = 450
 const FLASH_OUT_MS = 1300
-// a merged unit's outline, thicker when zoomed in
+// a merged unit's outline, thicker when zoomed in, and thinner around a part that is small on screen
+// (an islet would otherwise be all outline): at most an eighth of the part's width, at least 0.35 px.
+// Each polygon of a merged unit is its own outline feature with s = √(area in km²); per zoom stop
+// [zoom, full width in px, screen px per km at 44° N].
 const MERGED_LINE = '#1d1c1a'
-const mergedWidth = ['interpolate', ['linear'], ['zoom'], 5.5, 1, 7, 1.4, 9, 2.2, 11, 3] as maplibregl.ExpressionSpecification
+const MERGED_STOPS: [number, number, number][] = [
+  [5.5, 1, 0.4],
+  [7, 1.4, 1.14],
+  [9, 2.2, 4.55],
+  [11, 3, 18.2],
+]
+const mergedWidth = [
+  'interpolate',
+  ['linear'],
+  ['zoom'],
+  ...MERGED_STOPS.flatMap(([z, full, pxPerKm]) => [z, ['max', 0.35, ['min', full, ['*', ['get', 's'], pxPerKm / 8]]]]),
+] as unknown as maplibregl.ExpressionSpecification
+
+/** √ of a polygon's outer ring area in km² (equirectangular, good enough for a line width). */
+function sideKm(ring: Position[]) {
+  let a = 0
+  let lat = 0
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    a += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1])
+    lat += ring[i][1]
+  }
+  const k = 111.32 // km per degree
+  return Math.sqrt((Math.abs(a / 2) * k * k * Math.cos(((lat / ring.length) * Math.PI) / 180)))
+}
 
 function fillOpacity(m: maplibregl.Map, value: number, duration: number) {
   m.setPaintProperty('reform-fill', 'fill-opacity-transition', { duration, delay: 0 })
@@ -67,6 +93,7 @@ function flash(m: maplibregl.Map, on: boolean, duration: number) {
  *  It stays mounted across threshold changes, so the view (zoom, position) is kept. */
 export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
   const box = useRef<HTMLDivElement>(null)
+  const caption = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const topo = useRef<Topology | null>(null)
   const [ready, setReady] = useState(false)
@@ -94,8 +121,8 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
       container: box.current,
       style: BASEMAP,
       bounds: CROATIA,
-      fitBoundsOptions: { padding: 24 },
-      minZoom: 5.5,
+      fitBoundsOptions: { padding: fitPadding(caption.current) },
+      minZoom: MIN_ZOOM,
       maxZoom: 11,
       attributionControl: { compact: true },
       dragRotate: false,
@@ -131,6 +158,7 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
       const t = topo.current
       const firstLabel = m.getStyle().layers.find((l: maplibregl.LayerSpecification) => l.type === 'symbol')?.id
       m.addSource('reform', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, promoteId: 'key' })
+      m.addSource('reform-outline', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
       m.addSource('jls', { type: 'geojson', data: feature(t, t.objects.jls) as FeatureCollection })
       m.addSource('zup', { type: 'geojson', data: feature(t, t.objects.zupanije) as FeatureCollection })
       const none = ['==', ['get', 'key'], ''] as maplibregl.FilterSpecification
@@ -155,8 +183,7 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
         {
           id: 'reform-merged-line',
           type: 'line',
-          source: 'reform',
-          filter: ['>', ['get', 'n'], 1],
+          source: 'reform-outline',
           layout: { 'line-join': 'round' },
           paint: { 'line-color': MERGED_LINE, 'line-width': mergedWidth, 'line-opacity': 0.9 },
         },
@@ -299,6 +326,15 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
     }
     m.on('sourcedata', onData)
     ;(m.getSource('reform') as maplibregl.GeoJSONSource).setData({ type: 'FeatureCollection', features })
+    // the merged units' outlines, one feature per polygon, each with its own size
+    const outlines: Feature[] = []
+    for (const f of features) {
+      if ((f.properties!.n as number) < 2) continue
+      const g = f.geometry as GeoPolygon | GeoMultiPolygon
+      for (const poly of g.type === 'Polygon' ? [g.coordinates] : g.coordinates)
+        outlines.push({ type: 'Feature', properties: { s: sideKm(poly[0]) }, geometry: { type: 'Polygon', coordinates: poly } })
+    }
+    ;(m.getSource('reform-outline') as maplibregl.GeoJSONSource).setData({ type: 'FeatureCollection', features: outlines })
     const timer = setTimeout(settle, 1500) // in case no 'idle' follows
     return () => {
       done = true
@@ -330,7 +366,11 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-2xl border border-hairline bg-surface">
       <div ref={box} className="h-full w-full" aria-label={`Karta reforme za prag od ${num(prag)} stanovnika`} role="region" />
-      <div className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur">
+      {/* top left on phones (the fit leaves room under it), bottom left over the Italian coast from lg */}
+      <div
+        ref={caption}
+        className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur lg:top-auto lg:bottom-12"
+      >
         <div className="text-sm font-semibold">Ocjena poslije reforme, prag {num(prag)} stanovnika</div>
         <div className="text-xs text-muted">tamni obrub: spojena jedinica · klikni za pojedinosti</div>
         <button

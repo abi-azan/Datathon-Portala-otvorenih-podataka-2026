@@ -71,11 +71,19 @@ def test_grade_claims_are_found_beyond_filler_words_and_the_scale_is_not_a_claim
 
 def test_no_false_grade_claims_in_real_model_texts():
     """Regression on the Kaggle texts (docs/research/06): every grade the checker reads out of a
-    real model text is the unit's real grade, so the grade check raises no false alarms. (The full
-    check is not repeated: the fact packs have changed since those runs.)"""
+    real model text is a grade the text really states, so the grade check raises no false alarms
+    (Gradec, 4.11.: "3" cut out of "3,8"). (The full check is not repeated: the fact packs have
+    changed since those runs.)
+
+    A grade counts as stated when it is the unit's grade in today's pack, or when the text writes it
+    the canonical way, "N (word for N)". The second case is needed because a text keeps the grade of
+    the build it was written from: v6 (3.11.) says Rešetari 4 and Petrinja 2, which were right then,
+    but the equalization rule of 4.11. raised both. A digit cut out of an amount or a share is never
+    followed by its grade word, so the check stays sharp."""
     import json
+    import re
     from pathlib import Path
-    from pipeline import config
+    from pipeline import config, facts
     if not (config.BUILD / "results.parquet").exists():
         return
     packs = {p["oib"]: p for p in explain.load_packs()[0]}
@@ -86,9 +94,16 @@ def test_no_false_grade_claims_in_real_model_texts():
         for m in (out.get("models") or {"": {"results": out.get("results", [])}}).values():
             texts += [(r["oib"], r["text"]) for r in m["results"] if r["source"] == "ai"]   # wrong texts may claim wrong grades
     assert len(texts) >= 60
+
+    def stated(t):
+        return {d for d, w in re.findall(r"(?<![\d,.])([1-5])\s*\(([^)]+)\)", t) if w.strip() == facts.GRADE_WORDS[int(d)]}
+
     bad = [(packs[o]["naziv"]["nom"], g) for o, t in texts for g in verify.claimed_grades(t)
-           if int(g) not in packs[o]["ocjene"]]
+           if int(g) not in packs[o]["ocjene"] and g not in stated(t)]
     assert not bad, bad
+    # the canonical form does not let a fragment through
+    fragment = "Općina Primjerovo ima ocjenu 5 (vrlo stabilno). Ocjenu najviše spušta servis duga, uz medijan 3"
+    assert [g for g in verify.claimed_grades(fragment) if g not in stated(fragment)] == ["3"]
 
 
 def test_an_amount_after_the_word_ocjena_is_not_a_grade():

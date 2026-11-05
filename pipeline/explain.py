@@ -2,6 +2,7 @@
 
     .venv/Scripts/python -m pipeline.explain --kaggle-test 20   # writes the Kaggle test script
     .venv/Scripts/python -m pipeline.explain --kaggle-test 20 --fresh   # 20 units not tested before
+    .venv/Scripts/python -m pipeline.explain --kaggle-test 20 --kontekst 12   # at least 12 with context
     .venv/Scripts/python -m pipeline.explain --check out.json   # re-verifies a downloaded Kaggle output
     .venv/Scripts/python -m pipeline.explain --kaggle-batch     # all 576 units, plus data/ai/manifest-2025.json
     .venv/Scripts/python -m pipeline.explain --kaggle-batch --skip out.json   # resume: leave out units whose text fits their pack
@@ -207,10 +208,31 @@ def tested_oibs():
     return seen
 
 
-def pick_test_units(packs, n, seed=7, fresh=False):
+def has_context(pack):
+    """True when the pack has a context item (facts.context_facts, "kontekst": true)."""
+    return any(f.get("kontekst") for f in pack["facts"])
+
+
+def pick_test_units(packs, n, seed=7, fresh=False, min_context=0):
     """The fixed stories plus a sample spread over all grades. With fresh=True: no fixed
     stories and no unit from an earlier test, so a prompt tuned on the old sample is
-    checked on units it has not seen."""
+    checked on units it has not seen. With min_context: at least that many units with a
+    context item (has_context), picked first and spread over the grades; the rest as before."""
+    if min_context:
+        seen = tested_oibs() if fresh else set()
+        chosen = [] if fresh else [p for p in packs if p["naziv"]["nom"] in TEST_FIXED][:n]
+        rng = random.Random(seed)
+        need = max(0, min_context - sum(map(has_context, chosen)))
+        # first the missing context units, then the rest from every unit; both spread over the grades
+        for only_context, target in ((True, min(n, len(chosen) + need)), (False, n)):
+            pool = [p for p in packs if p not in chosen and p["oib"] not in seen and (has_context(p) or not only_context)]
+            by_grade = {g: [p for p in pool if p["ocjena"] == g] for g in (1, 2, 3, 4, 5)}
+            g = 1
+            while len(chosen) < target and any(by_grade.values()):
+                if by_grade[g]:
+                    chosen.append(by_grade[g].pop(rng.randrange(len(by_grade[g]))))
+                g = g % 5 + 1
+        return chosen
     if fresh:
         seen = tested_oibs()
         chosen, rest = [], [p for p in packs if p["oib"] not in seen]
@@ -257,10 +279,11 @@ def write_kaggle_script(packs, dest, out_name="gemma_test_output.json", hf_model
     return dest
 
 
-def write_kaggle_test(n, fresh=False, hf=()):
+def write_kaggle_test(n, fresh=False, hf=(), min_context=0):
     """kaggle/gemma_test.py for a test on n units. hf: "repo:file" GGUF files the notebook
-    downloads from Hugging Face."""
-    packs = pick_test_units(load_packs()[0], n, seed=11 if fresh else 7, fresh=fresh)
+    downloads from Hugging Face. min_context: at least that many units with a context item."""
+    packs = pick_test_units(load_packs()[0], n, seed=11 if fresh else 7, fresh=fresh, min_context=min_context)
+    print(f"uzorak: {len(packs)} jedinica, od toga {sum(map(has_context, packs))} s kontekstom")
     write_kaggle_script(packs, config.ROOT / "kaggle" / "gemma_test.py",
                         hf_models=[x.split(":", 1) for x in hf])
 
@@ -461,6 +484,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--kaggle-test", type=int, metavar="N")
     ap.add_argument("--fresh", action="store_true", help="test units not used in any earlier test")
+    ap.add_argument("--kontekst", type=int, default=0, metavar="K",
+                    help="with --kaggle-test: at least K units whose pack has a context item")
     ap.add_argument("--hf", action="append", default=[], metavar="REPO:FILE",
                     help="GGUF on Hugging Face that the notebook downloads, e.g. "
                          "unsloth/gemma-4-31B-it-qat-GGUF:gemma-4-31B-it-qat-UD-Q4_K_XL.gguf")
@@ -477,7 +502,7 @@ def main():
     if a.import_batch:
         import_batch(a.import_batch, dest=a.out)
     if a.kaggle_test:
-        write_kaggle_test(a.kaggle_test, fresh=a.fresh, hf=a.hf)
+        write_kaggle_test(a.kaggle_test, fresh=a.fresh, hf=a.hf, min_context=a.kontekst)
     if a.kaggle_batch:
         write_kaggle_batch(skip=a.skip)
     if a.check:
