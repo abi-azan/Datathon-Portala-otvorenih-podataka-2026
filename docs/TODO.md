@@ -30,7 +30,7 @@
 - [ ] Prijedlog 6 (silueta jedinice i brojke u praznom prostoru na vrhu pregleda jedinice).
 - [ ] Prijedlog 5 (vidljiva provjera AI teksta): samo ako stignemo.
 - [ ] Push na `main` i isključivanje tjednog crona prije zamrzavanja (cron pada u ponedjeljak 9.11. u 04:17 UTC).
-- [ ] Kriterij od 10 % na pregledu jedinice: ostaje ili samo rečenica u napomenama.
+- [x] Kriterij od 10 %: samo redak u "Dodatni pokazatelji" (i blok u simulatoru), bez upozorenja, jer ga za 2025. po približnom izračunu ne zadovoljava 270 od 576 jedinica (odluka 5.11.).
 - [ ] Zakonski tekst u simulatoru iza "Kako se računa".
 
 - [ ] Prediktori gospodarskog razvoja: istraživanje u noćnoj smjeni 5.11. (`docs/research/13`), odluka RAZVITI ili ODBACITI u četvrtak.

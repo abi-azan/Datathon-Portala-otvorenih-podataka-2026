@@ -85,7 +85,6 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
     ...(r.ogranicenje_do
       ? [{ kind: 'rule' as const, text: 'Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.' }]
       : []),
-    ...(z5?.warning ? [{ kind: 'rule' as const, text: z5.warning }] : []),
     ...r.kvaliteta.map((q) => ({ kind: 'data' as const, text: QUALITY[q] ?? q })),
   ]
   const isCounty = unit.vrsta === 'zupanija'

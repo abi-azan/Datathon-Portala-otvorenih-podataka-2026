@@ -55,7 +55,9 @@ export const FLAGS: Record<string, string> = {
 }
 
 /** Z5, the 10 % criterion of the Government conclusion of 16.4.2026 (methodology.criterion_10).
- * Approximate when EU projects are large, because PR-RAS does not split spending by source. */
+ * Approximate when EU projects are large, because PR-RAS does not split spending by source.
+ * Shown as an additional indicator, never among the warnings: in 2025 about half of the units do
+ * not meet it on this approximate calculation (decided 5.11.). */
 export function criterion10(udio: number | null | undefined, ok: boolean | null | undefined, oznake?: string[]) {
   if (udio == null || ok == null) return null
   const approx = oznake?.includes('eu_projekt') ?? false
@@ -64,11 +66,6 @@ export function criterion10(udio: number | null | undefined, ok: boolean | null 
     approx,
     value: ok ? 'zadovoljava' : 'ne zadovoljava',
     hint: `manjak ${pct(udio)} prihoda bez EU izvora${approx ? '; približno zbog velikih EU projekata' : ''}`,
-    warning: ok
-      ? null
-      : `Manjak prihoda nad rashodima je ${pct(udio)} prihoda bez EU izvora, više od 10 %. Po zaključku Vlade od 16.4.2026. ` +
-        `jedinica ne bi zadovoljila kriterij za pomoći iz državnog proračuna koje se dodjeljuju putem poziva (naš izračun` +
-        `${approx ? ', približan zbog velikih EU projekata' : ''}).`,
   }
 }
 

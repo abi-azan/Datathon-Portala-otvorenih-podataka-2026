@@ -138,7 +138,8 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
                        "iste godine; kod jedinica s velikim EU projektima rezultat je približan. Zaključak ne kaže je li riječ "
                        "o manjku same godine ili o ukupnom manjku s prenesenim rezultatom; uzimamo manjak godine, jer je "
                        "svrha zaključka fiskalni rezultat opće države, koji se mjeri po godinama. Izračun je naš, a ne "
-                       "MF-ov, i ne ulazi u ocjenu.",
+                       "MF-ov, i ne ulazi u ocjenu. Prikazuje se među dodatnim pokazateljima, a ne među upozorenjima, "
+                       "jer je izračun približan, a zaključak ne kaže je li kriterij uvjet ili samo jedan od kriterija.",
         "skupine": {"razredi": [label for _, _, label in methodology.SIZE_CLASSES],
                     "opis": f"Općine i gradovi uspoređuju se unutar vrste i razreda veličine; gradovi od {_int(big)} "
                             "stanovnika naviše čine skupinu velikih gradova, županije svoju skupinu, a Grad Zagreb nema "

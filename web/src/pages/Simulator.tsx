@@ -429,7 +429,6 @@ function Result({
     ...(z.ogranicenje_do
       ? [{ kind: 'flag' as const, text: 'Ocjena je ograničena na najviše 2 jer dospjele obveze dosežu 30 % rashoda poslovanja.' }]
       : []),
-    ...(z5?.warning ? [{ kind: 'flag' as const, text: z5.warning.replace('jedinica ne bi', 'spojena jedinica ne bi') }] : []),
     ...z.kvaliteta.map((q) => ({ kind: 'data' as const, text: QUALITY[q] ?? q })),
   ]
 
