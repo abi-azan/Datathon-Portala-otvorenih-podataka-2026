@@ -73,7 +73,7 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
   - The State Audit Office layer (`pipeline/dur.py`) is not part of the build: run `python -m pipeline.dur` by hand; it writes the committed `data/reference/dur_revizije.json` (331 units, with its provenance in `meta`), and profiles get `revizija`.
   - `openapi.json` describes all of these. It is built from `pipeline/openapi.py` as OpenAPI 3.1 with JSON Schema 2020-12.
   - `tests/test_api.py` validates every published file against those same schemas.
-- `.github/workflows/deploy.yml` runs, on push to main, weekly, or by hand: build → publish → pytest → `npm run build` → GitHub Pages.
+- `.github/workflows/deploy.yml` runs on push to main or by hand (the weekly cron is off for judging since 2026-11-06): build → publish → pytest → `npm run build` → GitHub Pages.
   - Pages is enabled with Source "GitHub Actions" (2026-11-03). The site is https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/. The first CI run passed end to end, ETL included.
   - Pushing a change under `.github/workflows/` needs a `gh` token with the `workflow` scope (`gh auth refresh -h github.com -s workflow`).
 - `web/` is the frontend: React 19, Vite 8, Tailwind 4, MapLibre GL 6 with OpenFreeMap tiles, hash routes.

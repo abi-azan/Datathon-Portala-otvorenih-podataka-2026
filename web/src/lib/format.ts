@@ -16,11 +16,11 @@ export interface GradeMeta {
 }
 
 export const GRADES: GradeMeta[] = [
-  { value: 5, word: 'vrlo stabilno', color: '#1c5cab', ink: '#ffffff' },
-  { value: 4, word: 'stabilno', color: '#86b6ef', ink: '#0b0b0b' },
-  { value: 3, word: 'umjereno stabilno', color: '#e6e4dd', ink: '#0b0b0b' },
-  { value: 2, word: 'nestabilno', color: '#f5938c', ink: '#0b0b0b' },
-  { value: 1, word: 'vrlo nestabilno', color: '#9e3432', ink: '#ffffff' },
+  { value: 5, word: 'vrlo stabilno', color: '#087664', ink: '#ffffff' },
+  { value: 4, word: 'stabilno', color: '#68c598', ink: '#0b0b0b' },
+  { value: 3, word: 'umjereno stabilno', color: '#f2d148', ink: '#0b0b0b' },
+  { value: 2, word: 'nestabilno', color: '#df7727', ink: '#0b0b0b' },
+  { value: 1, word: 'vrlo nestabilno', color: '#7d1518', ink: '#ffffff' },
 ]
 
 export const grade = (g: number | null | undefined) => GRADES.find((x) => x.value === g)

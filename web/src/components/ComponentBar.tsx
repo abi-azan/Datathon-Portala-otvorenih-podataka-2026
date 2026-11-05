@@ -17,8 +17,6 @@ export function ComponentBar({ name, score, peer, thin = false }: { name: string
           style={{
             width: `${score ?? 0}%`,
             background: band?.color,
-            // grade 3 is a light neutral: an edge keeps the bar visible on the track
-            boxShadow: band?.value === 3 ? 'inset 0 0 0 1px #c3c2b7' : undefined,
           }}
         />
       </div>

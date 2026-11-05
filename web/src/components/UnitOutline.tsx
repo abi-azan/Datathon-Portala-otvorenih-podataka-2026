@@ -8,8 +8,8 @@ import { grade } from '../lib/format'
 const W = 260
 const H = 120
 const PAD = 4
-/** Neighbours' fill: darker than the grade-3 colour (#e6e4dd), so a grade-3 unit stands out by its
- *  fill and not only by its outline; light enough that grades 1-5 all read against it. */
+/** Neighbours' fill: a neutral grey, so the unit stands out by its grade colour and not only by its
+ *  outline; light enough that grades 1-5 all read against it. */
 const NEIGHBOUR = '#d3d2ca'
 
 interface Props {

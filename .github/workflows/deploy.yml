@@ -1,6 +1,7 @@
 # Build the data from the public sources, test it, and publish the site and the static API
-# to GitHub Pages. Runs on every push to main, weekly (sources are re-checked with
-# conditional GET), and on demand.
+# to GitHub Pages. Runs on every push to main and on demand. The weekly run is switched off
+# for the judging period (from 6.11.2026), so the site stays the submitted version: a fresh
+# MF file would change the fact packs and turn the checked AI texts back into the template.
 #
 # One-time setup in the repository: Settings -> Pages -> Source: "GitHub Actions".
 name: Build i objava
@@ -8,8 +9,8 @@ name: Build i objava
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: "17 4 * * 1"          # Monday 04:17 UTC
+  # schedule:
+  #   - cron: "17 4 * * 1"        # Monday 04:17 UTC; off for the judging period, see above
   workflow_dispatch:
 
 permissions:

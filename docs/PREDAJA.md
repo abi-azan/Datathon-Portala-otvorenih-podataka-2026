@@ -89,7 +89,7 @@ Iz `1792415200857_praviladatathonfinal.pdf`:
 |---|---|
 | pet 6.11. do 17 h | regeneracija AI tekstova (batch oko 4,2 h), uvoz, testovi zeleni lokalno |
 | pet 6.11. | push na `main`, zeleni CI, provjera stranice uživo (naslovnica, Povljana, simulator, reforma) |
-| sub 7.11. do 20 h | isključiti tjedni cron u `deploy.yml` (pada u pon 9.11. u 04:17 UTC; treba `gh` token s `workflow`), zamrzavanje |
+| sub 7.11. do 20 h | ~~isključiti tjedni cron~~ (gotovo 6.11.), zamrzavanje |
 | ned 8.11. | **ponovno snimiti naslovnicu za README** i ostale snimke zaslona sa stranice uživo; provjeriti brojke u videu prema API-ju uživo (`docs/video-scenarij.md`, tablica u `docs/noc-5-11.md`) |
 | ned 8.11. | snimiti i montirati video (ispod 3:00, ljudski glas), objaviti i dobiti poveznicu |
 | pon 9.11. | završni commit (README: poveznica na video, datum; `docs/PREDAJA.md`: stanje "gotovo"), oznaka (tag) `predaja-2026-11-09` |

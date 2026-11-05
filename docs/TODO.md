@@ -42,7 +42,7 @@
 - [x] Belišće knjiži izravnanje na 6352: bez posebnog pravila (odluka 5.11.), poznato ograničenje.
 - [ ] Prijedlog 6 (silueta jedinice i brojke u praznom prostoru na vrhu pregleda jedinice).
 - [ ] Prijedlog 5 (vidljiva provjera AI teksta): samo ako stignemo.
-- [ ] Push na `main` i isključivanje tjednog crona prije zamrzavanja (cron pada u ponedjeljak 9.11. u 04:17 UTC).
+- [x] Push na `main` i isključivanje tjednog crona (6.11.; `deploy.yml` sada samo na push i ručno).
 - [x] Kriterij od 10 %: samo redak u "Dodatni pokazatelji" (i blok u simulatoru), bez upozorenja, jer ga za 2025. po približnom izračunu ne zadovoljava 270 od 576 jedinica (odluka 5.11.).
 - [ ] Zakonski tekst u simulatoru iza "Kako se računa".
 

@@ -2,9 +2,9 @@
 @import "@fontsource-variable/source-serif-4";
 @import "tailwindcss";
 
-/* Design tokens. Grade colours are a diverging scale (blue = stable, red = under pressure,
-   warm grey = middle) validated for colour-vision deficiency with the dataviz validator:
-   all pairs ΔE >= 14.1 under protan/deutan simulation, >= 18.7 for normal vision. */
+/* Design tokens. Grade colours run green (stable) - yellow (middle) - red (unstable). The greens
+   lean blue and the steps differ in lightness, so the scale survives colour-vision deficiency
+   (dataviz validator, all pairs: ΔE >= 12.2 under protan/deutan simulation, >= 18.6 normal). */
 @theme {
   --font-sans: "Public Sans Variable", system-ui, "Segoe UI", sans-serif;
   --font-serif: "Source Serif 4 Variable", Georgia, serif;
@@ -19,11 +19,11 @@
   --color-axis: #c3c2b7;
   --color-focus: #1c5cab;
 
-  --color-grade-5: #1c5cab;
-  --color-grade-4: #86b6ef;
-  --color-grade-3: #e6e4dd;
-  --color-grade-2: #f5938c;
-  --color-grade-1: #9e3432;
+  --color-grade-5: #087664;
+  --color-grade-4: #68c598;
+  --color-grade-3: #f2d148;
+  --color-grade-2: #df7727;
+  --color-grade-1: #7d1518;
   --color-nodata: #ffffff;
 
   --color-warn: #b35c00;

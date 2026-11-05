@@ -8,7 +8,7 @@ export function GradeChip({ g, size = 'sm' }: { g: number | null | undefined; si
   return (
     <span
       className={`inline-flex items-center rounded-full font-medium ${big ? 'gap-2.5 py-1.5 pr-4 pl-1.5 text-base' : 'gap-1.5 py-0.5 pr-2.5 pl-0.5 text-sm'}`}
-      style={{ background: m.color, color: m.ink, boxShadow: m.value === 3 ? 'inset 0 0 0 1px #c3c2b7' : undefined }}
+      style={{ background: m.color, color: m.ink }}
     >
       <span
         className={`tabular grid place-items-center rounded-full bg-white/90 font-semibold text-ink ${big ? 'h-9 w-9 text-xl' : 'h-6 w-6 text-sm'}`}
