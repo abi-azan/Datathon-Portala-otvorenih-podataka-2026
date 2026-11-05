@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react'
+import { ChevronDown, ExternalLink } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Card, Eyebrow } from '../components/Layout'
 import { loadDatasets, loadMethodology, type Dataset, type MethodologyDoc } from '../lib/data'
@@ -24,14 +24,32 @@ const threshold = (key: string, v: number) => {
 const day = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('hr-HR') : '–')
 const link = 'underline decoration-axis underline-offset-4 hover:decoration-ink'
 
+/** One part of the page, folded except the first, so the page reads as a list of seven headings.
+ *  The id stays on the element, so the section links and #/metodologija?o=<id> still find it. */
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-24">
-      <h2 className="mt-12 font-serif text-2xl font-semibold tracking-tight">{title}</h2>
-      {children}
-    </section>
+    <details id={id} open={id === SECTIONS[0][0]} className="group scroll-mt-24 border-b border-hairline">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded py-5 [&::-webkit-details-marker]:hidden">
+        <h2 className="font-serif text-2xl font-semibold tracking-tight">{title}</h2>
+        <ChevronDown className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180" aria-hidden />
+      </summary>
+      <div className="pb-10">{children}</div>
+    </details>
   )
 }
+
+/** Open a section and bring it into view. */
+function openSection(id: string, smooth = true) {
+  const el = document.getElementById(id)
+  if (!(el instanceof HTMLDetailsElement)) return
+  el.open = true
+  el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
+}
+const setAll = (open: boolean) =>
+  SECTIONS.forEach(([id]) => {
+    const el = document.getElementById(id)
+    if (el instanceof HTMLDetailsElement) el.open = open
+  })
 
 // The page reads metodologija.json, which publish.py builds from the code (pipeline/metodologija.py),
 // so thresholds, weights, rules and the prompt shown here are the ones the computation uses.
@@ -48,6 +66,13 @@ export function Methodology() {
       .catch(() => setFailed(true))
   }, [])
 
+  // #/metodologija?o=podaci opens that section once the page has its content
+  useEffect(() => {
+    if (!doc) return
+    const o = new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('o')
+    if (o && SECTIONS.some(([id]) => id === o)) requestAnimationFrame(() => openSection(o, false))
+  }, [doc])
+
   const used = (sets ?? []).filter((s) => s.koristi_se)
   const ckan = used.find((s) => s.kljuc === 'ckan_package_search')
   const dzsApi = used.find((s) => s.kljuc === 'dzs_pxweb_sp31_2')
@@ -61,22 +86,35 @@ export function Methodology() {
         opterećenje i plaća li jedinica račune na vrijeme. Ne mjeri kvalitetu usluga ni razvijenost. Sve na ovoj stranici
         čita se iz istog koda koji računa ocjene.
       </p>
-      <nav aria-label="Sadržaj stranice" className="mt-6 flex flex-wrap gap-2">
+      <nav aria-label="Sadržaj stranice" className="mt-6 flex flex-wrap items-center gap-2">
         {SECTIONS.map(([id, label]) => (
-          <a key={id} href={`#/metodologija`} onClick={(e) => {
-            e.preventDefault()
-            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-          }} className="rounded-full border border-hairline px-3 py-1 text-sm hover:border-ink">
+          <a
+            key={id}
+            href={`#/metodologija?o=${id}`}
+            onClick={(e) => {
+              e.preventDefault()
+              openSection(id)
+            }}
+            className="rounded-full border border-hairline px-3 py-1 text-sm hover:border-ink"
+          >
             {label}
           </a>
         ))}
+        <span className="ml-1 flex gap-3 text-sm text-muted">
+          <button type="button" onClick={() => setAll(true)} className="underline decoration-axis underline-offset-4 hover:text-ink">
+            Otvori sve
+          </button>
+          <button type="button" onClick={() => setAll(false)} className="underline decoration-axis underline-offset-4 hover:text-ink">
+            Zatvori sve
+          </button>
+        </span>
       </nav>
 
       {failed && <p className="mt-8 text-ink-2">Podaci o metodologiji nisu se učitali. Osvježi stranicu.</p>}
       {!doc && !failed && <p className="mt-8 text-muted">Učitavam…</p>}
 
       {doc && (
-        <>
+        <div className="mt-8 border-t border-hairline">
           <Section id="pokazatelji" title="Pet pokazatelja">
             <p className="mt-3 leading-relaxed text-ink-2">
               Svaki pokazatelj pretvara se u 0–100 bodova linearnom interpolacijom između pragova (KDZ, Austrija; INEKO,
@@ -330,7 +368,7 @@ export function Methodology() {
               ))}
             </ul>
           </Section>
-        </>
+        </div>
       )}
     </main>
   )

@@ -4,7 +4,7 @@ import { GradeLegend } from '../components/Grade'
 import { Eyebrow } from '../components/Layout'
 import { Search } from '../components/Search'
 import { UnitTable } from '../components/UnitTable'
-import type { IndexFile } from '../lib/data'
+import { loadDatasets, type IndexFile } from '../lib/data'
 import { num } from '../lib/format'
 import { unitHref } from '../lib/router'
 import { CONTEXT_VIEWS, SEQUENTIAL, classOf, contextView, quintiles, type ViewKey } from '../lib/views'
@@ -240,8 +240,9 @@ export function Home({ index }: { index: IndexFile }) {
       </div>
 
       <div className="order-3 flex min-w-0 flex-col gap-3 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:self-start">
-        <div className="flex justify-end">
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Karta ili tablica">
+        <div className="flex items-center justify-end gap-4 lg:justify-between">
+          <KeyFigures index={index} className="hidden lg:flex" />
+          <div className="grid shrink-0 grid-cols-2 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Karta ili tablica">
             {(['karta', 'tablica'] as const).map((m) => (
               <button
                 key={m}
@@ -266,8 +267,52 @@ export function Home({ index }: { index: IndexFile }) {
             <UnitTable units={index.jedinice} year={year} ctx={ctx} />
           )}
         </div>
+        {/* phones: under the map, which comes right after the search */}
+        <KeyFigures index={index} className="flex lg:hidden" />
       </div>
     </main>
+  )
+}
+
+/** A strip of figures computed from the API files, never typed in: units, years, people in units
+ *  under pressure in the latest year, and the sources the build reads through an API.
+ *  `className` carries the display (flex) for the breakpoints where it shows. */
+function KeyFigures({ index, className = '' }: { index: IndexFile; className?: string }) {
+  const [apis, setApis] = useState<number | null>(null)
+  useEffect(() => {
+    loadDatasets()
+      .then((s) => setApis(s.filter((d) => d.koristi_se && d.pristup.startsWith('API')).length))
+      .catch(() => setApis(null))
+  }, [])
+  const f = useMemo(() => {
+    const last = String(index.zadnja_godina)
+    const years = [...new Set(index.jedinice.flatMap((u) => Object.keys(u.ocjena).filter((y) => u.ocjena[y] != null)))].sort()
+    // municipalities and towns only: a county's people also live in its municipalities
+    const pressed = index.jedinice
+      .filter((u) => u.vrsta !== 'zupanija' && (u.ocjena[last] === 1 || u.ocjena[last] === 2))
+      .reduce((a, u) => a + u.stanovnici, 0)
+    return { units: index.jedinice.length, years, last, pressed }
+  }, [index])
+  const item = (value: string, label: ReactNode, key: string) => (
+    <div key={key} className="flex flex-row-reverse items-baseline justify-end gap-1.5">
+      <dt className="text-ink-2">{label}</dt>
+      <dd className="tabular font-semibold text-ink">{value}</dd>
+    </div>
+  )
+  return (
+    <dl className={`flex-wrap gap-x-5 gap-y-1 text-sm ${className}`} aria-label="Brojke iz podataka">
+      {item(num(f.units), 'općina, gradova i županija', 'u')}
+      {f.years.length > 0 && item(num(f.years.length), `godina (${f.years[0]}.–${f.years[f.years.length - 1]}.)`, 'y')}
+      {item(num(f.pressed), `stanovnika u jedinicama s ocjenom 1 ili 2 (${f.last}.)`, 'p')}
+      {apis != null &&
+        item(
+          num(apis),
+          <a href="#/metodologija?o=podaci" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+            izvora preko API-ja
+          </a>,
+          'a',
+        )}
+    </dl>
   )
 }
 
