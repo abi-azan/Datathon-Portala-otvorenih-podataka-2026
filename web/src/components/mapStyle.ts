@@ -8,10 +8,13 @@ export const CROATIA: [number, number, number, number] = [13.45, 42.35, 19.45, 4
 
 /** Fit padding that keeps Croatia clear of the map's caption. Below lg the caption sits in the top
  *  corner and the map is wide rather than tall, so a deeper top padding costs no zoom; from lg it sits
- *  bottom left, over the Italian coast, and needs none. */
+ *  bottom left, over the Italian coast, and a wider left padding moves the southern islands to the
+ *  right of it (the map is tall rather than wide there, so this too costs almost no zoom). */
 export function fitPadding(caption: HTMLElement | null, base = 24) {
   const atTop = caption != null && caption.offsetTop < 40
-  return { top: atTop ? Math.max(base, caption.offsetTop + caption.offsetHeight + 8) : base, bottom: base, left: base, right: base }
+  return atTop
+    ? { top: Math.max(base, caption.offsetTop + caption.offsetHeight + 8), bottom: base, left: base, right: base }
+    : { top: base, bottom: base, left: caption ? base + 64 : base, right: base }
 }
 
 /** Land colour of the quiet basemap (and of BLANK). */

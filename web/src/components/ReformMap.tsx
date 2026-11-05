@@ -369,7 +369,7 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
       {/* top left on phones (the fit leaves room under it), bottom left over the Italian coast from lg */}
       <div
         ref={caption}
-        className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur lg:top-auto lg:bottom-4"
+        className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur lg:top-auto lg:bottom-12"
       >
         <div className="text-sm font-semibold">Ocjena poslije reforme, prag {num(prag)} stanovnika</div>
         <div className="text-xs text-muted">tamni obrub: spojena jedinica · klikni za pojedinosti</div>

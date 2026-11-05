@@ -313,7 +313,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
           left, over the Italian coast, so it does not cover the north of Croatia */}
       <div
         ref={caption}
-        className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg lg:top-auto lg:bottom-4 bg-card/90 px-3 py-2 shadow-sm backdrop-blur"
+        className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg lg:top-auto lg:bottom-12 bg-card/90 px-3 py-2 shadow-sm backdrop-blur"
       >
         <div className="text-sm font-semibold">{view ? view.label : 'Ocjena financijske održivosti proračuna'}, {year}.</div>
         <div className="text-xs text-muted">
