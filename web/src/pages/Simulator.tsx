@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, Info, LoaderCircle, RotateCcw, Scale, X } from 'lucide-react'
+import { AlertTriangle, ArrowRight, ChevronDown, Info, LoaderCircle, RotateCcw, Scale, X } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
@@ -783,10 +783,19 @@ function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] })
           </div>
           <p className="mt-2 text-sm leading-relaxed text-ink-2">
             Procjena godišnje isplate iz državnog proračuna, za članice zajedno i za spojenu jedinicu.
-            {Math.abs(change) < 1 ? ' Sve članice su ispod referentne vrijednosti, pa se iznos ne mijenja.' : change < 0 && why}
           </p>
+        </>
+      )}
+      <HowComputed>
+        {e && e.isplata_clanice != null && e.isplata_spojena != null && !e.oznake.includes('bez_prava_na_izravnanje') && (
+          <>
+          {(Math.abs(change) < 1 || change < 0) && (
+            <p className="text-sm leading-relaxed text-ink-2">
+              {Math.abs(change) < 1 ? 'Sve članice su ispod referentne vrijednosti, pa se iznos ne mijenja.' : why.trim()}
+            </p>
+          )}
           {change < -1 && (
-            <div className="mt-3 flex gap-2.5 rounded-xl bg-page p-3 text-sm">
+            <div className="flex gap-2.5 rounded-xl bg-page p-3 text-sm">
               <Scale className="mt-0.5 h-4 w-4 shrink-0 text-ink-2" aria-hidden />
               <p>
                 <strong className="font-semibold">Državni proračun se ne mijenja.</strong> Iznos za izravnanje je fiksan, pa{' '}
@@ -794,7 +803,7 @@ function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] })
               </p>
             </div>
           )}
-          <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">
+          <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
             {members.map((m) => (
               <div key={m.sifra} className="contents">
                 <dt className="text-ink-2">{short(m.naziv)}</dt>
@@ -802,15 +811,16 @@ function Equalization({ r, members }: { r: MergeSummary; members: UnitIndex[] })
               </div>
             ))}
           </dl>
-        </>
-      )}
-      <p className="mt-3 text-xs text-muted">
+          </>
+        )}
+      <p className="text-xs text-muted">
         Zakon o financiranju jedinica lokalne i područne (regionalne) samouprave, čl. 8. i 9. Isplata je udio jedinice u zbroju
         punih iznosa po zakonskoj formuli puta iznos u državnom proračunu
         {e?.iznos_proracuna != null && ` (${eur(e.iznos_proracuna)} za 2026.; za ${e.godina}. još nije utvrđen, pa se uzima isti)`}.
         {e &&
           ` Puni iznosi iz tablice Ministarstva financija za ${e.godina}.: ${eur(e.puni_clanice)} prije i ${eur(e.puni_spojena)} poslije; formula ih daje jednako kao Ministarstvo za svih 576 jedinica.`}
       </p>
+      </HowComputed>
     </Card>
   )
 }
@@ -827,9 +837,8 @@ function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }
       <Eyebrow>Poticaj države za stvarno spajanje</Eyebrow>
       {p.s_pravom.length === 0 ? (
         <p className="mt-3 text-sm leading-relaxed text-ink-2">
-          Po Vladinoj odluci (NN 88/2022) poticaj pripada samo kad je pripojena jedinica u razvojnoj skupini I.-V.{' '}
-          {list(annexed.map((m) => short(m.naziv)))} {annexed.length > 1 ? 'nisu' : 'nije'} u tim skupinama, pa poticaj ne
-          pripada.
+          {list(annexed.map((m) => short(m.naziv)))} {annexed.length > 1 ? 'nisu' : 'nije'} u razvojnoj skupini I.-V., pa
+          poticaj za spajanje ne pripada.
         </p>
       ) : (
         <>
@@ -840,12 +849,24 @@ function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }
             </div>
           )}
           <p className="mt-2 text-sm leading-relaxed text-ink-2">
-            Jedinica koja pripaja ({name(p.pripaja)}) po Vladinoj odluci (NN 88/2022) pet godina dobiva godišnje dvostruki
-            iznos fiskalnog izravnanja pripojenih jedinica iz razvojnih skupina I.-V. ({list(p.s_pravom.map(name))}), do{' '}
-            {eur(p.kapitalni_do)} za kapitalne projekte te podmirenje njihovih dospjelih obveza i kredita sa stanjem 30.6.2022.
+            Jedinica koja pripaja ({name(p.pripaja)}) pet godina dobiva godišnje dvostruki iznos fiskalnog izravnanja
+            pripojenih jedinica iz razvojnih skupina I.-V. ({list(p.s_pravom.map(name))}).
+          </p>
+        </>
+      )}
+      <HowComputed>
+        {p.s_pravom.length === 0 ? (
+          <p className="text-sm leading-relaxed text-ink-2">
+            Po Vladinoj odluci (NN 88/2022) poticaj pripada samo kad je pripojena jedinica u razvojnoj skupini I.-V.
+          </p>
+        ) : (
+          <>
+          <p className="text-sm leading-relaxed text-ink-2">
+            Po Vladinoj odluci (NN 88/2022) uz to dobiva do {eur(p.kapitalni_do)} za kapitalne projekte te podmirenje
+            dospjelih obveza i kredita pripojenih jedinica sa stanjem 30.6.2022.
           </p>
           {p.izravnanje_isplata != null && (
-            <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">
+            <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
               <dt className="text-ink-2">Izravnanje pripojenih, procjena isplate</dt>
               <dd className="tabular text-right">{eur(p.izravnanje_isplata)}</dd>
               <dt className="text-ink-2">Poticaj godišnje (2 ×)</dt>
@@ -854,9 +875,9 @@ function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }
               <dd className="tabular text-right">do {eur(p.kapitalni_do)}</dd>
             </dl>
           )}
-        </>
-      )}
-      <p className="mt-3 text-xs text-muted">
+          </>
+        )}
+      <p className="text-xs text-muted">
         Pretpostavka: najveća članica pripaja ostale. Poticaj je prijenos iz državnog proračuna, a ne ušteda
         {r.usteda?.realno_do != null && ` (ušteda na upravi je 0 – ${eur(r.usteda.realno_do)} godišnje)`}.
         {p.omjer_isplate != null &&
@@ -864,6 +885,20 @@ function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }
         Odluka ostaje na snazi i u 2026. (NN 152/25, čl. 70.); od 2022. isplaćeno je oko 17 % planiranih poticaja, a stvarnog
         spajanja nije bilo.
       </p>
+      </HowComputed>
     </Card>
+  )
+}
+
+/** The working and the legal basis of a simulator block, folded so the amount and one sentence lead. */
+function HowComputed({ children }: { children: ReactNode }) {
+  return (
+    <details className="group mt-3 border-t border-hairline pt-3">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded text-xs text-muted underline decoration-axis underline-offset-4 hover:text-ink hover:decoration-ink [&::-webkit-details-marker]:hidden">
+        Kako se računa
+        <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" aria-hidden />
+      </summary>
+      <div className="mt-3 space-y-3">{children}</div>
+    </details>
   )
 }
