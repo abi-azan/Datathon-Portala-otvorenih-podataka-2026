@@ -9,7 +9,7 @@ import type { Feature, FeatureCollection, MultiPolygon as GeoMultiPolygon, Polyg
 import { ZAGREB_SIFRA as ZAGREB, topoUrl, type ReformUnit } from '../lib/data'
 import { num } from '../lib/format'
 import { GradeChip } from './Grade'
-import { BASEMAP, BLANK, CROATIA, fitPadding, gradeFill, quietBasemap, reducedMotion } from './mapStyle'
+import { BASEMAP, BLANK, CROATIA, MIN_ZOOM, fitPadding, gradeFill, quietBasemap, reducedMotion } from './mapStyle'
 
 maplibregl.setWorkerUrl(workerUrl)
 
@@ -122,7 +122,7 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
       style: BASEMAP,
       bounds: CROATIA,
       fitBoundsOptions: { padding: fitPadding(caption.current) },
-      minZoom: 5.5,
+      minZoom: MIN_ZOOM,
       maxZoom: 11,
       attributionControl: { compact: true },
       dragRotate: false,

@@ -12,7 +12,7 @@ import { topoUrl, type UnitIndex } from '../lib/data'
 import { grade, num } from '../lib/format'
 import { go, unitHref } from '../lib/router'
 import { GradeChip } from './Grade'
-import { BASEMAP, BLANK, CROATIA, LAND, SEQUENTIAL_CLASS, classFill, fitPadding, quietBasemap, reducedMotion } from './mapStyle'
+import { BASEMAP, BLANK, CROATIA, LAND, MIN_ZOOM, SEQUENTIAL_CLASS, classFill, fitPadding, quietBasemap, reducedMotion } from './mapStyle'
 import { classOf, contextView, quintiles, type ViewKey } from '../lib/views'
 
 maplibregl.setWorkerUrl(workerUrl)
@@ -91,7 +91,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
       style: BASEMAP,
       bounds: CROATIA,
       fitBoundsOptions: { padding: fitPadding(caption.current) },
-      minZoom: 5.5,
+      minZoom: MIN_ZOOM,
       maxZoom: 11,
       attributionControl: { compact: true },
       dragRotate: false,

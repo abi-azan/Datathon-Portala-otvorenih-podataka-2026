@@ -5,6 +5,9 @@ import { SEQUENTIAL } from '../lib/views'
 // OpenFreeMap: free vector tiles from OpenStreetMap data, no key (openfreemap.org).
 export const BASEMAP = 'https://tiles.openfreemap.org/styles/positron'
 export const CROATIA: [number, number, number, number] = [13.45, 42.35, 19.45, 46.56]
+/** Lowest zoom of the maps: low enough that fitBounds can show all of Croatia in a 325 px wide map on a
+ *  phone (about zoom 4.9 with the caption above it); on a desktop the first view is above 5.5 anyway. */
+export const MIN_ZOOM = 4.5
 
 /** Fit padding that keeps Croatia clear of the map's caption. Below lg the caption sits in the top
  *  corner and the map is wide rather than tall, so a deeper top padding costs no zoom; from lg it sits
