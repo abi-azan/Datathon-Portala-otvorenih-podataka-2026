@@ -147,11 +147,15 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
-        <div className="flex flex-col gap-6">
+      {/* Two columns from lg, balanced: the score story on the left (summary, components, trend,
+          equalization, audit), the notes and the context on the right. Below lg the columns dissolve
+          (display: contents) and `order` sets the reading order: summary, warnings, components,
+          trend, extra indicators, equalization, population, audit, neighbours, open data. */}
+      <div className="mt-8 flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+        <div className="contents lg:flex lg:flex-col lg:gap-6">
           {/* explanation */}
           {unit.objasnjenje && (
-            <Card>
+            <Card className="order-1 lg:order-none">
               {/* the badge drops to its own line on narrow screens, and the model name is shown from sm up */}
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <Eyebrow>Ukratko</Eyebrow>
@@ -199,7 +203,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           )}
 
           {/* components */}
-          <Card>
+          <Card className="order-3 lg:order-none">
             <Eyebrow>Od čega se sastoji ocjena</Eyebrow>
             <p className="mt-1 text-sm text-muted">Bodovi 0–100 po sastavnici; prosjek zadnjih {r.prozor_godina} godina gdje je navedeno.</p>
             <ul className="mt-5 space-y-5">
@@ -239,7 +243,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           </Card>
 
           {/* trend */}
-          <Card>
+          <Card className="order-4 lg:order-none">
             <Eyebrow>Kretanje bodova</Eyebrow>
             <div className="mt-4">
               <TrendChart
@@ -254,13 +258,44 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             </div>
           </Card>
 
-          {/* context that does not enter the score (pipeline/kontekst.py) */}
-          {unit.stanovnistvo_gospodarstvo && <PopulationEconomyCard data={unit.stanovnistvo_gospodarstvo} />}
-          {unit.izravnanje && <UnitEqualizationCard e={unit.izravnanje} zagreb={unit.sifra === ZAGREB_SIFRA} />}
+          {/* context that does not enter the score (pipeline/kontekst.py); the population card is on the right */}
+          {unit.izravnanje && (
+            <div className="order-6 lg:order-none">
+              <UnitEqualizationCard e={unit.izravnanje} zagreb={unit.sifra === ZAGREB_SIFRA} />
+            </div>
+          )}
+
+          {unit.revizija !== undefined && (
+          <Card className="order-8 lg:order-none">
+            <Eyebrow>Revizija Državnog ureda za reviziju</Eyebrow>
+            {unit.revizija ? (
+              <>
+                <p className="mt-3 font-medium">{OPINION[unit.revizija.misljenje ?? ''] ?? 'Mišljenje nije pročitano iz izvješća'}</p>
+                <p className="mt-1 text-sm text-ink-2">
+                  Financijska revizija
+                  {unit.revizija.revidirana_godina ? ` za ${unit.revizija.revidirana_godina}.` : ''}, izvješće objavljeno{' '}
+                  {unit.revizija.objavljeno}.
+                </p>
+                <a
+                  href={unit.revizija.url}
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm underline decoration-axis underline-offset-4 hover:decoration-ink"
+                >
+                  Izvješće (PDF) <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                </a>
+                <p className="mt-3 text-xs text-muted">Mišljenje revizije ne ulazi u ocjenu; prikazuje se kao neovisna provjera.</p>
+              </>
+            ) : (
+              <p className="mt-3 text-sm text-ink-2">
+                Na popisima izvješća Državnog ureda za reviziju (objave 2019.–2026.) nije pronađena financijska revizija ove
+                jedinice.
+              </p>
+            )}
+          </Card>
+          )}
         </div>
 
-        <aside className="flex flex-col gap-6">
-          <Card>
+        <aside className="contents lg:flex lg:flex-col lg:gap-6">
+          <Card className="order-2 lg:order-none">
             <Eyebrow>Upozorenja i napomene</Eyebrow>
             {notes.length === 0 ? (
               <p className="mt-3 flex items-center gap-2 text-sm text-ink-2">
@@ -282,7 +317,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             )}
           </Card>
 
-          <Card>
+          <Card className="order-5 lg:order-none">
             <Eyebrow>Dodatni pokazatelji</Eyebrow>
             <p className="mt-1 text-xs text-muted">Ne ulaze u ocjenu.</p>
             <dl className="mt-3 space-y-3 text-sm">
@@ -311,35 +346,13 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             </dl>
           </Card>
 
-          {unit.revizija !== undefined && (
-          <Card>
-            <Eyebrow>Revizija Državnog ureda za reviziju</Eyebrow>
-            {unit.revizija ? (
-              <>
-                <p className="mt-3 font-medium">{OPINION[unit.revizija.misljenje ?? ''] ?? 'Mišljenje nije pročitano iz izvješća'}</p>
-                <p className="mt-1 text-sm text-ink-2">
-                  Financijska revizija
-                  {unit.revizija.revidirana_godina ? ` za ${unit.revizija.revidirana_godina}.` : ''}, izvješće objavljeno{' '}
-                  {unit.revizija.objavljeno}.
-                </p>
-                <a
-                  href={unit.revizija.url}
-                  className="mt-2 inline-flex items-center gap-1.5 text-sm underline decoration-axis underline-offset-4 hover:decoration-ink"
-                >
-                  Izvješće (PDF) <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                </a>
-                <p className="mt-3 text-xs text-muted">Mišljenje revizije ne ulazi u ocjenu; prikazuje se kao neovisna provjera.</p>
-              </>
-            ) : (
-              <p className="mt-3 text-sm text-ink-2">
-                Na popisima izvješća Državnog ureda za reviziju (objave 2019.–2026.) nije pronađena financijska revizija ove
-                jedinice.
-              </p>
-            )}
-          </Card>
+          {unit.stanovnistvo_gospodarstvo && (
+            <div className="order-7 lg:order-none">
+              <PopulationEconomyCard data={unit.stanovnistvo_gospodarstvo} />
+            </div>
           )}
 
-          <Card>
+          <Card className="order-10 lg:order-none">
             <Eyebrow>Otvoreni podaci jedinice</Eyebrow>
             {unit.portal_objavljuje ? (
               <div className="mt-3 space-y-2 text-sm text-ink-2">
@@ -359,7 +372,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
           </Card>
 
           {unit.susjedi.length > 0 && (
-            <Card>
+            <Card className="order-9 lg:order-none">
               <Eyebrow>Susjedi</Eyebrow>
               <ul className="mt-3 flex flex-wrap gap-2">
                 {unit.susjedi.map((s) => (
@@ -386,7 +399,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             </Card>
           )}
 
-          <p className="text-xs leading-relaxed text-muted">
+          <p className="order-11 text-xs leading-relaxed text-muted lg:order-none">
             Izvor: Ministarstvo financija, PR-RAS i Bilanca razine 22, {YEARS[0]}.–{year}.; DZS, Popis 2021. Kontekst uz ocjenu:
             DZS (PxWeb), Porezna uprava i tablica fiskalnog izravnanja Ministarstva financija. Šifra jedinice{' '}
             {unit.sifra}, OIB {unit.oib}.{' '}
