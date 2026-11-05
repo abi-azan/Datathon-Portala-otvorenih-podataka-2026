@@ -254,26 +254,34 @@ function originOf(label: string, token: string): string | null {
   return null
 }
 
-/** Source line of a matched number: the MF cells for a component (once izvor.json is loaded),
- *  otherwise where the fact comes from. */
-/** The number is the peer group's median in its fact ("…; medijan skupine 81,9 boda"). */
-const isMedian = (f: Fact, token: string) => {
-  const at = f.value.search(new RegExp(`(?<![\\d,.])${token.replace(/[.]/g, '\\.')}(?![\\d,])`))
-  return at > 0 && f.value.slice(0, at).toLowerCase().includes('medijan')
+/** The number is the peer group's median: its fact has it after "medijan" ("…; medijan skupine 81,9 boda")
+ *  and the text names the median in the same clause before it (`before` is the text up to the number).
+ *  Both are needed, because a unit's own value can equal the median: Viškovo 2025 has 88,4 boda and a
+ *  median of 88,4, and only the second "88,4" of its text is the median. */
+function isMedian(f: Fact, token: string, before: string) {
+  const re = new RegExp(`(?<![\\d,.])${token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\d,])`, 'g')
+  const inFact = [...f.value.matchAll(re)].some((m) => f.value.slice(0, m.index).toLowerCase().includes('medijan'))
+  const clause = before.split(/[;.!?]\s|,\s/).pop() ?? ''
+  return inFact && clause.toLowerCase().includes('medijan')
 }
-const sourceLine = (hit: { fact: Fact; component?: string }, token: string, src: SourceFile | null) =>
-  isMedian(hit.fact, token)
+
+/** Source line of a matched number: for a median, the peer group; for a component, the MF cells
+ *  (once izvor.json is loaded); otherwise where the fact comes from. */
+const sourceLine = (n: { fact: Fact; component?: string; median?: boolean }, token: string, src: SourceFile | null) =>
+  n.median
     ? 'Medijan usporedne skupine, isti izračun za svaku jedinicu skupine'
-    : hit.component && src
-      ? cellsFor(src, hit.component)
-      : originOf(hit.fact.label, token)
+    : n.component && src
+      ? cellsFor(src, n.component)
+      : originOf(n.fact.label, token)
 
 interface NumberPart {
   token: string
   /** position in the displayed text, for the snippet in the check list */
   at: number
   fact: Fact | null
+  /** the component whose MF cells the number opens; never set for a median (those are not the unit's cells) */
   component?: string
+  median: boolean
   /** the number check (pipeline/verify.py) did not find it in the fact pack */
   unknown: boolean
 }
@@ -295,7 +303,15 @@ function splitNumbers(text: string, facts: Fact[], unknown: string[]) {
       .filter((n) => n.trim() !== m[0])
     const hit = factFor(m[0], unitAfter(text, end), facts, near)
     const bad = unknown.includes(m[0]) || !hit
-    parts.push({ token: m[0], at: i, fact: hit && !bad ? hit.fact : null, component: hit && !bad ? hit.component : undefined, unknown: bad })
+    const median = !!hit && !bad && isMedian(hit.fact, m[0], text.slice(0, i))
+    parts.push({
+      token: m[0],
+      at: i,
+      fact: hit && !bad ? hit.fact : null,
+      component: hit && !bad && !median ? hit.component : undefined,
+      median,
+      unknown: bad,
+    })
     last = i + m[0].length
   }
   parts.push(text.slice(last))
@@ -367,7 +383,7 @@ export function CheckedText({
   const hide = (i: number) => setTip((t) => (t && t.i === i ? null : t))
   const shown = tip ? parts[tip.i] : undefined
   const cur = shown && typeof shown !== 'string' ? shown : undefined
-  const curSource = cur?.fact ? sourceLine({ fact: cur.fact, component: cur.component }, cur.token, src) : null
+  const curSource = cur?.fact ? sourceLine({ ...cur, fact: cur.fact }, cur.token, src) : null
 
   return (
     <>
@@ -431,7 +447,7 @@ export function CheckedText({
           <ol className="mt-3 divide-y divide-hairline text-sm">
             {numbers.map((n, i) => {
               const s = snippet(displayText, n.at, n.token.length)
-              const line = n.fact ? sourceLine({ fact: n.fact, component: n.component }, n.token, src) : null
+              const line = n.fact ? sourceLine({ ...n, fact: n.fact }, n.token, src) : null
               return (
                 <li key={i} className="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-x-2 py-2.5 sm:grid-cols-[1.25rem_minmax(0,14rem)_minmax(0,1fr)] sm:gap-x-4">
                   {n.unknown ? (
