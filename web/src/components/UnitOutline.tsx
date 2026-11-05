@@ -8,6 +8,9 @@ import { grade } from '../lib/format'
 const W = 260
 const H = 120
 const PAD = 4
+/** Neighbours' fill: darker than the grade-3 colour (#e6e4dd), so a grade-3 unit stands out by its
+ *  fill and not only by its outline; light enough that grades 1-5 all read against it. */
+const NEIGHBOUR = '#d3d2ca'
 
 interface Props {
   /** jedinica: the unit's slug and its neighbours' slugs; zupanija: the county's id among all counties */
@@ -88,7 +91,7 @@ export default function UnitOutline({ kind, slug, neighbours, zupId, ocjena, naz
         <path
           key={i}
           d={sh.d}
-          fill={sh.own ? fill : '#e1e0d9'}
+          fill={sh.own ? fill : NEIGHBOUR}
           stroke={sh.own ? '#0b0b0b' : '#ffffff'}
           strokeWidth={sh.own ? 1.2 : 0.8}
           strokeLinejoin="round"
