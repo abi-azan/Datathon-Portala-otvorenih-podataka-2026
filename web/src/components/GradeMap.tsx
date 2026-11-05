@@ -12,7 +12,7 @@ import { topoUrl, type UnitIndex } from '../lib/data'
 import { grade, num } from '../lib/format'
 import { go, unitHref } from '../lib/router'
 import { GradeChip } from './Grade'
-import { BASEMAP, BLANK, CROATIA, SEQUENTIAL_CLASS, classFill, quietBasemap, reducedMotion } from './mapStyle'
+import { BASEMAP, BLANK, CROATIA, SEQUENTIAL_CLASS, classFill, fitPadding, quietBasemap, reducedMotion } from './mapStyle'
 import { classOf, contextView, quintiles, type ViewKey } from '../lib/views'
 
 maplibregl.setWorkerUrl(workerUrl)
@@ -58,6 +58,7 @@ const TOOLTIP_H = 132 // approximate height, to keep the tooltip inside the map
 
 export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, selected, onSelect, dimmed, hint, focus }: Props) {
   const box = useRef<HTMLDivElement>(null)
+  const caption = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
   const [hover, setHover] = useState<Hover | null>(null)
@@ -85,7 +86,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
       container: box.current,
       style: BASEMAP,
       bounds: CROATIA,
-      fitBoundsOptions: { padding: 24 },
+      fitBoundsOptions: { padding: fitPadding(caption.current) },
       minZoom: 5.5,
       maxZoom: 11,
       attributionControl: { compact: true },
@@ -275,7 +276,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
     const m = map.current
     if (!ready || !m || !geo.current) return
     if (!focusKey) {
-      if (fitted.current) m.fitBounds(CROATIA, { padding: 24, duration: 600 })
+      if (fitted.current) m.fitBounds(CROATIA, { padding: fitPadding(caption.current), duration: 600 })
       fitted.current = false
       return
     }
@@ -303,8 +304,12 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-2xl border border-hairline bg-surface">
       <div ref={box} className="h-full w-full" aria-label="Karta ocjena općina i gradova" role="region" />
-      {/* max width keeps the caption clear of the zoom buttons on narrow screens */}
-      <div className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg bg-card/90 px-3 py-2 shadow-sm backdrop-blur">
+      {/* max width keeps the caption clear of the zoom buttons on narrow screens; from lg it sits bottom
+          left, over the Italian coast, so it does not cover the north of Croatia */}
+      <div
+        ref={caption}
+        className="pointer-events-none absolute top-4 left-4 max-w-[calc(100%-5.5rem)] rounded-lg lg:top-auto lg:bottom-4 bg-card/90 px-3 py-2 shadow-sm backdrop-blur"
+      >
         <div className="text-sm font-semibold">{view ? view.label : 'Ocjena financijske održivosti proračuna'}, {year}.</div>
         <div className="text-xs text-muted">
           556 općina i gradova · prijeđi mišem, klikni za {selectable ? 'odabir' : 'pregled'}

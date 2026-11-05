@@ -6,6 +6,14 @@ import { SEQUENTIAL } from '../lib/views'
 export const BASEMAP = 'https://tiles.openfreemap.org/styles/positron'
 export const CROATIA: [number, number, number, number] = [13.45, 42.35, 19.45, 46.56]
 
+/** Fit padding that keeps Croatia clear of the map's caption. Below lg the caption sits in the top
+ *  corner and the map is wide rather than tall, so a deeper top padding costs no zoom; from lg it sits
+ *  bottom left, over the Italian coast, and needs none. */
+export function fitPadding(caption: HTMLElement | null, base = 24) {
+  const atTop = caption != null && caption.offsetTop < 40
+  return { top: atTop ? Math.max(base, caption.offsetTop + caption.offsetHeight + 8) : base, bottom: base, left: base, right: base }
+}
+
 // Fallback when the OpenFreeMap style cannot be loaded: the choropleth still works on a plain background.
 export const BLANK: maplibregl.StyleSpecification = {
   version: 8,
