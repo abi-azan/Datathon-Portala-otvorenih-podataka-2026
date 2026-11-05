@@ -80,22 +80,21 @@ flowchart LR
     CK["data.gov.hr CKAN API<br/>katalog, Porezna uprava"]
     DUR["Državni ured za reviziju<br/>izvješća (ručno, commitano)"]
   end
-  subgraph CI["GitHub Actions (tjedno i na push)"]
+  subgraph CI["GitHub Actions<br/>tjedno i na push"]
     ETL["ETL, Python 3.12<br/>pipeline/build.py<br/>zapis URL, ETag, sha256"]
     TEST["testovi (pytest)<br/>sheme OpenAPI"]
   end
   API[("Statični API na GitHub Pages<br/>OpenAPI 3.1, DCAT-AP, CSV, JSON")]
   WEB["Web: React, MapLibre"]
   MCPS["MCP server fiskalna_mcp<br/>za AI asistente"]
-  KG["Kaggle GPU<br/>Gemma 4 31B, llama.cpp"]
+  KG["Kaggle GPU: Gemma 4 31B<br/>paketi činjenica →<br/>provjereni tekstovi (commit)"]
   MF --> ETL
   WFS --> ETL
   PX --> ETL
   CK --> ETL
   DUR --> ETL
   ETL --> TEST --> API
-  ETL -- "paketi činjenica" --> KG
-  KG -- "provjereni tekstovi (commit)" --> ETL
+  ETL <--> KG
   API --> WEB
   API --> MCPS
   PX -. "uživo iz preglednika (CORS)" .-> WEB
