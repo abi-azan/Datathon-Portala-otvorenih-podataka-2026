@@ -1,5 +1,5 @@
 import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ExternalLink, Info, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { PopulationEconomyCard } from '../components/PopulationEconomy'
@@ -12,6 +12,11 @@ import { COMPONENTS, FLAGS, QUALITY, VRSTA, criterion10, eur, normalizeGradeLabe
 import { simulatorHref, unitHref } from '../lib/router'
 
 const YEARS = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']
+
+// the outline reads geo/jls.topo.json (about 600 KB), so it is its own chunk and only loads from lg,
+// where it fills the space next to the grade card
+const UnitOutline = lazy(() => import('../components/UnitOutline'))
+const wide = () => window.matchMedia?.('(min-width: 1024px)').matches ?? false
 
 export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) {
   const [unit, setUnit] = useState<UnitDetail | null>(null)
@@ -106,6 +111,20 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             {unit.razvojna_skupina != null && <span>razvojna skupina {num(unit.razvojna_skupina)} od 8</span>}
             <span>usporedna skupina: {unit.skupina}</span>
           </div>
+          {wide() && (
+            <div className="mt-6 hidden lg:block">
+              <Suspense fallback={null}>
+                <UnitOutline
+                  kind={isCounty ? 'zupanija' : 'jedinica'}
+                  slug={unit.slug}
+                  neighbours={unit.susjedi.map((s) => s.slug)}
+                  zupId={unit.zup_id}
+                  ocjena={r.ocjena}
+                  naziv={unit.naziv}
+                />
+              </Suspense>
+            </div>
+          )}
         </div>
         <div className="rounded-2xl border border-hairline bg-card p-5">
           <div className="flex items-start justify-between gap-4">
