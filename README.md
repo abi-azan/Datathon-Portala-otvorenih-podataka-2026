@@ -10,6 +10,8 @@ Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datat
 
 **Stranica:** `https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/` (objava preko GitHub Actions, vidi dolje)
 
+![Naslovnica Fiskalne karte: karta Hrvatske s 556 općina i gradova obojenih po ocjeni financijske održivosti za 2025., traka s brojkama iz API-ja, pretraga i izbor godine](docs/snimke/naslovnica.png)
+
 ## Što radi
 
 - **Karta** svih 556 općina i gradova obojena po ocjeni, za godine 2019.-2025. Pretraga "Pronađi svoju općinu" radi i bez dijakritika.

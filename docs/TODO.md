@@ -16,7 +16,7 @@
 - [x] Meki prijelaz boja na karti pri promjeni godine (prijedlog 3).
 - [x] Nova ikona i favicon: v3 (presavijena karta od šahovnice); korisnik je možda još promijeni.
 - [ ] Sitnice s karte koje je agent primijetio: teški obrubi oko malih otoka, na mobitelu zaglavlje prekriva natpis Karte reforme, natpis na karti na 1280 px prekriva sjever.
-- [ ] Snimka naslovnice u README, nakon karte i ikone.
+- [x] Snimka naslovnice u README, nakon karte i ikone. (5.11. noću, `docs/snimke/naslovnica.png`; uključuje prijedloge U-a)
 - [ ] **8.11.: ponovno snimiti naslovnicu za README** (do tada će biti još promjena).
 - [ ] AI tekstovi: ponovno generiranje 5.11., nakon ostalih promjena.
 
