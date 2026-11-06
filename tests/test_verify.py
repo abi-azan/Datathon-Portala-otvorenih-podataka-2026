@@ -136,6 +136,34 @@ def test_content_claims_must_match_the_pack():
     assert verify.verify("Ocjena je 2, ograničena na najviše 2.", with_rule)["ok"]
 
 
+def test_the_weakest_indicator_needs_its_value():
+    """Grad Zagreb and Općina Blato, 6.11.: 'Ocjenu najviše spušta pokazatelj „slobodni saldo”.' and
+    not a word on how much. The text must carry a number of the unit's own part of that item."""
+    pack = {"ocjene": [5], "naziv": {"nom": "Grad X"}, "year": 2025, "facts": [
+        {"label": "Ocjena financijske održivosti proračuna za 2025.",
+         "value": "5 (vrlo stabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno)"},
+        {"label": "Bodovi", "value": "80,1 boda od 100"},
+        {"label": "Pokazatelj: slobodni saldo",
+         "value": "nakon otplate glavnice kredita ostaje 5,7 % tekućih prihoda; medijan skupine: ostaje 9,2 % tekućih prihoda"},
+        {"label": "Pokazatelj: godine otplate duga", "value": "jedinica nema neto duga (novac na računu pokriva kredite)"},
+        {"label": "Najslabiji pokazatelj", "value": "slobodni saldo"}]}
+    thin = "Grad X ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”."
+    r = verify.verify(thin, pack)
+    assert not r["ok"] and r["nepoznate"] == [] and r["sadrzaj"] == ["najslabiji pokazatelj „slobodni saldo” bez vrijednosti"]
+    # the peer median alone is not the unit's value
+    assert not verify.verify(thin[:-1] + ", uz medijan skupine od 9,2 % tekućih prihoda.", pack)["ok"]
+    assert verify.verify(thin[:-1] + ": nakon otplate glavnice kredita ostaje 5,7 % tekućih prihoda.", pack)["ok"]
+    # an indicator with no number of its own asks for nothing
+    no_debt = {**pack, "facts": pack["facts"][:-1] + [{"label": "Najslabiji pokazatelj", "value": "godine otplate duga"}]}
+    assert verify.verify("Grad X ima ocjenu 5. Ocjenu najviše spušta pokazatelj „godine otplate duga”.", no_debt)["ok"]
+    # the retry quotes the item to copy, and the template states the value itself
+    msg = explain.feedback([], r["sadrzaj"], pack)
+    assert "„Pokazatelj: slobodni saldo”" in msg and "ostaje 5,7 % tekućih prihoda" in msg
+    text = explain.template(pack)
+    assert "„slobodni saldo”: nakon otplate glavnice kredita ostaje 5,7 % tekućih prihoda" in text
+    assert verify.verify(text, pack)["ok"]
+
+
 # --- context: population and income (facts.context_facts) ---------------------------------------
 
 FISCAL = [{"label": "Jedinica", "value": "Općina Bogdanovci (Vukovarsko-srijemska županija), 1.893 stanovnika (Popis 2021.)"},

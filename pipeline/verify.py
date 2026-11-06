@@ -80,6 +80,14 @@ STRENGTHS = re.compile(r"jake strane jedinice su:\s*([^.;]+)", re.IGNORECASE)
 CAPPED = re.compile(r"\bograničen\w*", re.IGNORECASE)
 
 
+def states_value(text, fact):
+    """True when the text carries a number of the unit's own part of an indicator fact, the part
+    before the peer median ("… ostaje 10,7 % tekućih prihoda; medijan skupine: …"). A fact with no
+    number of its own ("jedinica nema neto duga") asks for nothing."""
+    need = {v for v, _ in numbers(fact.split(";", 1)[0]) if v is not None}
+    return not need or bool(need & {v for v, _ in numbers(text) if v is not None})
+
+
 def content_issues(text, pack):
     facts = {f["label"]: f["value"] for f in pack["facts"]}
     issues = []
@@ -87,6 +95,9 @@ def content_issues(text, pack):
         weakest = facts.get("Najslabiji pokazatelj", facts.get("Najslabija sastavnica", ""))
         if name.strip().lower() != weakest.lower():
             issues.append(f"najslabiji pokazatelj „{name.strip()}”")
+        # the weakest indicator named without its value says nothing (Grad Zagreb and Općina Blato, 6.11.)
+        elif not states_value(text, facts.get(f"Pokazatelj: {weakest}", "")):
+            issues.append(f"najslabiji pokazatelj „{weakest}” bez vrijednosti")
     strong = facts.get("Jake strane", "").lower()
     for listed in STRENGTHS.findall(text):
         for part in re.split(r",| i | te ", listed):
@@ -192,7 +203,8 @@ def verify(text, pack):
     """{"ok", "n_brojki", "nepoznate", "sadrzaj"}. ok only if there is at least one number, every
     number is in the pack and written the Croatian way, every grade mentioned is the unit's grade
     (this year or last year), the weakest component, the strengths and any capped grade agree
-    with the pack, and any sentence on the context keeps to the context items (context_issues)."""
+    with the pack, the weakest component comes with its value (states_value), and any sentence on
+    the context keeps to the context items (context_issues)."""
     ok_vals = allowed(pack)
     found = numbers(text)
     unknown = [tok for v, tok in found if v is None or v not in ok_vals]

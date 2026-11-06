@@ -33,13 +33,15 @@ Model ne računa i ne bira što je važno. To radi naš kod, a model samo piše 
    - svaka brojka u tekstu mora postojati u paketu;
    - navedena ocjena mora biti ovogodišnja ili prošlogodišnja;
    - najslabiji pokazatelj, jake strane i ograničenje ocjene moraju se slagati s paketom;
+   - uz najslabiji pokazatelj mora stajati i njegova vrijednost;
    - kontekst se ne smije povezati s ocjenom.
 
    Tekst koji ne prođe vraća se modelu s popisom grešaka, najviše dva puta. Ako ni tada ne prođe, prikazuje se predložak.
 4. **Izvođenje na Kaggleu.** Jedna skripta s ugrađenim paketima, promptom i provjerom pokreće se u Kaggle bilježnici, na besplatnom GPU-u (2× T4). Model poslužuje llama.cpp.
    - Batch od 5.11. obradio je svih 576 jedinica za oko 4 h.
    - Iz prvog pokušaja prošlo je 550 tekstova, nakon ponavljanja 561.
-   - Za 15 jedinica prikazuje se predložak.
+   - Preostalih 15 ponovno je generirano 6.11. s određenijom porukom o grešci i svi su prošli.
+   - Isti dan dodana je provjera vrijednosti najslabijeg pokazatelja. Dva teksta koja je nisu navodila (Grad Zagreb i Općina Blato) ponovno su generirana. AI tekst sada ima svih 576 jedinica.
 5. **Objava.** Tekstovi se commitaju (`data/ai/objasnjenja-2025.json`) zajedno sa sha256 paketa iz kojeg su nastali. CI ne poziva model. Pri objavi ponovno provjeri svaki tekst i prikaže ga samo ako se paket nije promijenio; inače prikazuje predložak.
 6. **U sučelju** tekst nosi oznaku poput „AI tekst · Gemma 4 31B · 15/15 brojki provjereno” (Povljana), a svaka brojka pokazuje činjenicu iz koje dolazi.
 

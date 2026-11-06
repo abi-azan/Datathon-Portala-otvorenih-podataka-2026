@@ -140,7 +140,8 @@ def messages(pack):
 def feedback(unknown, issues=(), pack=None):
     """The retry message. With the pack it also says exactly what to change for the two misses the
     general line did not fix (batch v2, 5.11., all 15 rejected units, three identical attempts each):
-    a closing "Kontekst …" sentence or a "Jake strane …" sentence although the list has no such item."""
+    a closing "Kontekst …" sentence or a "Jake strane …" sentence although the list has no such item.
+    And for the weakest indicator named without its value (6.11.) it quotes the item to copy."""
     parts = []
     if unknown:
         parts.append("Tekst sadrži brojke kojih nema u činjenicama: " + ", ".join(unknown)
@@ -156,6 +157,11 @@ def feedback(unknown, issues=(), pack=None):
             else:
                 parts.append("Na popisu nema stavke „Jake strane”, pa rečenicu „Jake strane jedinice su: …” "
                              "potpuno izostavi.")
+        if labels is not None and any(i.endswith("bez vrijednosti") for i in issues):
+            weakest = labels.get("Najslabiji pokazatelj", "")
+            parts.append(f"Uz najslabiji pokazatelj nedostaje njegova vrijednost: iza naziva pokazatelja stavi "
+                         f"dvotočku i prepiši stavku „Pokazatelj: {weakest}” s popisa "
+                         f"({labels.get(f'Pokazatelj: {weakest}', '')}).")
         if labels is not None and any(i.endswith("bez stavke u činjenicama") for i in issues) \
                 and not any(f.get("kontekst") for f in pack["facts"]):
             parts.append("Na popisu nema stavki „Kontekst”, pa rečenicu „Kontekst koji ne ulazi u ocjenu: …” "
@@ -175,7 +181,9 @@ def template(pack):
     parts = [f"{pack['naziv']['nom']} za {pack['year']}. godinu ima ocjenu {grade.split(' na ljestvici')[0]}."]
     weakest = f.get("Najslabiji pokazatelj") or f.get("Najslabija sastavnica")
     if weakest:
-        parts.append(f"Ocjenu najviše spušta pokazatelj „{weakest}”.")
+        # with its value, as the check asks of every text (verify.states_value)
+        value = f.get(f"Pokazatelj: {weakest}")
+        parts.append(f"Ocjenu najviše spušta pokazatelj „{weakest}”{f': {value}' if value else ''}.")
     if "Jake strane" in f:
         parts.append(f"Jake strane su {_and(f['Jake strane'].split(', '))}.")
     if "Pravilo" in f:

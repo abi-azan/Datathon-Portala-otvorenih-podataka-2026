@@ -10,8 +10,9 @@
   "model_izvor": "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2",
   "biljeznica": "albertmari/fiskalna-karta-jls-gemma-batch",
   "prompt_sha256": "0f58640aecb8f70bb34a1f1c594aba0abc70cf98e4ead6c1a00278476edd0433",
-  "verify_sha256": "51ed056a51c6bc9dd7bd5fff7a2c5283b7f9a000011a39956205e37023a9b5f4",
+  "verify_sha256": "1f6a80e940b4e572b1bd9ffb07a229ca227211b71537b47f1dcb63a969c03a5e",
   "verify_sha256_kaggle": [
+   "1f6a80e940b4e572b1bd9ffb07a229ca227211b71537b47f1dcb63a969c03a5e",
    "51ed056a51c6bc9dd7bd5fff7a2c5283b7f9a000011a39956205e37023a9b5f4"
   ],
   "commit_skripte": null,
@@ -50,9 +51,26 @@
     "commit_skripte": null,
     "model_izvor": "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2",
     "biljeznica": "albertmari/fiskalna-karta-jls-gemma-batch"
+   },
+   {
+    "datoteka": "gemma_batch_2025_31b_q4_0_v4_vrijednost.json",
+    "sha256": "888e0795743e1fd44fc5d1571055dfb9f47e57e2134e9cbfbca0718242dd119a",
+    "djelomicno": false,
+    "llama_cpp_commit": "2cbca389f515df455412dafa07e2b1359cc72a6d",
+    "gpu": "Tesla T4, Tesla T4",
+    "sekundi": 291,
+    "modeli": [
+     "gemma-4-31B_q4_0-it.gguf"
+    ],
+    "otisci_paketa": "meta.paketi",
+    "prompt_sha256": "0f58640aecb8f70bb34a1f1c594aba0abc70cf98e4ead6c1a00278476edd0433",
+    "verify_sha256_kaggle": "1f6a80e940b4e572b1bd9ffb07a229ca227211b71537b47f1dcb63a969c03a5e",
+    "commit_skripte": null,
+    "model_izvor": "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2",
+    "biljeznica": "albertmari/fiskalna-karta-jls-gemma-batch"
    }
   ],
-  "uvezeno": "2026-11-06T00:51:42+00:00",
+  "uvezeno": "2026-11-06T14:24:29+00:00",
   "jedinica": 576,
   "tekstova": 576,
   "ai": 576
@@ -2429,7 +2447,7 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "40097918961": {
-   "tekst": "Općina Blato za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,6 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+   "tekst": "Općina Blato za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,6 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,7 % tekućih prihoda, dok je medijan skupine 16,9 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
    "pack_sha256": "8e07c3422104ff5ef42e4114dc663d849e6621e808dffcc24705a16dcde533cf",
    "pokusaja": 3,
    "pokusaj": 3,
@@ -3659,10 +3677,10 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "61817894937": {
-   "tekst": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+   "tekst": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 5,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
    "pack_sha256": "a0140d70f9d731d07357db6c481bf6b8801653b1aeee7dedff3dffddaeacf58e",
-   "pokusaja": 1,
-   "pokusaj": 1,
+   "pokusaja": 3,
+   "pokusaj": 3,
    "izvor": "ai",
    "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",

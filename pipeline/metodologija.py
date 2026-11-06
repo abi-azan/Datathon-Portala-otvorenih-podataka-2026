@@ -153,7 +153,8 @@ def doc(ai_texts_path=None, shown_ai=None, n_units=None):
         "ai": {
             "opis": "Naš kod izračuna sve brojke i složi popis činjenica (pipeline/facts.py). Model od njih napiše 3–5 "
                     "rečenica. Provjera (pipeline/verify.py) odbija tekst s ijednom brojkom koje nema na popisu, s "
-                    "pogrešnom ocjenom ili s drukčijim najslabijim pokazateljem, jakim stranama ili ograničenjem ocjene. "
+                    "pogrešnom ocjenom ili s drukčijim najslabijim pokazateljem, jakim stranama ili ograničenjem ocjene, "
+                    "kao i tekst koji najslabiji pokazatelj samo imenuje, bez njegove vrijednosti. "
                     f"Model tada dobiva popis grešaka i piše ponovno, najviše {explain.MAX_RETRIES} puta, a zatim se "
                     "koristi predložak. Na stranici se AI tekst prikazuje samo ako je napisan iz istog popisa činjenica "
                     "(isti sha256) i ako ga prihvaća trenutna verzija provjere, koja se ponovno pokreće pri uvozu i pri "

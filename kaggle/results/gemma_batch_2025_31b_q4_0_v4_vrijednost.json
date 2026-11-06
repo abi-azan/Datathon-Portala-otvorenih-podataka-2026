@@ -1,0 +1,175 @@
+{
+ "partial": false,
+ "meta": {
+  "llama_cpp_commit": "2cbca389f515df455412dafa07e2b1359cc72a6d",
+  "gpu": "Tesla T4\nTesla T4",
+  "max_retries": 2,
+  "hf_models": [],
+  "vrsta": "batch",
+  "godina": 2025,
+  "prompt_sha256": "0f58640aecb8f70bb34a1f1c594aba0abc70cf98e4ead6c1a00278476edd0433",
+  "verify_sha256": "1f6a80e940b4e572b1bd9ffb07a229ca227211b71537b47f1dcb63a969c03a5e",
+  "model_izvor": "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2",
+  "biljeznica": "albertmari/fiskalna-karta-jls-gemma-batch",
+  "paketa": 2,
+  "paketi": {
+   "40097918961": "8e07c3422104ff5ef42e4114dc663d849e6621e808dffcc24705a16dcde533cf",
+   "61817894937": "a0140d70f9d731d07357db6c481bf6b8801653b1aeee7dedff3dffddaeacf58e"
+  },
+  "hf_download_seconds": 0,
+  "seconds_total": 291
+ },
+ "models": {
+  "gemma-4-31B_q4_0-it.gguf": {
+   "load_seconds": 198,
+   "results": [
+    {
+     "oib": "40097918961",
+     "naziv": "Općina Blato",
+     "text": "Općina Blato za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,6 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,7 % tekućih prihoda, dok je medijan skupine 16,9 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Blato za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,6 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,7 % tekućih prihoda, dok je medijan skupine 16,9 % tekućih prihoda. Jake strane jedinice su: operativni saldo. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": false,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": [
+         "jaka strana „operativni saldo”"
+        ]
+       },
+       "seconds": 17.5,
+       "usage": {
+        "completion_tokens": 153,
+        "prompt_tokens": 1357,
+        "total_tokens": 1510,
+        "prompt_tokens_details": {
+         "cached_tokens": 0
+        }
+       }
+      },
+      {
+       "text": "Općina Blato za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,6 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,7 % tekućih prihoda, dok je medijan skupine 16,9 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja. Kontekst koji ne ulazi u ocjenu: 3.330 stanovnika (Popis 2021.).",
+       "check": {
+        "ok": false,
+        "n_brojki": 9,
+        "nepoznate": [],
+        "sadrzaj": [
+         "kontekst bez stavke u činjenicama"
+        ]
+       },
+       "seconds": 16.7,
+       "usage": {
+        "completion_tokens": 170,
+        "prompt_tokens": 1610,
+        "total_tokens": 1780,
+        "prompt_tokens_details": {
+         "cached_tokens": 1353
+        }
+       }
+      },
+      {
+       "text": "Općina Blato za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 80,6 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,7 % tekućih prihoda, dok je medijan skupine 16,9 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 14.7,
+       "usage": {
+        "completion_tokens": 142,
+        "prompt_tokens": 1895,
+        "total_tokens": 2037,
+        "prompt_tokens_details": {
+         "cached_tokens": 1606
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "61817894937",
+     "naziv": "Grad Zagreb",
+     "text": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 5,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 4,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+       "check": {
+        "ok": false,
+        "n_brojki": 3,
+        "nepoznate": [],
+        "sadrzaj": [
+         "najslabiji pokazatelj „slobodni saldo” bez vrijednosti"
+        ]
+       },
+       "seconds": 15.4,
+       "usage": {
+        "completion_tokens": 65,
+        "prompt_tokens": 1209,
+        "total_tokens": 1274,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 5,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: 767.131 stanovnik (Popis 2021.).",
+       "check": {
+        "ok": false,
+        "n_brojki": 6,
+        "nepoznate": [],
+        "sadrzaj": [
+         "kontekst bez stavke u činjenicama"
+        ]
+       },
+       "seconds": 12.7,
+       "usage": {
+        "completion_tokens": 117,
+        "prompt_tokens": 1421,
+        "total_tokens": 1538,
+        "prompt_tokens_details": {
+         "cached_tokens": 1205
+        }
+       }
+      },
+      {
+       "text": "Grad Zagreb ima ocjenu 5 (vrlo stabilno) i 80,1 boda od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 5,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 4,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 9.9,
+       "usage": {
+        "completion_tokens": 86,
+        "prompt_tokens": 1653,
+        "total_tokens": 1739,
+        "prompt_tokens_details": {
+         "cached_tokens": 1417
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "gpu_memory": "9523 MiB, 15360 MiB\n9969 MiB, 15360 MiB\n",
+   "seconds": 287
+  }
+ }
+}

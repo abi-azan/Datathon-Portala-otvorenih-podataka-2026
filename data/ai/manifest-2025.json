@@ -1,7 +1,7 @@
 {
  "godina": 2025,
  "prompt_sha256": "0f58640aecb8f70bb34a1f1c594aba0abc70cf98e4ead6c1a00278476edd0433",
- "verify_sha256": "51ed056a51c6bc9dd7bd5fff7a2c5283b7f9a000011a39956205e37023a9b5f4",
+ "verify_sha256": "1f6a80e940b4e572b1bd9ffb07a229ca227211b71537b47f1dcb63a969c03a5e",
  "model_izvor": "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2",
  "biljeznica": "albertmari/fiskalna-karta-jls-gemma-batch",
  "paketi": {
