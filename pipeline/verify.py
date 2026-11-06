@@ -78,6 +78,41 @@ def claimed_grades(text):
 WEAKEST = re.compile(r"spušta (?:pokazatelj|sastavnica)\s+[„\"“]([^”\"“]+)[”\"“]", re.IGNORECASE)
 STRENGTHS = re.compile(r"jake strane jedinice su:\s*([^.;]+)", re.IGNORECASE)
 CAPPED = re.compile(r"\bograničen\w*", re.IGNORECASE)
+# The peer median glued to the fact's own words with "od": "uz medijan skupine od nedostaje 1,7 %
+# tekućih prihoda" (14 of the 20 counties, 6.11.), "... od viška 13,3 % ..." (28 texts). The numbers
+# are right and the sentence is not Croatian, so it is written again. The same for the verb put
+# after the nominative: "dok je medijan skupine nedostaje 1,7 %" (the pilot of 6.11.), "dok medijan
+# skupine iznosi nedostaje 1,7 %"; "kod medijana skupine nedostaje 1,7 %" is fine and does not match.
+MEDIAN_OF = re.compile(r"\bmedijan\w*\s+(?:usporedne\s+)?skupine\s+(od\s+(?:nedostaje|ostaje|viš[a-zčćđšž]+|manj[a-zčćđšž]+))",
+                       re.IGNORECASE)
+MEDIAN_VERB = re.compile(r"\bmedijan\s+(?:usporedne\s+)?skupine\s+((?:(?:je|iznosi)\s+)?(?:nedostaje|ostaje))\b",
+                         re.IGNORECASE)
+# The sign of the peer median is a word in the facts: "nedostaje 18,4 % tekućih prihoda; medijan
+# skupine: ostaje 9,2 % tekućih prihoda". A text that keeps only the number ("nedostaje 18,4 %, uz
+# medijan skupine od 9,2 %") reads as if the median lacked 9,2 % as well (67 accepted texts, 6.11.).
+MEDIAN_SEP = "; medijan skupine: "
+SIGN_WORDS = {"ostaje": 1, "nedostaje": -1, "višak": 1, "manjak": -1}
+SIGN_FORMS = {"ostaje": r"\bostaje\b", "nedostaje": r"\bnedostaje\b", "višak": r"\bviš(?:ak|ka|kom|ku)\b",
+              "manjak": r"\bmanj(?:ak|ka|kom|ku)\b"}
+# No bracket in between: the context sentence writes its own median as "ispod medijana skupine (−3,9 %)".
+MEDIAN_PERCENT = re.compile(r"\bmedijan\w*\s+(?:usporedne\s+)?skupine\b([^.;%\d(]{0,60}?)(\d+(?:[.,]\d+)*)\s*%",
+                            re.IGNORECASE)
+
+
+def median_sign_issue(text, fact):
+    """The word that has to stand with the peer median's number, when the text gives that number
+    without it and the unit's own value has the other sign; otherwise None. Same signs need no word:
+    "nedostaje 0,4 %, uz medijan skupine od 1,7 %" is read the right way."""
+    own, sep, median = fact.partition(MEDIAN_SEP)
+    word = median.split(" ", 1)[0]
+    own_sign = next((s for w, s in SIGN_WORDS.items() if re.search(SIGN_FORMS[w], own)), None)
+    if not sep or word not in SIGN_WORDS or own_sign in (None, SIGN_WORDS[word]):
+        return None
+    value = next((v for v, _ in numbers(median) if v is not None), None)
+    for between, token in MEDIAN_PERCENT.findall(text):
+        if normalise(token) == value and not re.search(SIGN_FORMS[word], between, re.IGNORECASE):
+            return word
+    return None
 
 
 def states_value(text, fact):
@@ -106,6 +141,12 @@ def content_issues(text, pack):
                 issues.append(f"jaka strana „{part}”")
     if CAPPED.search(text) and "Pravilo" not in facts:
         issues.append("ograničenje ocjene bez pravila")
+    for words in MEDIAN_OF.findall(text) + MEDIAN_VERB.findall(text):
+        issues.append(f"medijan skupine uveden riječima „{' '.join(words.lower().split())}”")
+    weakest = facts.get("Najslabiji pokazatelj", "")
+    word = median_sign_issue(text, facts.get(f"Pokazatelj: {weakest}", ""))
+    if word:
+        issues.append(f"medijan skupine bez riječi „{word}”")
     return issues + context_issues(text, pack)
 
 
@@ -203,8 +244,10 @@ def verify(text, pack):
     """{"ok", "n_brojki", "nepoznate", "sadrzaj"}. ok only if there is at least one number, every
     number is in the pack and written the Croatian way, every grade mentioned is the unit's grade
     (this year or last year), the weakest component, the strengths and any capped grade agree
-    with the pack, the weakest component comes with its value (states_value), and any sentence on
-    the context keeps to the context items (context_issues)."""
+    with the pack (no weakest component is named when the pack has none), the weakest component
+    comes with its value (states_value), the peer median is not glued on with "od" or a verb
+    (MEDIAN_OF, MEDIAN_VERB) and keeps its word when its sign differs from the unit's
+    (median_sign_issue), and any sentence on the context keeps to the context items (context_issues)."""
     ok_vals = allowed(pack)
     found = numbers(text)
     unknown = [tok for v, tok in found if v is None or v not in ok_vals]

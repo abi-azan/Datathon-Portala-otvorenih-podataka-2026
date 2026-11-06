@@ -34,6 +34,9 @@ from pathlib import Path
 import pandas as pd
 
 from . import config, facts, verify
+# feedback() is embedded verbatim in the Kaggle script, next to the inlined verify.py: there "verify"
+# is the function and no module, so what feedback() takes from verify.py it takes by bare name
+from .verify import MEDIAN_SEP
 
 MAX_RETRIES = 2
 CONTEXT_OPENING = "Kontekst koji ne ulazi u ocjenu:"    # rule 8, the example and the template
@@ -141,7 +144,11 @@ def feedback(unknown, issues=(), pack=None):
     """The retry message. With the pack it also says exactly what to change for the two misses the
     general line did not fix (batch v2, 5.11., all 15 rejected units, three identical attempts each):
     a closing "Kontekst …" sentence or a "Jake strane …" sentence although the list has no such item.
-    And for the weakest indicator named without its value (6.11.) it quotes the item to copy."""
+    And for the weakest indicator named without its value (6.11.) it quotes the item to copy.
+    Since 6.11. also: a weakest indicator named although the list has none (it is a strength, so
+    facts.fact_pack leaves it out), and the peer median glued on with "od" or a verb
+    (verify.MEDIAN_OF, MEDIAN_VERB) or given without the word that carries its sign
+    (verify.median_sign_issue); for both it writes out the clause to use, built from the unit's own item."""
     parts = []
     if unknown:
         parts.append("Tekst sadrži brojke kojih nema u činjenicama: " + ", ".join(unknown)
@@ -157,6 +164,35 @@ def feedback(unknown, issues=(), pack=None):
             else:
                 parts.append("Na popisu nema stavke „Jake strane”, pa rečenicu „Jake strane jedinice su: …” "
                              "potpuno izostavi.")
+        if labels is not None and "Najslabiji pokazatelj" not in labels \
+                and any(i.startswith("najslabiji pokazatelj") for i in issues):
+            parts.append("Na popisu nema stavke „Najslabiji pokazatelj”, jer nijedan pokazatelj ne spušta ocjenu, "
+                         "pa rečenicu „Ocjenu najviše spušta pokazatelj …” potpuno izostavi. Nakon ocjene i bodova "
+                         "odmah napiši jake strane."
+                         # without that sentence the text is two sentences long, and the pilot of 6.11. then
+                         # padded it with the population from the "Jedinica" line (Općina Donja Motičina)
+                         + ("" if any(f.get("kontekst") for f in pack["facts"]) else
+                            " Tekst smije imati i samo dvije rečenice: ne dodaji rečenicu o kontekstu ni broj stanovnika."))
+        glued = any(i.startswith("medijan skupine uveden") for i in issues)
+        unsigned = next((i for i in issues if i.startswith("medijan skupine bez riječi")), None)
+        if labels is not None and (glued or unsigned):
+            fact = labels.get(f"Pokazatelj: {labels.get('Najslabiji pokazatelj', '')}", "")
+            tail = fact.partition(MEDIAN_SEP)[2]
+            word, _, rest = tail.partition(" ")
+            # the item's own word stays (rule 2 ties it to the number): the pilot of 6.11. was offered
+            # "manjak od 1,7 %" for "nedostaje 1,7 %" and wrote "dok je medijan skupine nedostaje 1,7 %"
+            if word in ("višak", "manjak"):
+                clause = f"dok je medijan skupine {word} od {rest}"
+            else:
+                clause = f"dok kod medijana skupine {tail}" if tail else ""
+            if glued:
+                parts.append("Usporedbu s medijanom ne uvodi riječima „uz medijan skupine od …” ispred riječi nedostaje, "
+                             "ostaje, višak ili manjak, i ne piši „medijan skupine nedostaje”.")
+            if unsigned:
+                parts.append(f"Uz brojku medijana skupine mora stajati i njezina riječ s popisa ({unsigned.split(' ')[-1]}), "
+                             "jer je drukčija od riječi uz brojku jedinice.")
+            if clause:
+                parts.append(f"Usporedbu s medijanom napiši točno ovako: „…, {clause}”.")
         if labels is not None and any(i.endswith("bez vrijednosti") for i in issues):
             weakest = labels.get("Najslabiji pokazatelj", "")
             parts.append(f"Uz najslabiji pokazatelj nedostaje njegova vrijednost: iza naziva pokazatelja stavi "

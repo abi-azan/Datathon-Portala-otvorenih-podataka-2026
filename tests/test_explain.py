@@ -342,3 +342,28 @@ def test_kaggle_script_checks_context_like_the_pipeline(tmp_path):
     flipped = good.replace("smanjio se za 8,3 %", "povećao se za 8,3 %")
     assert mod.verify(flipped, mod.PACKS[0])["sadrzaj"] == ["smjer promjene „povećao se za 8,3” ne slaže se s činjenicama"]
     assert "kontekst" in mod.feedback([], ["x"])
+
+
+def test_kaggle_script_feedback_matches_the_pipeline(tmp_path):
+    """The Kaggle script embeds feedback() verbatim next to the inlined verify.py, where "verify" is the
+    function and no module. A reference to verify.MEDIAN_SEP raised AttributeError there for 7 of 8
+    units (pilot of 6.11.), and nothing local saw it. Every branch of feedback() has to give the same
+    message in the script as in the pipeline."""
+    pack = {"oib": "1", "year": 2025, "naziv": {"nom": "Grad X"}, "ocjene": [1], "facts": [
+        {"label": "Ocjena financijske održivosti proračuna za 2025.", "value": "1 (vrlo nestabilno)"},
+        {"label": "Pokazatelj: slobodni saldo",
+         "value": "nakon otplate glavnice kredita nedostaje 18,4 % tekućih prihoda; medijan skupine: ostaje 9,2 % tekućih prihoda"},
+        {"label": "Najslabiji pokazatelj", "value": "slobodni saldo"},
+        {"label": "Jake strane", "value": "servis duga"}]}
+    bare = {**pack, "facts": pack["facts"][:2]}                     # no weakest indicator, no strengths
+    mod = load_script(explain.write_kaggle_script([pack, bare], tmp_path / "f.py"))
+    issues = ["najslabiji pokazatelj „servis duga”", "najslabiji pokazatelj „slobodni saldo” bez vrijednosti",
+              "jaka strana „operativni saldo”", "ograničenje ocjene bez pravila", "kontekst bez stavke u činjenicama",
+              "medijan skupine uveden riječima „od nedostaje”", "medijan skupine bez riječi „ostaje”"]
+    for p, embedded in zip((pack, bare), mod.PACKS):
+        for chosen in [[i] for i in issues] + [issues]:
+            assert mod.feedback(["12,5"], chosen, embedded) == explain.feedback(["12,5"], chosen, p)
+    assert "dok kod medijana skupine ostaje 9,2 % tekućih prihoda" in mod.feedback([], issues[-1:], mod.PACKS[0])
+    # and the runner's own check sees what the pipeline's sees
+    lost = "Grad X ima ocjenu 1. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nedostaje 18,4 %, uz medijan skupine od 9,2 %."
+    assert mod.verify(lost, mod.PACKS[0]) == verify.verify(lost, pack) and not mod.verify(lost, mod.PACKS[0])["ok"]

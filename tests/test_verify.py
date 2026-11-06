@@ -164,6 +164,115 @@ def test_the_weakest_indicator_needs_its_value():
     assert verify.verify(text, pack)["ok"]
 
 
+def test_no_weakest_indicator_when_it_is_itself_a_strength():
+    """Grad Rovinj, 6.11.: 100 points of 100, and the text said 'Ocjenu najviše spušta pokazatelj
+    „operativni saldo”' and then listed operativni saldo among the strengths (68 texts). The pack of
+    such a unit has no weakest item (facts.fact_pack), the check rejects the sentence and the retry
+    says to leave it out."""
+    pack = {"ocjene": [5], "naziv": {"nom": "Grad X"}, "year": 2025, "facts": [
+        {"label": "Ocjena financijske održivosti proračuna za 2025.",
+         "value": "5 (vrlo stabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno)"},
+        {"label": "Bodovi", "value": "100 bodova od 100; medijan skupine 82,7 boda"},
+        {"label": "Pokazatelj: operativni saldo",
+         "value": "operativni višak iznosi 21,9 % tekućih prihoda; medijan skupine: višak 12,6 % tekućih prihoda"},
+        {"label": "Jake strane", "value": "operativni saldo, slobodni saldo"}]}
+    old = ("Grad X ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100. Ocjenu najviše spušta pokazatelj „operativni saldo”: "
+           "operativni višak iznosi 21,9 % tekućih prihoda. Jake strane jedinice su: operativni saldo, slobodni saldo.")
+    r = verify.verify(old, pack)
+    assert not r["ok"] and r["nepoznate"] == [] and r["sadrzaj"] == ["najslabiji pokazatelj „operativni saldo”"]
+    assert "„Ocjenu najviše spušta pokazatelj …” potpuno izostavi" in explain.feedback([], r["sadrzaj"], pack)
+    good = "Grad X ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100. Jake strane jedinice su: operativni saldo, slobodni saldo."
+    assert verify.verify(good, pack)["ok"]
+    text = explain.template(pack)
+    assert "spušta" not in text and verify.verify(text, pack)["ok"]
+    # a pack that does name the weakest indicator gets no such advice
+    named = {**pack, "facts": pack["facts"] + [{"label": "Najslabiji pokazatelj", "value": "slobodni saldo"}]}
+    assert "potpuno izostavi" not in explain.feedback([], verify.verify(old, named)["sadrzaj"], named)
+
+
+def test_the_peer_median_is_not_glued_on_with_od():
+    """14 of the 20 counties, 6.11.: '… nedostaje 0,4 % tekućih prihoda, uz medijan skupine od nedostaje
+    1,7 % tekućih prihoda'. The numbers are right and the sentence is broken: it is rejected, and the
+    retry gets the clause to write, built from the unit's own item."""
+    pack = {"ocjene": [4], "facts": [
+        {"label": "Ocjena", "value": "4 (stabilno); 70,6 boda"},
+        {"label": "Pokazatelj: slobodni saldo",
+         "value": "nakon otplate glavnice kredita nedostaje 0,4 % tekućih prihoda; medijan skupine: nedostaje 1,7 % tekućih prihoda"},
+        {"label": "Najslabiji pokazatelj", "value": "slobodni saldo"}]}
+    start = ("Županija ima ocjenu 4 i 70,6 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate "
+             "glavnice kredita nedostaje 0,4 % tekućih prihoda")
+    r = verify.verify(start + ", uz medijan skupine od nedostaje 1,7 % tekućih prihoda.", pack)
+    assert not r["ok"] and r["nepoznate"] == [] and r["sadrzaj"] == ["medijan skupine uveden riječima „od nedostaje”"]
+    # the clause keeps the item's own verb: offered "manjak od 1,7 %", the pilot of 6.11. wrote
+    # "dok je medijan skupine nedostaje 1,7 %" for two of three counties, which is rejected as well
+    assert "„…, dok kod medijana skupine nedostaje 1,7 % tekućih prihoda”" in explain.feedback([], r["sadrzaj"], pack)
+    assert verify.verify(start + ", dok kod medijana skupine nedostaje 1,7 % tekućih prihoda.", pack)["ok"]
+    assert verify.verify(start + ", dok je medijan skupine manjak od 1,7 % tekućih prihoda.", pack)["ok"]
+    for glued, words in ((", dok je medijan skupine nedostaje 1,7 % tekućih prihoda.", "nedostaje"),
+                         (", dok medijan skupine iznosi nedostaje 1,7 % tekućih prihoda.", "iznosi nedostaje")):
+        r = verify.verify(start + glued, pack)
+        assert not r["ok"] and r["sadrzaj"] == [f"medijan skupine uveden riječima „{words}”"]
+        assert "ne piši „medijan skupine nedostaje”" in explain.feedback([], r["sadrzaj"], pack)
+    # a number right after "od" is the usual wording and stays allowed
+    assert verify.verify(start + ", uz medijan skupine od 1,7 % tekućih prihoda.", pack)["ok"]
+    surplus = {"ocjene": [3], "facts": [
+        {"label": "Ocjena", "value": "3 (umjereno stabilno)"},
+        {"label": "Pokazatelj: operativni saldo",
+         "value": "operativni manjak iznosi 15,7 % tekućih prihoda; medijan skupine: višak 13,3 % tekućih prihoda"},
+        {"label": "Najslabiji pokazatelj", "value": "operativni saldo"}]}
+    bad = ("Općina ima ocjenu 3. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 15,7 % "
+           "tekućih prihoda, uz medijan usporedne skupine od viška 13,3 % tekućih prihoda.")
+    r = verify.verify(bad, surplus)
+    assert r["sadrzaj"] == ["medijan skupine uveden riječima „od viška”"]
+    assert "dok je medijan skupine višak od 13,3 % tekućih prihoda" in explain.feedback([], r["sadrzaj"], surplus)
+
+
+def test_the_peer_median_keeps_its_sign_word():
+    """Grad Knin, 6.11.: '… nedostaje 18,4 % tekućih prihoda, uz medijan skupine od 9,2 % tekućih
+    prihoda', while the median is 'ostaje 9,2 %' (67 accepted texts). Every number is on the list
+    and the reader still takes the median for a shortfall. When the unit's word and the median's
+    word differ, the median's word has to stand with its number."""
+    pack = {"ocjene": [1], "naziv": {"nom": "Grad X"}, "year": 2025, "facts": [
+        {"label": "Ocjena financijske održivosti proračuna za 2025.",
+         "value": "1 (vrlo nestabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno)"},
+        {"label": "Bodovi", "value": "18,3 boda od 100; medijan skupine 78,8 boda"},
+        {"label": "Pokazatelj: slobodni saldo",
+         "value": "nakon otplate glavnice kredita nedostaje 18,4 % tekućih prihoda; medijan skupine: ostaje 9,2 % tekućih prihoda"},
+        {"label": "Najslabiji pokazatelj", "value": "slobodni saldo"}]}
+    start = ("Grad X ima ocjenu 1 (vrlo nestabilno) i 18,3 boda od 100, dok je medijan usporedne skupine 78,8 boda. "
+             "Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 18,4 % "
+             "tekućih prihoda")
+    for lost in (", uz medijan skupine od 9,2 % tekućih prihoda.", ", dok je medijan skupine 9,2 % tekućih prihoda."):
+        r = verify.verify(start + lost, pack)
+        assert not r["ok"] and r["nepoznate"] == [] and r["sadrzaj"] == ["medijan skupine bez riječi „ostaje”"]
+        advice = explain.feedback([], r["sadrzaj"], pack)
+        assert "(„ostaje”)" in advice and "„…, dok kod medijana skupine ostaje 9,2 % tekućih prihoda”" in advice
+    assert verify.verify(start + ", dok kod medijana skupine ostaje 9,2 % tekućih prihoda.", pack)["ok"]
+    assert verify.verify(explain.template(pack), pack)["ok"]
+    # the same word on both sides needs no repeating: the reader carries it over
+    same = {**pack, "facts": [{**f, "value": f["value"].replace("ostaje 9,2", "nedostaje 9,2")} for f in pack["facts"]]}
+    assert verify.verify(start + ", uz medijan skupine od 9,2 % tekućih prihoda.", same)["ok"]
+    # the context sentence has a median of its own, in brackets; the same number there is no claim about this one
+    ctx = {**pack, "facts": pack["facts"] + [{"label": "Kontekst: broj stanovnika", "kontekst": True,
+           "value": "od 2021. do 2025. smanjio se za 12,0 %, što je ispod medijana skupine (−9,2 %)"}]}
+    closing = (", dok kod medijana skupine ostaje 9,2 % tekućih prihoda. Kontekst koji ne ulazi u ocjenu: broj stanovnika "
+               "od 2021. do 2025. smanjio se za 12,0 %, što je ispod medijana skupine (−9,2 %).")
+    assert verify.verify(start + closing, ctx)["ok"]
+    # operativni saldo: "manjak" against "višak"
+    op = {"ocjene": [3], "facts": [
+        {"label": "Ocjena", "value": "3 (umjereno stabilno)"},
+        {"label": "Pokazatelj: operativni saldo",
+         "value": "operativni manjak iznosi 15,7 % tekućih prihoda; medijan skupine: višak 13,3 % tekućih prihoda"},
+        {"label": "Najslabiji pokazatelj", "value": "operativni saldo"}]}
+    begin = "Općina ima ocjenu 3. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 15,7 % tekućih prihoda"
+    r = verify.verify(begin + ", uz medijan skupine od 13,3 % tekućih prihoda.", op)
+    assert r["sadrzaj"] == ["medijan skupine bez riječi „višak”"]
+    assert "„…, dok je medijan skupine višak od 13,3 % tekućih prihoda”" in explain.feedback([], r["sadrzaj"], op)
+    for kept in (", dok je medijan skupine višak od 13,3 % tekućih prihoda.", ", dok je medijan skupine višak 13,3 % tekućih prihoda.",
+                 ", dok skupina u medijanu ima višak."):
+        assert verify.verify(begin + kept, op)["ok"]
+
+
 # --- context: population and income (facts.context_facts) ---------------------------------------
 
 FISCAL = [{"label": "Jedinica", "value": "Općina Bogdanovci (Vukovarsko-srijemska županija), 1.893 stanovnika (Popis 2021.)"},
@@ -255,3 +364,87 @@ def test_the_committed_texts_raise_no_context_issue():
              if t["izvor"] == "ai" and t["pack_sha256"] == explain.pack_sha256(packs[o])}
     assert len(texts) >= 500
     assert {o: i for o, t in texts.items() if (i := verify.context_issues(t, packs[o]))} == {}
+
+
+OPPOSITE = {"nedostaje": "ostaje", "ostaje": "nedostaje", "manjak": "višak", "višak": "manjak"}
+
+
+def reading_issues(text, pack):
+    """What matching numbers cannot see: the first grade and the first points are the unit's own for
+    this year, the grade carries its own word, the weakest indicator keeps its sign word, and every
+    part the pack has (weakest indicator, strengths, warnings, capped grade, context) is in the text,
+    while a part the pack lacks is not."""
+    import re
+    from pipeline import facts
+    f = {x["label"]: x["value"] for x in pack["facts"]}
+    out = []
+    grade = next(v for k, v in f.items() if k.startswith("Ocjena financijske")).split(" ")[0]
+    if verify.claimed_grades(text)[:1] != [grade]:
+        out.append("prva ocjena nije ovogodišnja")
+    for g, word in re.findall(r"ocjen\w*\s+([1-5])\s*\(([^)]+)\)", text):
+        if facts.GRADE_WORDS[int(g)] != word.strip():
+            out.append(f"ocjena {g} ({word})")
+    first_points = re.search(r"(\d+(?:,\d+)?)\s+bod", text)
+    if first_points and first_points.group(1) != f["Bodovi"].split(" bod")[0]:
+        out.append(f"bodovi {first_points.group(1)}")
+    weakest = f.get("Najslabiji pokazatelj")
+    own = f.get(f"Pokazatelj: {weakest}", "").partition(verify.MEDIAN_SEP)[0]
+    word = next((w for w in OPPOSITE if re.search(verify.SIGN_FORMS[w], own)), None)
+    number = next((tok for v, tok in verify.numbers(own) if v is not None), None)
+    before = re.search(r"([^.;]{0,60})" + re.escape(number) + r"\s*%", text) if word and number else None
+    lead = before.group(1) if before else ""
+    if word and re.search(verify.SIGN_FORMS[OPPOSITE[word]], lead) and not re.search(verify.SIGN_FORMS[word], lead):
+        out.append(f"vrijednost jedinice s riječju „{OPPOSITE[word]}”")
+    parts = {"najslabiji pokazatelj": (bool(weakest), bool(verify.WEAKEST.search(text))),
+             "jake strane": ("Jake strane" in f, bool(verify.STRENGTHS.search(text))),
+             "upozorenja": (f.get("Upozorenja", "nema upozorenja") != "nema upozorenja", "Upozorenj" in text),
+             "ograničenje ocjene": ("Pravilo" in f, bool(verify.CAPPED.search(text))),
+             "kontekst": (any(x.get("kontekst") and ": " in x["label"] for x in pack["facts"]),
+                          explain.CONTEXT_OPENING in text)}
+    return out + [f"{part}: {'izostavljeno' if in_pack else 'bez stavke'}"
+                  for part, (in_pack, in_text) in parts.items() if in_pack != in_text]
+
+
+def test_reading_issues_see_what_number_matching_cannot():
+    pack = {"naziv": {"nom": "Općina X"}, "year": 2025, "ocjene": [2, 5], "facts": [
+        {"label": "Ocjena financijske održivosti proračuna za 2025.",
+         "value": "2 (nestabilno) na ljestvici od 1 (vrlo nestabilno) do 5 (vrlo stabilno)"},
+        {"label": "Bodovi", "value": "39,9 boda od 100; medijan skupine 80,8 boda"},
+        {"label": "Ocjena za 2024.", "value": "5 (vrlo stabilno)"},
+        {"label": "Pokazatelj: slobodni saldo",
+         "value": "nakon otplate glavnice kredita nedostaje 4,2 % tekućih prihoda; medijan skupine: ostaje 10,8 % tekućih prihoda"},
+        {"label": "Najslabiji pokazatelj", "value": "slobodni saldo"},
+        {"label": "Jake strane", "value": "servis duga"},
+        {"label": "Upozorenja", "value": "novca na računu manje nego za mjesec dana rashoda poslovanja"}]}
+    good = ("Općina X za 2025. godinu ima ocjenu 2 (nestabilno) i 39,9 boda od 100, dok je medijan usporedne skupine "
+            "80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 4,2 % "
+            "tekućih prihoda, dok kod medijana skupine ostaje 10,8 % tekućih prihoda. Jake strane jedinice su: servis duga. "
+            "Upozorenje: novca na računu manje nego za mjesec dana rashoda poslovanja.")
+    assert verify.verify(good, pack)["ok"] and reading_issues(good, pack) == []
+    for change, issue in (
+            (("ocjenu 2 (nestabilno)", "ocjenu 5 (vrlo stabilno)"), "prva ocjena nije ovogodišnja"),
+            (("ocjenu 2 (nestabilno)", "ocjenu 2 (stabilno)"), "ocjena 2 (stabilno)"),
+            (("i 39,9 boda od 100, dok je medijan usporedne skupine 80,8 boda", "i 80,8 boda"), "bodovi 80,8"),
+            (("kredita nedostaje 4,2 %", "kredita ostaje 4,2 %"), "vrijednost jedinice s riječju „ostaje”"),
+            ((" Jake strane jedinice su: servis duga.", ""), "jake strane: izostavljeno"),
+            ((" Upozorenje: novca na računu manje nego za mjesec dana rashoda poslovanja.", ""), "upozorenja: izostavljeno"),
+            ((" Upozorenje:", " Ocjena je ograničena na najviše 2. Upozorenje:"), "ograničenje ocjene: bez stavke"),
+            (("poslovanja.", "poslovanja. " + explain.CONTEXT_OPENING + " ništa."), "kontekst: bez stavke")):
+        assert good.count(change[0]) == 1, change
+        assert reading_issues(good.replace(*change), pack) == [issue], change
+
+
+def test_the_committed_texts_leave_nothing_out_and_turn_nothing_round():
+    """reading_issues over every accepted AI text against its own pack (6.11., after 67 texts had lost
+    the sign word of the peer median, which verify.median_sign_issue now rejects)."""
+    import json
+    from pipeline import config
+    path = config.ROOT / "data" / "ai" / "objasnjenja-2025.json"
+    if not path.exists():
+        pytest.skip("no imported texts")
+    if not (config.BUILD / "results.parquet").exists():
+        pytest.skip("no build")
+    packs = {p["oib"]: p for p in explain.load_packs()[0]}
+    texts = {o: t["tekst"] for o, t in json.loads(path.read_text(encoding="utf-8"))["tekstovi"].items()
+             if t["izvor"] == "ai" and t["pack_sha256"] == explain.pack_sha256(packs[o])}
+    assert {packs[o]["naziv"]["nom"]: i for o, t in texts.items() if (i := reading_issues(t, packs[o]))} == {}

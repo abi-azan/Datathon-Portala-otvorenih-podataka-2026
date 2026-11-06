@@ -100,3 +100,23 @@ def test_real_packs_follow_the_profile_blocks(build):
         if p["naziv"]["nom"].endswith("županija"):
             assert b["skupina"] == "županije"
     assert len(packs) * 0.25 <= with_ctx <= len(packs) * 0.6, with_ctx
+
+
+def test_no_pack_names_a_strength_as_the_weakest_indicator(build):
+    """Grad Rovinj, 6.11.: 100 points of 100, and the text said 'Ocjenu najviše spušta pokazatelj
+    „operativni saldo”' and then 'Jake strane jedinice su: operativni saldo, …' (68 texts). A pack
+    names the weakest indicator only when it is not among the strengths; with all five indicators
+    strong there is none to name."""
+    units, res = build
+    packs = {p["naziv"]["nom"]: {f["label"]: f["value"] for f in p["facts"]}
+             for p in facts.build_all(units, res, config.LAST_YEAR, context={})}
+    without = 0
+    for name, f in packs.items():
+        weakest, strong = f.get("Najslabiji pokazatelj"), f.get("Jake strane", "").split(", ")
+        assert weakest not in strong, name
+        without += weakest is None
+        if weakest is None:
+            assert f.get("Jake strane"), name          # left out only because it is a strength
+    assert "Najslabiji pokazatelj" not in packs["Grad Rovinj - Rovigno"]
+    assert packs["Općina Povljana"]["Najslabiji pokazatelj"] == "dospjele obveze"
+    assert 0 < without < len(packs) / 4               # 68 of 576 on the data of 6.11.

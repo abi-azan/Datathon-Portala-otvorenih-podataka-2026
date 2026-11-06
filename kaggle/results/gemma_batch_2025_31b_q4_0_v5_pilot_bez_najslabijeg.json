@@ -1,0 +1,454 @@
+{
+ "partial": false,
+ "meta": {
+  "llama_cpp_commit": "2cbca389f515df455412dafa07e2b1359cc72a6d",
+  "gpu": "Tesla T4\nTesla T4",
+  "max_retries": 2,
+  "hf_models": [],
+  "vrsta": "batch",
+  "godina": 2025,
+  "prompt_sha256": "0f58640aecb8f70bb34a1f1c594aba0abc70cf98e4ead6c1a00278476edd0433",
+  "verify_sha256": "4884d111f319212ed50299f24ab1e1089b559db47ee7e04692cc1c05874e36d6",
+  "model_izvor": "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2",
+  "biljeznica": "albertmari/fiskalna-karta-jls-gemma-batch",
+  "paketa": 8,
+  "paketi": {
+   "47763874566": "f21573f5dbbf9818425c92dd8c92bfdedeb2ff6451c5b581146803f394df1c28",
+   "71070402969": "1c8c14a474e516708a491809de821a9ebaa48f5b59b8aec89eba1a50b6556b10",
+   "15877210917": "8327e8990b3c11964cff5bdf19d263632df52a9f0914309f52f998451842e00c",
+   "07440607982": "4d157ca9ca16708d123110cffd9f8da7235b78a66ce045b33cea266bce0a9aeb",
+   "48744373701": "01c0661000e10884155b671e48b6fe0c81b7d4be43892ede69a68db4ef9af5e3",
+   "56204655363": "1306a33a4cc392b7b6c62c147acdda44e540320876d3a9c6ed8f1fc27dc87585",
+   "05744763826": "579b49ddc26b80dc82161df0d40d1aa8ae5846f43ee0433e36516ba3e1f17129",
+   "25677819890": "98108b1b23adf636b69d8e2f3e164226df02323b9e2c46fcd3c6aedb3a1f38d9"
+  },
+  "hf_download_seconds": 0,
+  "seconds_total": 440
+ },
+ "models": {
+  "gemma-4-31B_q4_0-it.gguf": {
+   "load_seconds": 142,
+   "results": [
+    {
+     "oib": "47763874566",
+     "naziv": "Općina Kravarsko",
+     "text": "Općina Kravarsko za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 58,3 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 29,4 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: neto dohodak po stanovniku: u 2025. iznosio je 8.751 €, što je iznad medijana skupine (7.227 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Kravarsko za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 58,3 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 29,4 % tekućih prihoda, uz medijan skupine od viška 13,3 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 8.751 €, što je iznad medijana skupine (7.227 €).",
+       "check": {
+        "ok": false,
+        "n_brojki": 10,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine uveden riječima „od viška”"
+        ]
+       },
+       "seconds": 20.2,
+       "usage": {
+        "completion_tokens": 188,
+        "prompt_tokens": 1379,
+        "total_tokens": 1567,
+        "prompt_tokens_details": {
+         "cached_tokens": 0
+        }
+       }
+      },
+      {
+       "text": "Općina Kravarsko za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 58,3 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 29,4 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: neto dohodak po stanovniku: u 2025. iznosio je 8.751 €, što je iznad medijana skupine (7.227 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 10,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 18.4,
+       "usage": {
+        "completion_tokens": 189,
+        "prompt_tokens": 1710,
+        "total_tokens": 1899,
+        "prompt_tokens_details": {
+         "cached_tokens": 1375
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "71070402969",
+     "naziv": "Grad Novi Marof",
+     "text": "Grad Novi Marof ima ocjenu 5 (vrlo stabilno) i 99,8 boda od 100, dok je medijan skupine 82,7 boda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 5,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Novi Marof ima ocjenu 5 (vrlo stabilno) i 99,8 boda od 100, dok je medijan skupine 82,7 boda. Ocjenu najviše spušta pokazatelj „dospjele obveze”: dospjele neplaćene obveze na kraju godine iznose 3.744 €, što je 0,1 % rashoda poslovanja, uz medijan skupine od 0,6 % rashoda poslovanja. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": false,
+        "n_brojki": 8,
+        "nepoznate": [],
+        "sadrzaj": [
+         "najslabiji pokazatelj „dospjele obveze”"
+        ]
+       },
+       "seconds": 25.0,
+       "usage": {
+        "completion_tokens": 194,
+        "prompt_tokens": 1360,
+        "total_tokens": 1554,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Grad Novi Marof ima ocjenu 5 (vrlo stabilno) i 99,8 boda od 100, dok je medijan skupine 82,7 boda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 5,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 13.3,
+       "usage": {
+        "completion_tokens": 121,
+        "prompt_tokens": 1698,
+        "total_tokens": 1819,
+        "prompt_tokens_details": {
+         "cached_tokens": 1356
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "15877210917",
+     "naziv": "Varaždinska županija",
+     "text": "Varaždinska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 59,5 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 11,3 % tekućih prihoda, dok je medijan skupine manjak od 1,0 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze. Upozorenje: rashodi poslovanja veći od tekućih prihoda dvije godine zaredom.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Varaždinska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 59,5 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 11,3 % tekućih prihoda, uz medijan skupine od manjka 1,0 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze. Upozorenje: rashodi poslovanja veći od tekućih prihoda dvije godine zaredom.",
+       "check": {
+        "ok": false,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine uveden riječima „od manjka”"
+        ]
+       },
+       "seconds": 22.7,
+       "usage": {
+        "completion_tokens": 160,
+        "prompt_tokens": 1308,
+        "total_tokens": 1468,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Varaždinska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 59,5 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 11,3 % tekućih prihoda, dok je medijan skupine manjak od 1,0 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze. Upozorenje: rashodi poslovanja veći od tekućih prihoda dvije godine zaredom.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 16.5,
+       "usage": {
+        "completion_tokens": 161,
+        "prompt_tokens": 1610,
+        "total_tokens": 1771,
+        "prompt_tokens_details": {
+         "cached_tokens": 1304
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "07440607982",
+     "naziv": "Općina Hlebine",
+     "text": "Općina Hlebine za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 99,6 boda od 100, dok je medijan usporedne skupine 80,8 boda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 5,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Hlebine za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 99,6 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „servis duga”: otplata kredita i kamata iznosi 0,8 % zakonske osnovice, uz medijan skupine od 2,4 % zakonske osnovice. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze.",
+       "check": {
+        "ok": false,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": [
+         "najslabiji pokazatelj „servis duga”"
+        ]
+       },
+       "seconds": 20.8,
+       "usage": {
+        "completion_tokens": 142,
+        "prompt_tokens": 1317,
+        "total_tokens": 1459,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Općina Hlebine za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 99,6 boda od 100, dok je medijan usporedne skupine 80,8 boda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 5,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 10.3,
+       "usage": {
+        "completion_tokens": 89,
+        "prompt_tokens": 1600,
+        "total_tokens": 1689,
+        "prompt_tokens_details": {
+         "cached_tokens": 1313
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "48744373701",
+     "naziv": "Požeško-slavonska županija",
+     "text": "Požeško-slavonska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 58,8 boda od 100, dok je medijan usporedne skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 6,9 % tekućih prihoda, dok je medijan skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Požeško-slavonska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 58,8 boda od 100, dok je medijan usporedne skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 6,9 % tekućih prihoda, uz medijan skupine od nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: 64.084 stanovnika (Popis 2021.).",
+       "check": {
+        "ok": false,
+        "n_brojki": 9,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine uveden riječima „od nedostaje”",
+         "kontekst bez stavke u činjenicama"
+        ]
+       },
+       "seconds": 23.2,
+       "usage": {
+        "completion_tokens": 167,
+        "prompt_tokens": 1317,
+        "total_tokens": 1484,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Požeško-slavonska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 58,8 boda od 100, dok je medijan usporedne skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 6,9 % tekućih prihoda, dok je medijan skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 14.6,
+       "usage": {
+        "completion_tokens": 138,
+        "prompt_tokens": 1676,
+        "total_tokens": 1814,
+        "prompt_tokens_details": {
+         "cached_tokens": 1313
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "56204655363",
+     "naziv": "Zadarska županija",
+     "text": "Zadarska županija za 2025. godinu ima ocjenu 4 (stabilno) i 70,6 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 0,4 % tekućih prihoda, dok je medijan skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Zadarska županija za 2025. godinu ima ocjenu 4 (stabilno) i 70,6 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 0,4 % tekućih prihoda, uz medijan skupine od nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze.",
+       "check": {
+        "ok": false,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine uveden riječima „od nedostaje”"
+        ]
+       },
+       "seconds": 19.9,
+       "usage": {
+        "completion_tokens": 132,
+        "prompt_tokens": 1283,
+        "total_tokens": 1415,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Zadarska županija za 2025. godinu ima ocjenu 4 (stabilno) i 70,6 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 0,4 % tekućih prihoda, dok je medijan skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 13.9,
+       "usage": {
+        "completion_tokens": 132,
+        "prompt_tokens": 1557,
+        "total_tokens": 1689,
+        "prompt_tokens_details": {
+         "cached_tokens": 1279
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "05744763826",
+     "naziv": "Općina Donja Motičina",
+     "text": "Općina Donja Motičina za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 5,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Donja Motičina za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „servis duga”: otplata kredita i kamata iznosi 0,0 % zakonske osnovice, uz medijan skupine od 2,4 % zakonske osnovice. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze.",
+       "check": {
+        "ok": false,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": [
+         "najslabiji pokazatelj „servis duga”"
+        ]
+       },
+       "seconds": 21.3,
+       "usage": {
+        "completion_tokens": 144,
+        "prompt_tokens": 1317,
+        "total_tokens": 1461,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Općina Donja Motičina za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: 1.334 stanovnika (Popis 2021.).",
+       "check": {
+        "ok": false,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": [
+         "kontekst bez stavke u činjenicama"
+        ]
+       },
+       "seconds": 13.0,
+       "usage": {
+        "completion_tokens": 119,
+        "prompt_tokens": 1602,
+        "total_tokens": 1721,
+        "prompt_tokens_details": {
+         "cached_tokens": 1313
+        }
+       }
+      },
+      {
+       "text": "Općina Donja Motičina za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 5,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 11.2,
+       "usage": {
+        "completion_tokens": 91,
+        "prompt_tokens": 1836,
+        "total_tokens": 1927,
+        "prompt_tokens_details": {
+         "cached_tokens": 1598
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "25677819890",
+     "naziv": "Grad Rovinj - Rovigno",
+     "text": "Grad Rovinj - Rovigno ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100, dok je medijan usporedne skupine 82,7 boda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 9,0 %, što je iznad medijana skupine (+0,8 %), a neto dohodak po stanovniku u 2025. iznosio je 13.846 €, što je iznad medijana skupine (9.035 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 11,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Rovinj - Rovigno ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100, dok je medijan usporedne skupine 82,7 boda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. povećao se za 9,0 %, što je iznad medijana skupine (+0,8 %), a neto dohodak po stanovniku u 2025. iznosio je 13.846 €, što je iznad medijana skupine (9.035 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 11,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 26.4,
+       "usage": {
+        "completion_tokens": 176,
+        "prompt_tokens": 1426,
+        "total_tokens": 1602,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "gpu_memory": "9523 MiB, 15360 MiB\n9969 MiB, 15360 MiB\n",
+   "seconds": 436
+  }
+ }
+}

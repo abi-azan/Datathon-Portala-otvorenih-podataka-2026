@@ -20,7 +20,7 @@
 - [x] Nova snimka naslovnice za README (6.11., stranica uživo, 1440×900, nove boje ocjena). Ako se naslovnica još mijenja, snimiti ponovno 8.11.
 - [x] AI tekstovi: ponovno generiranje 5.11. navečer, nakon UI sesije (Gemma 4 31B, `kaggle/results/gemma_batch_2025_31b_q4_0_v2.json`): **561 od 576** prolazi provjeru (550 iz prvog pokušaja), ostalih 15 ide na predložak. 253 teksta imaju rečenicu konteksta (stanovništvo, dohodak).
 - [x] Tih 15 ponovno generirano 6.11. s konkretnijom porukom nakon odbijanja (`--kaggle-batch --neprovjereni`, `kaggle/results/gemma_batch_2025_31b_q4_0_v3_neprovjereni.json`): **576 od 576** prolazi provjeru (`26796a3`).
-- [ ] Opcionalno, sitnica u AI tekstovima: **44 teksta** prepisuju medijan skupine doslovno, pa ispadne nespretno, npr. "uz medijan skupine od nedostaje 1,7 % tekućih prihoda" (Požeško-slavonska županija) ili "uz medijan skupine od viška 13,3 % tekućih prihoda" (Novi Golubovec). Nije netočno. Popravak traži promjenu paketa ili prompta, a time novi batch za svih 576 (oko 4 h na Kaggleu); ne isplati se prije predaje.
+- [x] (riješeno 6.11. navečer, vidi dolje) Sitnica u AI tekstovima: **44 teksta** prepisuju medijan skupine doslovno, pa ispadne nespretno, npr. "uz medijan skupine od nedostaje 1,7 % tekućih prihoda" (Požeško-slavonska županija) ili "uz medijan skupine od viška 13,3 % tekućih prihoda" (Novi Golubovec). Nije netočno. Popravak traži promjenu paketa ili prompta, a time novi batch za svih 576 (oko 4 h na Kaggleu); ne isplati se prije predaje.
 
 # UI sesija 5.11. popodne (lokalno, necommitano)
 
@@ -78,6 +78,26 @@ Procjena prije ovoga: oko 45 od 50 mogućih bez videa (API 4 od 5, dojam 8,5 od 
 - [ ] Zakonski tekst u simulatoru iza "Kako se računa".
 
 - [ ] Prediktori gospodarskog razvoja: istraživanje u noćnoj smjeni 5.11. (`docs/research/13`), odluka RAZVITI ili ODBACITI u četvrtak.
+
+# Sesija 6.11. navečer: bodovi žirija (grana `noc-6-11`, `main` nije diran)
+
+Žiri ocjenjuje samo predano: kod, dokumentaciju, demo i video. Zato je večer otišla na ono što žiri čita i otvara.
+
+- [x] **Karta bez WebGL-a.** MapLibre GL 6 traži WebGL 2 i bez njega baca grešku, pa je cijela stranica ostajala prazna. Sada se karta crta kao SVG iz istog TopoJSON-a (naslovnica, simulator, Karta reforme), a granica greške hvata i kasnije padove. Provjera na bilo kojem računalu: `?webgl=0` ispred `#` u adresi.
+- [x] **Pregled svega što žiri može otvoriti:** 576 pregleda jedinica, po dvije skupine simulatora za svaku županiju i svih devet stanja Karte reforme, bez ijedne greške, i prije i nakon promjene činjenica; 73 poveznice u dokumentaciji rade.
+- [x] **AI tekstovi pročitani uz činjenice.** Brojke su bile točne u svih 576, ali 164 teksta nisu bila dobra: 68 je kao najslabiji navodilo pokazatelj koji je ujedno jaka strana (Rovinj, 100 bodova), 67 je izgubilo riječ „ostaje” uz medijan dok jedinici „nedostaje” (Knin), 29 je imalo rečenicu „uz medijan skupine od nedostaje…”. Tri nova pravila u provjeri, određena poruka modelu, prompt isti. Piloti po 8 jedinica: v5 je dao 6 dobrih tekstova od 8, v6 je pao zbog greške u poruci modelu (ispravljeno, uz test koji je sada hvata), v7 je dao 8 od 8. Batch v8 (150 jedinica, 101 min) dao je 150 od 150: 10 iz prvog pokušaja, 138 iz drugog, 2 iz trećeg. **Svih 576 tekstova je AI i prolazi provjeru.**
+- [x] **Dokumentacija za žiri:** `docs/DOKUMENTACIJA.pdf`, 10 stranica po devet kriterija, s prilogom svih 34 skupa. Shema `docs/arhitektura.svg`, tablica povezivanja s postojećim javnim sustavima, točnija rečenica o API-ju (svaki izvor koji ima upotrebljiv API čita se preko njega).
+- [x] **Video:** scenarij v4 s natpisom za svaki od 7 elemenata iz pravila, 327 riječi, sve brojke ponovno pročitane iz API-ja; slike naslov, izvori i kraj; titlovi (`docs/video/`).
+- [x] Pristupačnost ponovno provjerena (axe, WCAG 2 A i AA): bez prekršaja na pet glavnih stranica i na prikazu bez WebGL-a.
+- [x] `docs/` pospremljen: radni dnevnici u `docs/dnevnik/`.
+- [ ] **Tim, prvo:** pregledati granu `noc-6-11` i spojiti je u `main`. Dok se ne spoji, stranica uživo na pregledniku bez WebGL-a 2 ostaje prazna.
+- [ ] **Tim:** u `docs/DOKUMENTACIJA.md` upisati naziv tima, članove, mentora i poveznicu na video, pa ponovno ispisati PDF (upute u `pipeline/dokumentacija.py` i `CLAUDE.md`).
+- [ ] **Tim:** poslati poruku iz `docs/PREDAJA.md`, odjeljak 6, na 3 do 5 adresa i jednu rečenicu korisnika staviti u dokumentaciju i video.
+- [ ] **Tim:** snimiti glas i video po scenariju v4.
+- [x] Preglednici: Firefox 157 i WebKit 27 (Playwrightove verzije, jezgra Safarija) otvaraju naslovnicu, prikaz bez WebGL-a, pregled Povljane, simulator, Kartu reforme i metodologiju bez greške u konzoli i bez vodoravnog pomicanja. Pravi Safari na Macu vrijedi još jednom pogledati.
+- [ ] **Tim:** opis repozitorija na GitHubu (About: adresa stranice, kratki opis, teme `open-data`, `croatia`, `public-finance`).
+- [ ] Pročitati i potvrditi dvije rečenice koje govore u ime tima: redak "Claude Code" u README-u (Korišteni AI alati) i `docs/dnevnik/README.md`.
+- Nije napravljeno, namjerno: četvrti prikaz karte "Otvoreni podaci" (tko objavljuje na Portalu). Tražio bi novo polje u API-ju i izmjene na naslovnici, dvjema kartama i tablici dan prije zamrzavanja; podatak je već na pregledu jedinice i na stranici "Metodologija i podaci".
 
 # Kasnije, ako ostane vremena
 

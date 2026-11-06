@@ -127,7 +127,7 @@ Najviše bi pomoglo da Ministarstvo financija ove izvještaje objavljuje na Port
 
 - Prototip radi za svih 576 jedinica i sedam godina i javno je dostupan.
 - Svaka izmjena u glavnoj grani pokreće cijelu obradu, testove i objavu.
-- 281 automatski test. Jedan od njih iz objavljenih ulaznih redaka ponovno računa svih pet pokazatelja za svih 576 jedinica. Drugi svaku objavljenu datoteku provjerava prema shemi iz `openapi.json`.
+- 283 automatska testa. Jedan od njih iz objavljenih ulaznih redaka ponovno računa svih pet pokazatelja za svih 576 jedinica. Drugi svaku objavljenu datoteku provjerava prema shemi iz `openapi.json`.
 - Zbroj prihoda i rashoda svih jedinica slaže se s državnim zbrojem Ministarstva financija do 1 € za svaku godinu.
 - Prije predaje svaka od 576 stranica jedinica otvorena je u pregledniku, kao i po dvije skupine simulatora za svaku županiju i sva tri praga Karte reforme, bez ijedne greške.
 - Pristupačnost: provjera alatom axe (WCAG 2, razine A i AA) ne nalazi prekršaje na pet glavnih stranica.

@@ -117,7 +117,7 @@ Naracija ima 327 riječi. Uz oko 130 riječi u minuti govor traje 2:31, pa ostaj
 | Izvedivost | sve se snima na javnoj stranici, bez montiranih prikaza |
 | Dojam | karta s pretapanjem godina, pregled jedinice, simulator |
 
-## Brojke u naraciji (obrada od 6.11.2026. u 17:02 UTC)
+## Brojke u naraciji (obrada od 6.11.2026.)
 
 | Rečenica | Vrijednost u API-ju | Datoteka |
 |---|---|---|

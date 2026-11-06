@@ -10,6 +10,8 @@ Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datat
 
 **Stranica:** https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/
 
+**Tehnička i projektna dokumentacija:** [docs/DOKUMENTACIJA.pdf](docs/DOKUMENTACIJA.pdf) (10 stranica, poredano po kriterijima ocjenjivanja; isti tekst je u [docs/DOKUMENTACIJA.md](docs/DOKUMENTACIJA.md)). Popis svih skupova podataka: [docs/skupovi-podataka.md](docs/skupovi-podataka.md).
+
 ![Naslovnica Fiskalne karte: karta Hrvatske s 556 općina i gradova obojenih od zelene (vrlo stabilno) preko žute do crvene (vrlo nestabilno) za 2025., s legendom, pretragom i izborom godine](docs/snimke/naslovnica.png)
 
 ## Što radi
@@ -43,7 +45,13 @@ Model ne računa i ne bira što je važno. To radi naš kod, a model samo piše 
    - Batch od 5.11. obradio je svih 576 jedinica za oko 4 h.
    - Iz prvog pokušaja prošlo je 550 tekstova, nakon ponavljanja 561.
    - Preostalih 15 ponovno je generirano 6.11. s određenijom porukom o grešci i svi su prošli.
-   - Isti dan dodana je provjera vrijednosti najslabijeg pokazatelja. Dva teksta koja je nisu navodila (Grad Zagreb i Općina Blato) ponovno su generirana. AI tekst sada ima svih 576 jedinica.
+   - Isti dan dodana je provjera vrijednosti najslabijeg pokazatelja. Dva teksta koja je nisu navodila (Grad Zagreb i Općina Blato) ponovno su generirana.
+   - 6.11. navečer svih 576 tekstova pročitano je uz njihove činjenice. Brojke su bile točne u svima, ali 164 teksta nisu bila dobra:
+     - 68 jedinica imalo je kao najslabiji naveden pokazatelj koji je ujedno jaka strana (Grad Rovinj: 100 bodova od 100 i rečenica „Ocjenu najviše spušta…”);
+     - u 67 tekstova uz brojku medijana nije bilo riječi „ostaje”, iako jedinici „nedostaje” (Grad Knin: „nedostaje 18,4 %, uz medijan skupine od 9,2 %”, a medijanu ostaje 9,2 %);
+     - 29 tekstova imalo je rečenicu koja nije hrvatska („uz medijan skupine od nedostaje 1,7 %”).
+
+     Za sve tri vrste dodano je pravilo u provjeri i određena poruka modelu, a prompt je ostao isti. Ti su tekstovi ponovno generirani u tri pokretanja (`kaggle/results/`, v5, v7 i v8; u zadnjem je 10 od 150 tekstova prošlo iz prvog pokušaja, 138 iz drugog i 2 iz trećeg). AI tekst sada ima svih 576 jedinica i svaki prolazi provjeru. Test `tests/test_verify.py` čita svaki prihvaćeni tekst uz njegove činjenice i traži ono što provjera brojki ne vidi (prva ocjena i bodovi, riječ uz ocjenu, predznak, izostavljen ili izmišljen dio).
 5. **Objava.** Tekstovi se commitaju (`data/ai/objasnjenja-2025.json`) zajedno sa sha256 paketa iz kojeg su nastali. CI ne poziva model. Pri objavi ponovno provjeri svaki tekst i prikaže ga samo ako se paket nije promijenio; inače prikazuje predložak.
 6. **U sučelju** tekst nosi oznaku poput „AI tekst · Gemma 4 31B · 15/15 brojki provjereno” (Povljana), a svaka brojka pokazuje činjenicu iz koje dolazi.
 
