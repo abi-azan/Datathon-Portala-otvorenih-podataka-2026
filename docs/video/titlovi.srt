@@ -1,0 +1,191 @@
+1
+00:00:00,500 --> 00:00:03,623
+Hrvatska ima 576 općina,
+gradova i županija.
+
+2
+00:00:03,703 --> 00:00:07,991
+Više od dvjesto općina ima manje
+od dvije tisuće stanovnika.
+
+3
+00:00:08,071 --> 00:00:12,723
+Njihovi godišnji izvještaji završe
+u tablicama s tisućama redaka.
+
+4
+00:00:12,803 --> 00:00:15,562
+Je li vaša općina financijski stabilna?
+
+5
+00:00:15,642 --> 00:00:19,420
+Odgovor postoji, samo ga
+nitko nije izračunao za sve.
+
+6
+00:00:20,500 --> 00:00:24,997
+Fiskalna karta je za građane,
+novinare, vijećnike i ministarstvo.
+
+7
+00:00:25,077 --> 00:00:28,166
+Svaka jedinica dobiva
+ocjenu od jedan do pet,
+
+8
+00:00:28,246 --> 00:00:31,617
+iz službenih podataka i
+uz usporedbu sa sličnima.
+
+9
+00:00:31,697 --> 00:00:35,420
+Mjeri održivost proračuna,
+a ne kvalitetu upravljanja.
+
+10
+00:00:36,500 --> 00:00:38,509
+Ana živi u Povljani na Pagu.
+
+11
+00:00:38,589 --> 00:00:42,388
+Otvori pregled svoje općine:
+ocjena dva, nestabilno.
+
+12
+00:00:42,468 --> 00:00:46,864
+Lani je bila pet. Ocjenu spuštaju
+dospjele neplaćene obveze:
+
+13
+00:00:46,944 --> 00:00:51,936
+milijun i četrdeset šest tisuća
+eura, gotovo pola godišnjih rashoda.
+
+14
+00:00:52,016 --> 00:00:54,920
+Kod sličnih općina medijan je dva posto.
+
+15
+00:00:56,000 --> 00:01:01,470
+Kratko objašnjenje piše otvoreni jezični
+model, ali brojke ne smišlja on.
+
+16
+00:01:01,550 --> 00:01:04,283
+Program ih izračuna i provjeri svaku.
+
+17
+00:01:04,363 --> 00:01:08,920
+Klik na broj vodi do retka u
+datoteci Ministarstva financija.
+
+18
+00:01:17,500 --> 00:01:20,715
+O spajanju općina
+raspravlja se bez brojki.
+
+19
+00:01:20,795 --> 00:01:25,772
+Ovdje se može probati. Povljana i
+Pag zajedno dobivaju ocjenu pet.
+
+20
+00:01:25,852 --> 00:01:30,523
+Ali dug ne nestaje: milijun i
+sto šezdeset tisuća eura ostaje,
+
+21
+00:01:30,603 --> 00:01:32,669
+sada petnaest posto rashoda.
+
+22
+00:01:32,749 --> 00:01:37,420
+Ušteda od veličine je mala, do
+osamnaest tisuća eura godišnje.
+
+23
+00:01:38,500 --> 00:01:41,732
+Karta reforme spaja
+najmanje jedinice unutar
+
+24
+00:01:41,812 --> 00:01:45,194
+županije dok ne dosegnu
+pet tisuća stanovnika.
+
+25
+00:01:45,274 --> 00:01:47,829
+Od 555 općina i gradova ostaje 239.
+
+26
+00:01:47,909 --> 00:01:52,345
+Ušteda na upravi je do trideset
+šest milijuna eura godišnje,
+
+27
+00:01:52,425 --> 00:01:55,732
+a državni poticaj sto
+šezdeset osam milijuna.
+
+28
+00:01:55,812 --> 00:01:59,420
+To je scenarij za raspravu,
+ne prijedlog granica.
+
+29
+00:02:01,500 --> 00:02:05,110
+Povezali smo podatke sedam
+tijela javnog sektora.
+
+30
+00:02:05,190 --> 00:02:08,424
+Svaki izvor koji ima
+API čitamo preko njega,
+
+31
+00:02:08,504 --> 00:02:11,361
+a stranica ta tri servisa pita i uživo.
+
+32
+00:02:11,441 --> 00:02:15,654
+Izvještaji Ministarstva financija
+postoje samo kao Excel,
+
+33
+00:02:15,734 --> 00:02:19,420
+pa svako preuzimanje
+bilježimo s otiskom datoteke.
+
+34
+00:02:20,500 --> 00:02:25,220
+Sve se izračuna u GitHub Actionsu
+i objavi kao otvoreni API,
+
+35
+00:02:25,300 --> 00:02:28,180
+s OpenAPI opisom i katalogom DCAT-AP.
+
+36
+00:02:28,260 --> 00:02:34,420
+Poslužitelja i baze nema. Iste brojke AI
+asistenti dobivaju preko MCP servera.
+
+37
+00:02:40,500 --> 00:02:43,747
+Građanin u minuti razumije
+stanje svoje općine,
+
+38
+00:02:43,827 --> 00:02:47,358
+a ministarstvo dobiva brojke
+za raspravu o reformi.
+
+39
+00:02:47,438 --> 00:02:52,739
+Sljedeći korak: Ministarstvo financija
+objavljuje ove izvještaje na Portalu,
+
+40
+00:02:52,819 --> 00:02:56,420
+a karta se osvježava sama.
+Kod i podaci su otvoreni.

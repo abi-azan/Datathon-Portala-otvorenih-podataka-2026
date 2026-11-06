@@ -91,7 +91,7 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
 - `pipeline/build.py` orchestrates the steps above and writes `data/build/units.csv`, `results.parquet`, `results.json` and `geo/`.
 
 Source documents:
-- Rules: `1792415200857_praviladatathonfinal.pdf` (in repo)
+- Rules: `docs/pravila-datathona.pdf` (in repo)
 - Javni poziv (deadlines, challenge description, scoring): https://data.gov.hr/uploads/images/2026-10-23/1792757323727_javnipozivdatathonportalaotvorenihpodatakasaizmjenomrokaprijave.pdf
 - Competition page: https://data.gov.hr/-datathon_portala_otvorenih_podataka2026
 

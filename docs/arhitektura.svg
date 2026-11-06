@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-labelledby="t d">
+  <title id="t">Arhitektura Fiskalne karte</title>
+  <desc id="d">Izvori javnog sektora (Ministarstvo financija, DZS preko WFS i PxWeb servisa, Portal otvorenih podataka preko CKAN API-ja, Državni ured za reviziju) ulaze u obradu u GitHub Actionsu. Obrada preuzima podatke sa zapisom, računa pokazatelje i ocjene i pokreće testove. Tekstove piše Gemma 4 na Kaggle GPU-u, uz provjeru svake brojke. Rezultat je statični otvoreni API na GitHub Pagesu, iz kojeg čitaju web aplikacija, MCP server i druge aplikacije. Web aplikacija tri API-ja pita i uživo iz preglednika.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#3a3936"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#087664"/>
+    </marker>
+    <style>
+      .bg { fill: #faf9f6 }
+      .card { fill: #ffffff; stroke: #dedcd5; stroke-width: 1.5 }
+      .band { fill: #f1efe9; stroke: #dedcd5; stroke-width: 1.5 }
+      .h { font: 600 40px 'Source Serif 4', Georgia, 'Times New Roman', serif; fill: #0b0b0b }
+      .sub { font: 400 21px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #55544f }
+      .eyebrow { font: 600 15px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #6b6a66; letter-spacing: 1.8px }
+      .name { font: 600 21px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #0b0b0b }
+      .txt { font: 400 17px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #3a3936 }
+      .small { font: 400 15px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #55544f }
+      .api { fill: #e1f0ea }
+      .apit { font: 600 14px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #087664; letter-spacing: 0.4px }
+      .file { fill: #efede7 }
+      .filet { font: 600 14px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #55544f; letter-spacing: 0.4px }
+      .step { font: 600 17px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #087664 }
+      .line { stroke: #3a3936; stroke-width: 2.2; fill: none }
+      .live { stroke: #087664; stroke-width: 2.2; fill: none; stroke-dasharray: 7 6 }
+      .livet { font: 600 16px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #087664 }
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="900"/>
+
+  <text class="h" x="40" y="62">Arhitektura</text>
+  <text class="sub" x="40" y="96">Od javnih izvora do otvorenog API-ja. Bez poslužitelja i baze: sve se izračuna unaprijed i objavi kao datoteke.</text>
+
+  <!-- 1 izvori -->
+  <text class="eyebrow" x="40" y="148">IZVORI JAVNOG SEKTORA</text>
+  <g>
+    <rect class="card" x="40" y="164" width="440" height="96" rx="14"/>
+    <text class="name" x="60" y="198">Ministarstvo financija</text>
+    <text class="txt" x="60" y="226">PR-RAS, Bilanca, fiskalno izravnanje</text>
+    <text class="small" x="60" y="248">2019.–2025., svih 576 jedinica</text>
+    <rect class="file" x="372" y="178" width="92" height="26" rx="13"/><text class="filet" x="418" y="196" text-anchor="middle">DATOTEKE</text>
+  </g>
+  <g>
+    <rect class="card" x="40" y="274" width="440" height="96" rx="14"/>
+    <text class="name" x="60" y="308">DZS · INSPIRE WFS</text>
+    <text class="txt" x="60" y="336">Popis 2021., granice općina i gradova</text>
+    <text class="small" x="60" y="358">servis NIPP-a, OGC WFS</text>
+    <rect class="api" x="410" y="288" width="54" height="26" rx="13"/><text class="apit" x="437" y="306" text-anchor="middle">API</text>
+  </g>
+  <g>
+    <rect class="card" x="40" y="384" width="440" height="96" rx="14"/>
+    <text class="name" x="60" y="418">DZS · PxWeb</text>
+    <text class="txt" x="60" y="446">stanovništvo, migracije, turizam, dozvole</text>
+    <text class="small" x="60" y="468">šest tablica, json-stat</text>
+    <rect class="api" x="410" y="398" width="54" height="26" rx="13"/><text class="apit" x="437" y="416" text-anchor="middle">API</text>
+  </g>
+  <g>
+    <rect class="card" x="40" y="494" width="440" height="96" rx="14"/>
+    <text class="name" x="60" y="528">Portal otvorenih podataka · CKAN</text>
+    <text class="txt" x="60" y="556">katalog skupova, tablice Porezne uprave</text>
+    <text class="small" x="60" y="578">package_search, package_show</text>
+    <rect class="api" x="410" y="508" width="54" height="26" rx="13"/><text class="apit" x="437" y="526" text-anchor="middle">API</text>
+  </g>
+  <g>
+    <rect class="card" x="40" y="604" width="440" height="96" rx="14"/>
+    <text class="name" x="60" y="638">Državni ured za reviziju</text>
+    <text class="txt" x="60" y="666">mišljenja financijskih revizija</text>
+    <text class="small" x="60" y="688">izvješća objavljena 2019.–2026.</text>
+    <rect class="file" x="410" y="618" width="54" height="26" rx="13"/><text class="filet" x="437" y="636" text-anchor="middle">PDF</text>
+  </g>
+
+  <!-- 2 obrada -->
+  <text class="eyebrow" x="590" y="148">OBRADA · GITHUB ACTIONS</text>
+  <rect class="band" x="590" y="164" width="430" height="342" rx="14"/>
+  <text class="name" x="612" y="200">ETL u Pythonu</text>
+  <text class="step" x="612" y="242">1</text>
+  <text class="txt" x="636" y="242">Preuzimanje sa zapisom:</text>
+  <text class="small" x="636" y="265">adresa, vrijeme, ETag i sha256 svake datoteke</text>
+  <text class="step" x="612" y="308">2</text>
+  <text class="txt" x="636" y="308">Spajanje po OIB-u, RKP-u i šifri jedinice</text>
+  <text class="small" x="636" y="331">pet pokazatelja, bodovi 0–100, ocjena 1–5</text>
+  <text class="step" x="612" y="374">3</text>
+  <text class="txt" x="636" y="374">Simulator spajanja i Karta reforme</text>
+  <text class="small" x="636" y="397">13.353 skupine izračunate unaprijed</text>
+  <text class="step" x="612" y="440">4</text>
+  <text class="txt" x="636" y="440">Testovi i sheme prije objave</text>
+  <text class="small" x="636" y="463">pokazatelji se ponovno računaju iz izvornih redaka</text>
+
+  <rect class="card" x="590" y="560" width="430" height="140" rx="14"/>
+  <text class="name" x="612" y="596">Kaggle GPU · Gemma 4 31B</text>
+  <text class="txt" x="612" y="626">Otvoreni model piše kratko objašnjenje</text>
+  <text class="txt" x="612" y="650">iz gotovih činjenica.</text>
+  <text class="small" x="612" y="680">Program provjerava svaku brojku u tekstu.</text>
+  <path class="line" d="M805 510V556" marker-start="url(#a)" marker-end="url(#a)"/>
+
+  <!-- 3 objava -->
+  <text class="eyebrow" x="1130" y="148">OBJAVA · GITHUB PAGES</text>
+  <rect class="band" x="1130" y="164" width="430" height="176" rx="14"/>
+  <text class="name" x="1152" y="200">Otvoreni API, bez ključa</text>
+  <text class="txt" x="1152" y="232">OpenAPI 3.1 · JSON · CSV · TopoJSON</text>
+  <text class="txt" x="1152" y="258">katalog DCAT-AP</text>
+  <text class="small" x="1152" y="290">uz svaku brojku: formula i redak u datoteci</text>
+  <text class="small" x="1152" y="312">Ministarstva financija</text>
+
+  <rect class="card" x="1130" y="398" width="430" height="92" rx="14"/>
+  <text class="name" x="1152" y="434">Web aplikacija</text>
+  <text class="txt" x="1152" y="462">karta, pregled jedinice, simulator, Karta reforme</text>
+  <rect class="card" x="1130" y="504" width="430" height="92" rx="14"/>
+  <text class="name" x="1152" y="540">MCP server</text>
+  <text class="txt" x="1152" y="568">iste brojke za AI asistente, s izvorom</text>
+  <rect class="card" x="1130" y="610" width="430" height="92" rx="14"/>
+  <text class="name" x="1152" y="646">Druge aplikacije i katalozi</text>
+  <text class="txt" x="1152" y="674">preuzimanje kataloga, analize, novinari</text>
+
+  <!-- tok -->
+  <path class="line" d="M480 212H534M480 322H534M480 432H534M480 542H534M480 652H534M534 212V652M534 335H586" marker-end="url(#a)"/>
+  <path class="line" d="M1020 252H1126" marker-end="url(#a)"/>
+  <path class="line" d="M1096 340V656M1096 444H1126M1096 550H1126M1096 656H1126" />
+  <path class="line" d="M1130 340H1096" />
+  <path class="line" d="M1110 444H1126" marker-end="url(#a)"/>
+  <path class="line" d="M1110 550H1126" marker-end="url(#a)"/>
+  <path class="line" d="M1110 656H1126" marker-end="url(#a)"/>
+
+  <!-- uživo iz preglednika -->
+  <path class="live" d="M40 322H20M40 432H20M40 542H20"/>
+  <path class="live" d="M20 322V786H1580V444H1566" marker-end="url(#g)"/>
+  <text class="livet" x="800" y="816" text-anchor="middle">uživo iz preglednika: DZS PxWeb, INSPIRE WFS i CKAN API Portala</text>
+  <text class="small" x="800" y="842" text-anchor="middle">ako servis ne odgovori, ostaje brojka iz zadnje obrade</text>
+</svg>

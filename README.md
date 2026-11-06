@@ -27,13 +27,15 @@ Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datat
 
 Model ne računa i ne bira što je važno. To radi naš kod, a model samo piše rečenice oko gotovih brojki, koje program zatim provjerava.
 
-1. **Paket činjenica** (`pipeline/facts.py`). Za svaku jedinicu Python složi popis gotovo formatiranih činjenica: ocjena i bodovi, najslabiji pokazatelj s medijanom skupine, jake strane, upozorenja, pravila i kontekst.
+1. **Paket činjenica** (`pipeline/facts.py`). Za svaku jedinicu Python složi popis gotovo formatiranih činjenica: ocjena i bodovi, najslabiji pokazatelj s medijanom skupine, jake strane, upozorenja, pravila i kontekst. Ako je i pokazatelj s najmanje bodova jaka strana jedinice (barem 90 bodova i nije lošiji od medijana skupine), paket ne navodi najslabiji pokazatelj, jer ništa ne spušta ocjenu.
 2. **Pisanje** (`pipeline/explain.py`). Gemma 4 31B dobiva paket i osam pravila. Mora napisati 3-5 rečenica, brojke prepisati točno i ne računati nove. Tekst mora biti bez ocjenjivanja, savjeta i nagađanja o uzrocima.
 3. **Provjera** (`pipeline/verify.py`):
    - svaka brojka u tekstu mora postojati u paketu;
    - navedena ocjena mora biti ovogodišnja ili prošlogodišnja;
    - najslabiji pokazatelj, jake strane i ograničenje ocjene moraju se slagati s paketom;
    - uz najslabiji pokazatelj mora stajati i njegova vrijednost;
+   - ako paket nema najslabijeg pokazatelja, tekst ga ne smije navesti;
+   - usporedba s medijanom skupine mora zadržati riječ koja nosi predznak (ostaje ili nedostaje, višak ili manjak) kad se razlikuje od riječi uz brojku jedinice;
    - kontekst se ne smije povezati s ocjenom.
 
    Tekst koji ne prođe vraća se modelu s popisom grešaka, najviše dva puta. Ako ni tada ne prođe, prikazuje se predložak.
@@ -61,12 +63,18 @@ Svi korišteni skupovi s izdavateljem, poveznicom, licencom i načinom pristupa 
 | Izvješća o financijskim revizijama, objavljena 2019.-2026. | Državni ured za reviziju | HTML popis i PDF (`pipeline/dur.py`) |
 | Upravne jedinice INSPIRE, indeks razvijenosti 2024. | DGU, MRRFEU | jednokratno, `data/reference/jls_master.csv` |
 
-Od 32 izvora podataka 9 se čita izravno preko API-ja: katalog Portala (CKAN), šest tablica DZS-a (PxWeb) i dva sloja INSPIRE (WFS). Ta tri servisa stranica pita i uživo iz preglednika:
+**Svaki izvor koji ima upotrebljiv API čita se izravno preko API-ja:** katalog Portala (CKAN), šest tablica DZS-a (PxWeb) i dva sloja INSPIRE (WFS), ukupno 9 skupova kroz tri servisa. Ta tri servisa stranica pita i uživo iz preglednika:
 
 - **Metodologija i podaci → Podaci** pokazuje što svaki od njih odgovara u tom trenutku: broj skupova u katalogu Portala, zadnju godinu procjene stanovništva i broj jedinica u sloju granica.
 - **Pregled jedinice** uživo pita DZS za broj stanovnika, a Portal za broj skupova koje jedinica objavljuje i dan zadnje izmjene. Portal ne šalje CORS zaglavlje, pa ga preglednik zove kao JSONP (`web/src/lib/portal.ts`).
 
-Ako servis ne odgovori, ostaje brojka iz zadnje obrade. Tablice Porezne uprave su datoteke na Portalu; ETL pri svakoj obradi preko `package_show` nađe najnoviju.
+Ako servis ne odgovori, ostaje brojka iz zadnje obrade.
+
+Datoteke ostaju samo tamo gdje API ne postoji:
+
+- **Ministarstvo financija** (13 datoteka: financijski izvještaji, tablice i odluke o fiskalnom izravnanju) i **Državni ured za reviziju** objavljuju samo Excel i PDF na svojim stranicama.
+- **Porezna uprava** objavljuje tablice kao datoteke na Portalu. ETL pri svakoj obradi preko `package_show` nađe najnoviju. Jedina tablica koja ima DataStore API (usporedba stopa 2025. i 2026.) u njemu ima 10.198 praznih redaka od 10.754, pa se i ona čita iz datoteke.
+- Svaku datoteku ETL preuzima sam, uvjetnim GET-om, i bilježi adresu, vrijeme, ETag i sha256 (`api/v1/izvori.json`). Ništa se ne preuzima ručno.
 
 Podaci Ministarstva financija nisu na portalu i nemaju izričitu licencu. Koriste se prema Zakonu o pravu na pristup informacijama i uz uvjete Otvorene dozvole (Pravilnik NN 67/17, čl. 4.). Obrazloženje je u [docs/skupovi-podataka.md](docs/skupovi-podataka.md).
 
@@ -86,35 +94,7 @@ Ponderirani zbroj daje ocjenu: 5 = vrlo stabilno, 4 = stabilno, 3 = umjereno sta
 
 ## Arhitektura
 
-```mermaid
-flowchart LR
-  subgraph IZ["Izvori (javni sektor)"]
-    MF["Ministarstvo financija<br/>PR-RAS, Bilanca, izravnanje"]
-    WFS["DZS INSPIRE WFS<br/>Popis 2021., granice"]
-    PX["DZS PxWeb API<br/>stanovništvo, turizam, dozvole"]
-    CK["data.gov.hr CKAN API<br/>katalog, Porezna uprava"]
-    DUR["Državni ured za reviziju<br/>izvješća (ručno, commitano)"]
-  end
-  subgraph CI["GitHub Actions<br/>na push i ručno"]
-    ETL["ETL, Python 3.12<br/>pipeline/build.py<br/>zapis URL, ETag, sha256"]
-    TEST["testovi (pytest)<br/>sheme OpenAPI"]
-  end
-  API[("Statični API na GitHub Pages<br/>OpenAPI 3.1, DCAT-AP, CSV, JSON")]
-  WEB["Web: React, MapLibre"]
-  MCPS["MCP server fiskalna_mcp<br/>za AI asistente"]
-  KG["Kaggle GPU: Gemma 4 31B<br/>paketi činjenica →<br/>provjereni tekstovi (commit)"]
-  MF --> ETL
-  WFS --> ETL
-  PX --> ETL
-  CK --> ETL
-  DUR --> ETL
-  ETL --> TEST --> API
-  ETL <--> KG
-  API --> WEB
-  API --> MCPS
-  PX -. "uživo iz preglednika (CORS)" .-> WEB
-  CK -. "uživo iz preglednika (JSONP)" .-> WEB
-```
+![Arhitektura Fiskalne karte: izvori javnog sektora (Ministarstvo financija, DZS preko WFS i PxWeb servisa, Portal preko CKAN API-ja, Državni ured za reviziju) ulaze u obradu u GitHub Actionsu; tekstove piše Gemma 4 na Kaggle GPU-u; rezultat je statični otvoreni API iz kojeg čitaju web aplikacija, MCP server i druge aplikacije](docs/arhitektura.svg)
 
 - **Bez poslužitelja i baze.** Sve se izračuna u CI-ju i objavi kao statične datoteke.
   - `pipeline/` je ETL, jedan modul po izvoru i koraku.
@@ -126,6 +106,17 @@ flowchart LR
   - katalog DCAT-AP s kontroliranim rječnicima EU-a;
   - INSPIRE izvori;
   - zapis provenijencije svakog preuzimanja.
+- **Povezivanje s postojećim javnim sustavima:**
+
+  | Sustav | Ključ ili standard | Kako se spaja |
+  |---|---|---|
+  | Portal otvorenih podataka (data.gov.hr, CKAN) | DCAT-AP, CKAN API | Naš katalog `api/v1/dcat.jsonld` opisuje skupove rječnicima EU-a, pa ga katalog koji podržava DCAT-AP može preuzeti bez ručnog unosa. U drugom smjeru čitamo katalog Portala i izdavatelje povezujemo s jedinicama. |
+  | Registar proračunskih i izvanproračunskih korisnika (Ministarstvo financija) | RKP | Svaka jedinica nosi broj RKP iz izvještaja MF-a, pa se rezultati spajaju s bilo kojom tablicom MF-a ili FINA-e. |
+  | Sustavi koji jedinicu vode po OIB-u (Porezna uprava, revizija, javna nabava) | OIB | OIB je u šifrarniku (`sifrarnik.csv`) i u svakoj datoteci jedinice. |
+  | DZS, DGU i Nacionalna infrastruktura prostornih podataka | službena šifra jedinice, INSPIRE | Statistika i granice spajaju se po službenoj peteroznamenkastoj šifri; granice su i u API-ju kao TopoJSON. |
+  | Druge aplikacije i analitički alati | OpenAPI 3.1, JSON, CSV | Sve što stranica prikazuje dostupno je kao datoteka bez ključa; opis je u `openapi.json`. |
+  | AI asistenti | MCP | Server `fiskalna_mcp` daje iste brojke s poveznicom na izvor. |
+
 - **Pravni preduvjeti:** podaci MF-a koriste se prema ZPPI (vidi Podaci). Kod je pod EUPL-1.2, a rezultati pod CC BY 4.0.
 - **Organizacijski preduvjeti:** MF jednom godišnje objavljuje izvještaje jedinica, a CI ih preuzima sam. Održavanje traži jednu osobu koja godišnje pregleda nove podatke i ponovno pokrene AI tekstove. Najviše bi pomoglo da MF te izvještaje objavljuje na data.gov.hr, s licencom i API-jem.
 - **Tehnički preduvjeti:** GitHub (repozitorij, Actions i Pages), Python 3.12 i Node.js 22 u CI-ju te besplatni Kaggle GPU, oko 4 h godišnje.
@@ -183,7 +174,7 @@ Osnovna adresa je `<stranica>/api/v1/`, bez ključa. Opis je u `openapi.json`.
 | Gemma 4 E4B, 12B i 26B-A4B | Apache-2.0 | samo testovi pri izboru modela |
 | llama.cpp | MIT | izvođenje modela na Kaggle GPU-u |
 | Kaggle (bilježnice, Kaggle Models, Kaggle MCP server) | Kaggle Terms of Use | GPU i upravljanje bilježnicama |
-| Claude Code | vlasnički alat; prava na izlaze ima korisnik | razvojni alat: pisanje koda i provjera brojki |
+| Claude Code | vlasnički alat; prava na izlaze ima korisnik | razvojni alat: pisanje i pregled koda, testovi, provjera brojki i nacrti dokumentacije, prema planu i odlukama tima (`docs/PLAN.md` §11); radni dnevnici su u [`docs/dnevnik/`](docs/dnevnik/) |
 | gstack | MIT | razvojni alat: pregled sučelja u pregledniku |
 
 U aplikaciji se prikazuju samo tekstovi otvorenog modela.
