@@ -45,6 +45,7 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
 - `pipeline/openness.py` builds the openness layer.
   - It pages through all portal datasets with CKAN `package_search` (about 4,000 datasets, 4 calls) and maps each publishing organization to a unit.
   - It matches names without diacritics, because the portal writes "Konjšćina" and MF writes "KONJŠČINA". A county suffix such as "(ZD)" settles duplicate names like Privlaka.
+  - While the portal rebuilds its search index, `package_search` can answer with 0 datasets (6.11. at 1 h; the CI build stopped). An answer with fewer than 80% of the saved count, or an HTTP error, is retried 4 times, 30 s apart and growing. After that the previous pages and their `sources.json` entries are restored and used, with a `::warning::` in Actions. Tests: `tests/test_openness.py`.
   - Per unit it records the number of datasets, the last update, the machine-readable share and a link to the newest budget dataset.
 - `pipeline/methodology.py` holds PLAN §3 as pure functions: auxiliary quantities, windowed indicators I1-I5, 0-100 scores, grades, four weight scenarios, flags Z1-Z4 and context measures. It also holds the two overdue-liability rules, decided 2026-11-03 (background in `docs/research/05`):
   - A loan reported as entirely overdue, while its principal is repaid at 3% a year or more, does not count toward DO. The unit gets the quality note `kredit_iskazan_kao_dospio`.

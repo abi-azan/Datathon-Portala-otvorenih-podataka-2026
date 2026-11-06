@@ -87,6 +87,18 @@ def fetch(key, url, dest, *, timeout=600, retries=3, meta=None):
     return dest
 
 
+def log_entries(prefix):
+    """Provenance-log entries whose key starts with prefix."""
+    return {k: v for k, v in _log().items() if k.startswith(prefix)}
+
+
+def restore_log_entries(prefix, entries):
+    """Replace every log entry under prefix with entries, to undo a bad download."""
+    log = {k: v for k, v in _log().items() if not k.startswith(prefix)}
+    log.update(entries)
+    _save_log(log)
+
+
 def ckan(action, **params):
     """Call a CKAN API v3 action on data.gov.hr and return its result."""
     r = requests.get(config.CKAN + action, params=params, headers=UA, timeout=120)

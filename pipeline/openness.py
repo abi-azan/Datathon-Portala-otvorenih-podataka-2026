@@ -5,15 +5,20 @@ and a link to its newest budget dataset. All of it comes from package_search, pa
 so the layer is a direct use of the portal API and refreshes with every build.
 """
 import json
+import os
 import re
+import time
 
 import pandas as pd
+import requests
 
 from . import config, sources
 from .units import match_key, norm_name, slugify
 
 MACHINE_READABLE = {"CSV", "XLSX", "XLS", "JSON", "XML", "ODS", "GEOJSON", "API", "SHP", "ZIP"}
 PAGE = 1000
+LOG_PREFIX = "ckan_package_search_"
+MIN_SHARE = 0.8   # a fresh count under 80 % of the saved one means a half-built search index
 
 # county abbreviations used in portal organization titles, e.g. "Općina Privlaka (ZD)"
 COUNTY_ABBR = {"ZG": 1, "KZ": 2, "SK": 3, "SM": 3, "KA": 4, "VZ": 5, "KC": 6, "KK": 6, "BJ": 7, "BB": 7,
@@ -27,20 +32,82 @@ def fold(s):
     return slugify(s)
 
 
-def fetch_packages(offline=False):
-    """All portal datasets, raw pages saved under data/raw/ckan/ (one file per page)."""
+def _page_dest(start):
+    return config.RAW / "ckan" / f"package_search_{start:05d}.json"
+
+
+def _read_pages():
+    """Datasets from the pages saved by an earlier build, or None if they are missing or empty."""
     pages, start = [], 0
     while True:
-        dest = config.RAW / "ckan" / f"package_search_{start:05d}.json"
-        url = f"{config.CKAN}package_search?rows={PAGE}&start={start}&sort=name%20asc"
-        if not (offline and dest.exists()):
-            sources.fetch(f"ckan_package_search_{start:05d}", url, dest,
-                          meta={"publisher": "data.gov.hr (CKAN API v3)", "api": "package_search"})
-        body = json.loads(dest.read_text(encoding="utf-8"))["result"]
+        try:
+            body = json.loads(_page_dest(start).read_text(encoding="utf-8"))["result"]
+        except (OSError, ValueError, KeyError):
+            return None
         pages.extend(body["results"])
         start += PAGE
         if start >= body["count"]:
+            return pages or None
+
+
+def _download(min_count):
+    """Fetch every page; None if the portal fails or answers with fewer than min_count datasets."""
+    pages, start = [], 0
+    while True:
+        dest = _page_dest(start)
+        url = f"{config.CKAN}package_search?rows={PAGE}&start={start}&sort=name%20asc"
+        try:
+            sources.fetch(f"{LOG_PREFIX}{start:05d}", url, dest,
+                          meta={"publisher": "data.gov.hr (CKAN API v3)", "api": "package_search"})
+            body = json.loads(dest.read_text(encoding="utf-8"))["result"]
+            count, results = body["count"], body["results"]
+        except (requests.RequestException, ValueError, KeyError) as e:
+            print(f"  package_search od {start}: neispravan odgovor ({type(e).__name__}: {e})")
+            return None
+        if count < min_count or not results:
+            print(f"  package_search od {start}: {count} skupova, {len(results)} na stranici "
+                  f"(očekuje se barem {min_count})")
+            return None
+        pages.extend(results)
+        start += PAGE
+        if start >= count:
             return pages
+
+
+def fetch_packages(offline=False, tries=4, wait=30):
+    """All portal datasets, raw pages saved under data/raw/ckan/ (one file per page).
+
+    While the portal rebuilds its search index, package_search answers with no datasets or only
+    part of them (6.11.2026 at 1 h: count 0, and the CI build stopped). Such an answer, or an HTTP
+    error, is retried. If the portal is still wrong after `tries` attempts, the pages and log
+    entries of the previous build are put back and used, so the "Izvori" page keeps the date the
+    data really comes from. A fresh count below MIN_SHARE of the saved one counts as wrong."""
+    saved = _read_pages()
+    if offline and saved:
+        return saved
+    backup = {p: p.read_bytes() for p in (config.RAW / "ckan").glob("package_search_*.json")} if saved else {}
+    entries = sources.log_entries(LOG_PREFIX) if saved else {}
+    min_count = max(1, int(MIN_SHARE * len(saved))) if saved else 1
+    for attempt in range(tries):
+        pages = _download(min_count)
+        if pages:
+            return pages
+        if attempt < tries - 1:
+            time.sleep(wait * (attempt + 1))
+    if not saved:
+        raise RuntimeError(f"data.gov.hr package_search nije vratio skupove ni nakon {tries} pokušaja, "
+                           "a spremljene kopije nema")
+    for p in (config.RAW / "ckan").glob("package_search_*.json"):
+        if p not in backup:
+            p.unlink()
+    for p, data in backup.items():
+        p.write_bytes(data)
+    sources.restore_log_entries(LOG_PREFIX, entries)
+    when = max((e.get("retrieved") or "" for e in entries.values()), default="?")
+    msg = (f"data.gov.hr package_search ni nakon {tries} pokušaja ne vraća ispravan popis; "
+           f"koristi se spremljena kopija od {when} ({len(saved)} skupova)")
+    print(f"::warning::{msg}" if os.environ.get("GITHUB_ACTIONS") else f"  UPOZORENJE: {msg}")
+    return saved
 
 
 def _org_unit_key(title):
