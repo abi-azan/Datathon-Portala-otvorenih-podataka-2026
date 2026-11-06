@@ -1,17 +1,35 @@
 import { AlertTriangle, ArrowRight, LoaderCircle, X } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import { ErrorBoundary } from '../components/ErrorBoundary'
+import type { ReformMapProps } from '../components/ReformMap'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { REFORM_THRESHOLDS, canMerge, loadReform, type IndexFile, type ReformFile, type ReformUnit } from '../lib/data'
 import { GRADES, VRSTA, eur, num, pct } from '../lib/format'
 import { demographySource } from '../lib/dzs'
 import { simulatorHref, unitHref } from '../lib/router'
+import { webgl2Available } from '../lib/webgl'
 
-const ReformMap = lazy(() =>
-  import('../components/ReformMap')
-    .then((m) => ({ default: m.ReformMap }))
-    .catch(() => ({ default: () => <MapBox>Karta se nije učitala. Osvježi stranicu.</MapBox> })),
-)
+const MapFailed = () => <MapBox>Karta se nije učitala. Osvježi stranicu.</MapBox>
+
+// The map without WebGL, as SVG: for a browser that gives no WebGL 2 context, and in place of a
+// MapLibre map that threw while drawing.
+const ReformMapSvg = lazy(async (): Promise<{ default: ComponentType<ReformMapProps> }> => {
+  try {
+    return { default: (await import('../components/ReformMapSvg')).ReformMapSvg }
+  } catch {
+    return { default: MapFailed }
+  }
+})
+
+const ReformMap = lazy(async (): Promise<{ default: ComponentType<ReformMapProps> }> => {
+  try {
+    if (!webgl2Available()) return { default: (await import('../components/ReformMapSvg')).ReformMapSvg }
+    return { default: (await import('../components/ReformMap')).ReformMap }
+  } catch {
+    return { default: MapFailed }
+  }
+})
 
 function MapBox({ children }: { children: ReactNode }) {
   return (
@@ -186,6 +204,18 @@ export function Reforma({ index }: { index: IndexFile }) {
     const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     card.current?.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' })
   }, [unit])
+  // the same props for the MapLibre map and for the SVG map that replaces it without WebGL
+  const mapProps = (units: ReformUnit[], shownPrag: number): ReformMapProps => ({
+    units,
+    prag: shownPrag,
+    selected,
+    onSelect: (s) => select(s, 'map'),
+    notice: stale
+      ? loadFailed
+        ? { text: `Podaci za prag ${num(prag)} nisu se učitali`, loading: false }
+        : { text: `Učitavam prag ${num(prag)}…`, loading: true }
+      : undefined,
+  })
 
   return (
     <main className="mx-auto grid max-w-[1440px] gap-8 px-6 pt-8 lg:grid-cols-[minmax(0,460px)_1fr] lg:px-10">
@@ -397,21 +427,17 @@ export function Reforma({ index }: { index: IndexFile }) {
       <div ref={mapArea} className="h-[60vh] min-h-[420px] lg:sticky lg:top-24 lg:h-[min(80vh,860px)] lg:min-h-[520px]">
         {/* stays mounted across threshold changes: the view is kept and the new groups fade in */}
         {file && shown != null ? (
-          <Suspense fallback={<MapBox>Učitavam kartu…</MapBox>}>
-            <ReformMap
-              units={file.jedinice}
-              prag={shown}
-              selected={selected}
-              onSelect={(s) => select(s, 'map')}
-              notice={
-                stale
-                  ? loadFailed
-                    ? { text: `Podaci za prag ${num(prag)} nisu se učitali`, loading: false }
-                    : { text: `Učitavam prag ${num(prag)}…`, loading: true }
-                  : undefined
-              }
-            />
-          </Suspense>
+          <ErrorBoundary
+            fallback={
+              <Suspense fallback={<MapBox>Učitavam kartu…</MapBox>}>
+                <ReformMapSvg {...mapProps(file.jedinice, shown)} />
+              </Suspense>
+            }
+          >
+            <Suspense fallback={<MapBox>Učitavam kartu…</MapBox>}>
+              <ReformMap {...mapProps(file.jedinice, shown)} />
+            </Suspense>
+          </ErrorBoundary>
         ) : (
           <MapBox>{loadFailed ? 'Podaci Karte reforme nisu se učitali. Osvježi stranicu.' : 'Učitavam…'}</MapBox>
         )}

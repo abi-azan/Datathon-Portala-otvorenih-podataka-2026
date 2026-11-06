@@ -3,7 +3,7 @@
 // the selected year, on one sequential hue that is not the grade palette, so "more" never reads as
 // "better" or "worse".
 import type { UnitIndex } from './data'
-import { eur, num, pct } from './format'
+import { eur, gradeRows, num, pct, type LegendRow } from './format'
 
 export type ViewKey = 'ocjena' | 'uprava_pc' | 'udio_tekucih_pomoci'
 
@@ -57,4 +57,30 @@ export function quintiles(units: UnitIndex[], view: ContextView, year: string): 
 export function classOf(v: number | null, cuts: number[]): number {
   if (v == null || !Number.isFinite(v) || !cuts.length) return 0
   return 1 + cuts.filter((c) => v >= c).length
+}
+
+/** Legend rows of a map: the grades, or a context view's five classes with their ranges; with the
+ *  unit counts, unless `counts` is off (the simulator, where national counts say nothing). */
+export function legendRows(units: UnitIndex[], year: string, key: ViewKey, counts = true): LegendRow[] {
+  const jls = units.filter((u) => u.vrsta !== 'zupanija')
+  const v = contextView(key)
+  if (!v) {
+    const n: Record<number, number> = {}
+    for (const u of jls) {
+      const g = u.ocjena[year]
+      if (g) n[g] = (n[g] ?? 0) + 1
+    }
+    return gradeRows(counts ? n : undefined)
+  }
+  const cuts = quintiles(jls, v, year)
+  const vals = jls.map((u) => v.value(u, year))
+  const finite = vals.filter((x): x is number => x != null && Number.isFinite(x))
+  if (!finite.length) return []
+  const edges = [Math.min(...finite), ...cuts, Math.max(...finite)]
+  return SEQUENTIAL.map((color, i) => ({
+    key: i,
+    color,
+    label: v.range(edges[i], edges[i + 1]),
+    n: vals.filter((x) => classOf(x, cuts) === i + 1).length,
+  }))
 }

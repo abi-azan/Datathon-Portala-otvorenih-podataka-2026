@@ -1,5 +1,7 @@
 import { AlertTriangle, ArrowRight, Info, LoaderCircle, RotateCcw, Scale, X } from 'lucide-react'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import { ErrorBoundary } from '../components/ErrorBoundary'
+import type { GradeMapProps } from '../components/GradeMap'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow, Fold } from '../components/Layout'
 import { Search } from '../components/Search'
@@ -20,13 +22,28 @@ import { COMPONENTS, FLAGS, QUALITY, VRSTA, criterion10, eur, num, pct } from '.
 import { ComponentBar, ComponentPoints, MedianKey } from '../components/ComponentBar'
 import { demographySource } from '../lib/dzs'
 import { parseSelection, simulatorHref, unitHref } from '../lib/router'
+import { webgl2Available } from '../lib/webgl'
+
+const MapFailed = () => <MapBox>Karta se nije učitala. Jedinice možeš odabrati pretragom.</MapBox>
+
+// The map without WebGL, as SVG (see the home page).
+const GradeMapSvg = lazy(async (): Promise<{ default: ComponentType<GradeMapProps> }> => {
+  try {
+    return { default: (await import('../components/GradeMapSvg')).GradeMapSvg }
+  } catch {
+    return { default: MapFailed }
+  }
+})
 
 // Same lazy chunk as the home page: MapLibre is about 1 MB.
-const GradeMap = lazy(() =>
-  import('../components/GradeMap')
-    .then((m) => ({ default: m.GradeMap }))
-    .catch(() => ({ default: () => <MapBox>Karta se nije učitala. Jedinice možeš odabrati pretragom.</MapBox> })),
-)
+const GradeMap = lazy(async (): Promise<{ default: ComponentType<GradeMapProps> }> => {
+  try {
+    if (!webgl2Available()) return { default: (await import('../components/GradeMapSvg')).GradeMapSvg }
+    return { default: (await import('../components/GradeMap')).GradeMap }
+  } catch {
+    return { default: MapFailed }
+  }
+})
 
 function MapBox({ children }: { children: ReactNode }) {
   return (
@@ -251,6 +268,8 @@ export function Simulator({ index }: { index: IndexFile }) {
     setLinkNotice('')
     setStatus('Odabir je poništen.')
   }
+  // the same props for the MapLibre map and for the SVG map that replaces it without WebGL
+  const mapProps: GradeMapProps = { units: index.jedinice, year, selectable: true, selected: sel, onSelect: toggle, dimmed, hint, focus, legendCounts: false }
 
   return (
     <main className="mx-auto grid max-w-[1440px] gap-8 px-6 pt-8 lg:grid-cols-[minmax(0,560px)_1fr] lg:px-10">
@@ -376,19 +395,17 @@ export function Simulator({ index }: { index: IndexFile }) {
       </div>
 
       <div className="h-[55vh] min-h-[380px] lg:sticky lg:top-24 lg:h-[min(80vh,860px)] lg:min-h-[520px]">
-        <Suspense fallback={<MapBox>Učitavam kartu…</MapBox>}>
-          <GradeMap
-            units={index.jedinice}
-            year={year}
-            selectable
-            selected={sel}
-            onSelect={toggle}
-            dimmed={dimmed}
-            hint={hint}
-            focus={focus}
-            legendCounts={false}
-          />
-        </Suspense>
+        <ErrorBoundary
+          fallback={
+            <Suspense fallback={<MapBox>Učitavam kartu…</MapBox>}>
+              <GradeMapSvg {...mapProps} />
+            </Suspense>
+          }
+        >
+          <Suspense fallback={<MapBox>Učitavam kartu…</MapBox>}>
+            <GradeMap {...mapProps} />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </main>
   )

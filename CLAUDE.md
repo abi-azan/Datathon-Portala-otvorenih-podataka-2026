@@ -87,6 +87,7 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
   - `mapStyle.leftClear` sets the left fit padding so that the caption with the legend (bottom left from lg) covers no land on short maps (1280×720).
   - The portal's DataStore copy of the one Porezna table that has it (rate comparison 2025/2026, resource `a33cb1d7…`) holds 10,754 rows, 10,198 of them empty (checked 2026-11-06), so the XLSX stays the source.
   - The MapLibre worker URL is set explicitly with `?url`, because Vite breaks the default path.
+  - MapLibre GL 6 needs WebGL 2 and throws without it; until 2026-11-06 that left the whole site blank, because nothing caught the error. Now `lib/webgl.ts` asks first and the pages load `GradeMapSvg` / `ReformMapSvg` instead (same props, drawn by `components/SvgMap.tsx` from `geo/jls.topo.json`, no basemap; MapLibre's chunk is not fetched). An `ErrorBoundary` around each map falls back to the same SVG map when MapLibre throws later, and one around the page shows a sentence instead of an empty screen. Check it on any machine with `?webgl=0` before the hash (`.../?webgl=0#/`).
 - `pipeline/build.py` orchestrates the steps above and writes `data/build/units.csv`, `results.parquet`, `results.json` and `geo/`.
 
 Source documents:
