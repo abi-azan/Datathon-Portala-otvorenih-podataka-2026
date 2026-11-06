@@ -49,6 +49,8 @@ interface Props {
   hint?: (sifra: string) => string | undefined
   /** Šifre of units to fit the view to whenever this list changes (e.g. the county of the selection). */
   focus?: string[]
+  /** Unit counts in the legend. Off in the simulator, where the national counts say nothing about the pick. */
+  legendCounts?: boolean
 }
 
 interface Hover {
@@ -60,7 +62,7 @@ interface Hover {
 const TOOLTIP_W = 256
 const TOOLTIP_H = 132 // approximate height, to keep the tooltip inside the map
 
-export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, selected, onSelect, dimmed, hint, focus }: Props) {
+export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, selected, onSelect, dimmed, hint, focus, legendCounts = true }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const caption = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
@@ -314,7 +316,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
         const g = u.ocjena[year]
         if (g) counts[g] = (counts[g] ?? 0) + 1
       }
-      return gradeRows(counts)
+      return gradeRows(legendCounts ? counts : undefined)
     }
     const cuts = quintiles(jls, v, year)
     const vals = jls.map((u) => v.value(u, year))
@@ -327,7 +329,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
       label: v.range(edges[i], edges[i + 1]),
       n: vals.filter((x) => classOf(x, cuts) === i + 1).length,
     }))
-  }, [units, year, colorBy])
+  }, [units, year, colorBy, legendCounts])
 
   const h = hover && grade(hover.unit.ocjena[year])
   const view = contextView(colorBy)
@@ -353,7 +355,9 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
             </div>
           )}
           <div className="text-xs text-muted">
-            556 općina i gradova{view ? ' · tamnije = veća vrijednost' : ''} · klikni jedinicu za {selectable ? 'odabir' : 'pregled'}
+            {/* a context view is not the grade: said on the map itself, where the colours are read */}
+            {view ? 'Ne ulazi u ocjenu · tamnije = veća vrijednost' : '556 općina i gradova'} · klikni jedinicu za{' '}
+            {selectable ? 'odabir' : 'pregled'}
           </div>
         </div>
         {!ready && (

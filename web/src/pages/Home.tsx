@@ -60,16 +60,54 @@ export function Home({ index }: { index: IndexFile }) {
     [index],
   )
 
+  const togglePlay = () => {
+    if (!playing && year === YEARS[YEARS.length - 1]) setYear(YEARS[0])
+    setPlaying((p) => !p)
+  }
+  const yearButtons = (size: string) =>
+    YEARS.map((y) => (
+      <button
+        key={y}
+        type="button"
+        role="radio"
+        aria-checked={y === year}
+        onClick={() => {
+          setPlaying(false)
+          setYear(y)
+        }}
+        className={`tabular rounded-lg transition ${size} ${y === year ? 'bg-card font-semibold shadow-sm' : 'text-ink-2 hover:text-ink'}`}
+      >
+        {y}
+      </button>
+    ))
+  const viewButtons = (size: string) =>
+    [{ key: 'ocjena' as ViewKey, short: 'Ocjena' }, ...CONTEXT_VIEWS].map((v) => (
+      <button
+        key={v.key}
+        type="button"
+        role="radio"
+        aria-checked={v.key === view}
+        onClick={() => setView(v.key)}
+        className={`rounded-lg text-sm transition ${size} ${v.key === view ? 'bg-card font-semibold shadow-sm' : 'text-ink-2 hover:text-ink'}`}
+      >
+        {v.short}
+      </button>
+    ))
+  const contextNote = ctx && (
+    <>
+      Ovaj pokazatelj ne ulazi u ocjenu, nego služi za usporedbu. Jedinice su podijeljene u pet jednako brojnih razreda
+      prema vrijednosti u {year}. godini. Tamnija boja znači veću vrijednost, ne nužno bolji rezultat.
+    </>
+  )
+
+  // below lg: the years as a card under the map
   const yearControls = (
     <div>
       <div className="flex items-center justify-between">
         <Eyebrow>Godina</Eyebrow>
         <button
           type="button"
-          onClick={() => {
-            if (!playing && year === YEARS[YEARS.length - 1]) setYear(YEARS[0])
-            setPlaying((p) => !p)
-          }}
+          onClick={togglePlay}
           className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm text-ink-2 hover:bg-hairline/60"
         >
           {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -77,27 +115,15 @@ export function Home({ index }: { index: IndexFile }) {
         </button>
       </div>
       <div className="mt-2 grid grid-cols-7 gap-0.5 rounded-xl bg-hairline/50 p-1 sm:gap-1" role="radiogroup" aria-label="Godina">
-        {YEARS.map((y) => (
-          <button
-            key={y}
-            type="button"
-            role="radio"
-            aria-checked={y === year}
-            onClick={() => {
-              setPlaying(false)
-              setYear(y)
-            }}
-            className={`tabular rounded-lg py-1.5 text-[13px] transition sm:text-sm ${y === year ? 'bg-card font-semibold shadow-sm' : 'text-ink-2 hover:text-ink'}`}
-          >
-            {y}
-          </button>
-        ))}
+        {yearButtons('py-1.5 text-[13px] sm:text-sm')}
       </div>
     </div>
   )
 
   // Below lg the page is one column: intro, search, map, the examples, the view and the years (the
-  // legend is on the map). From lg the left column holds everything but the map, in the same order.
+  // legend is on the map). From lg the left column holds the intro, the search and the examples, and
+  // the view and the years sit in a bar above the map, so everything that changes the map is on the
+  // first screen of a laptop (1366×768) and the map fills the height that is left.
   return (
     <main className="mx-auto flex max-w-[1440px] flex-col gap-7 px-6 pt-8 lg:grid lg:grid-cols-[400px_1fr] lg:gap-8 lg:px-10">
       <div className="contents lg:flex lg:flex-col lg:gap-7">
@@ -131,33 +157,21 @@ export function Home({ index }: { index: IndexFile }) {
 
         <Stories index={index} className="order-4" />
 
-        <div className="order-5">
+        <div className="order-5 lg:hidden">
           <Eyebrow>Prikaz na karti</Eyebrow>
           <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Prikaz na karti">
-            {[{ key: 'ocjena' as ViewKey, short: 'Ocjena' }, ...CONTEXT_VIEWS].map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                role="radio"
-                aria-checked={v.key === view}
-                onClick={() => setView(v.key)}
-                className={`rounded-lg px-2 py-1.5 text-sm transition ${v.key === view ? 'bg-card font-semibold shadow-sm' : 'text-ink-2 hover:text-ink'}`}
-              >
-                {v.short}
-              </button>
-            ))}
+            {viewButtons('px-2 py-1.5')}
           </div>
         </div>
 
-        <div className="order-6 flex flex-col gap-4 rounded-2xl border border-hairline bg-card p-5">
+        <div className="order-6 flex flex-col gap-4 rounded-2xl border border-hairline bg-card p-5 lg:hidden">
           {yearControls}
-          {ctx && (
-            <p className="border-t border-hairline pt-4 text-sm leading-relaxed text-ink-2">
-              Ovaj pokazatelj ne ulazi u ocjenu, nego služi za usporedbu. Jedinice su podijeljene u pet jednako brojnih
-              razreda prema vrijednosti u {year}. godini. Tamnija boja znači veću vrijednost, ne nužno bolji rezultat.
-            </p>
-          )}
+          {contextNote && <p className="border-t border-hairline pt-4 text-sm leading-relaxed text-ink-2">{contextNote}</p>}
         </div>
+        {/* from lg the card above is hidden; the order keeps the note after the examples (the column is a flex) */}
+        {contextNote && (
+          <p className="order-6 hidden border-l-2 border-axis pl-3 text-sm leading-relaxed text-ink-2 lg:block">{contextNote}</p>
+        )}
 
         <p className="order-7 text-xs leading-relaxed text-muted">
           Ocjena nije rang-lista: računa se iz pet pokazatelja prema stalnim pragovima (operativni saldo, slobodni saldo,
@@ -166,7 +180,7 @@ export function Home({ index }: { index: IndexFile }) {
         </p>
       </div>
 
-      <div className="order-3 flex min-w-0 flex-col gap-3 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:self-start">
+      <div className="order-3 flex min-w-0 flex-col gap-3 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:h-[calc(100vh-7rem)] lg:max-h-[920px] lg:min-h-[560px] lg:self-start">
         <div className="flex items-center justify-end gap-4 lg:justify-between">
           <KeyFigures index={index} className="hidden lg:flex" />
           <div className="grid shrink-0 grid-cols-2 gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Karta ili tablica">
@@ -184,15 +198,38 @@ export function Home({ index }: { index: IndexFile }) {
             ))}
           </div>
         </div>
-        {/* phones: shorter, so the page can still be scrolled past the map */}
-        <div className="h-[60vh] min-h-[420px] lg:h-[min(74vh,780px)] lg:min-h-[500px]">
-          {mode === 'karta' ? (
-            <Suspense fallback={<MapPlaceholder>Učitavam kartu…</MapPlaceholder>}>
-              <GradeMap units={index.jedinice} year={year} colorBy={view} />
-            </Suspense>
-          ) : (
-            <UnitTable units={index.jedinice} year={year} ctx={ctx} />
-          )}
+        {/* from lg: what the map shows and for which year, right above it; the bar wraps on narrow laptops */}
+        <div className="hidden flex-wrap items-center justify-between gap-x-3 gap-y-2 lg:flex">
+          <div className="flex gap-1 rounded-xl bg-hairline/50 p-1" role="radiogroup" aria-label="Prikaz na karti">
+            {viewButtons('px-2.5 py-1 whitespace-nowrap')}
+          </div>
+          <div className="flex items-center gap-1 rounded-xl bg-hairline/50 p-1">
+            <button
+              type="button"
+              onClick={togglePlay}
+              title="Prikaži godine redom, od 2019. do 2025."
+              className="flex min-w-[5.9rem] items-center gap-1.5 rounded-lg px-2.5 py-1 text-sm text-ink-2 hover:bg-card hover:text-ink"
+            >
+              {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {playing ? 'Zaustavi' : 'Pokreni'}
+            </button>
+            <div className="flex gap-0.5" role="radiogroup" aria-label="Godina">
+              {yearButtons('px-1.5 py-1 text-sm')}
+            </div>
+          </div>
+        </div>
+        {/* phones: shorter, so the page can still be scrolled past the map; from lg the map takes the
+            height the column has left (the inner box is absolute, so h-full inside it has a fixed size) */}
+        <div className="relative h-[60vh] min-h-[420px] lg:h-auto lg:min-h-0 lg:flex-1">
+          <div className="absolute inset-0">
+            {mode === 'karta' ? (
+              <Suspense fallback={<MapPlaceholder>Učitavam kartu…</MapPlaceholder>}>
+                <GradeMap units={index.jedinice} year={year} colorBy={view} />
+              </Suspense>
+            ) : (
+              <UnitTable units={index.jedinice} year={year} ctx={ctx} />
+            )}
+          </div>
         </div>
         {/* phones: under the map, which comes right after the search */}
         <KeyFigures index={index} className="flex lg:hidden" />

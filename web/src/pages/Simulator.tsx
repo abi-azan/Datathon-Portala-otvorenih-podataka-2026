@@ -386,6 +386,7 @@ export function Simulator({ index }: { index: IndexFile }) {
             dimmed={dimmed}
             hint={hint}
             focus={focus}
+            legendCounts={false}
           />
         </Suspense>
       </div>

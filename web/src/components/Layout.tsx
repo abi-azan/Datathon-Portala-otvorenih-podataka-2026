@@ -112,6 +112,11 @@ export function Footer({ generated }: { generated?: string }) {
                 Katalog skupova (DCAT-AP)
               </a>
             </li>
+            <li>
+              <a href="#/metodologija?o=mcp" className="underline decoration-axis underline-offset-4 hover:decoration-ink">
+                MCP server za AI asistente
+              </a>
+            </li>
           </ul>
           <p className="mt-2">
             Kod: EUPL-1.2 · Podaci: CC BY 4.0 ·{' '}

@@ -19,7 +19,8 @@
 - [x] Snimka naslovnice u README, nakon karte i ikone. (5.11. noću, `docs/snimke/naslovnica.png`; uključuje prijedloge U-a)
 - [x] Nova snimka naslovnice za README (6.11., stranica uživo, 1440×900, nove boje ocjena). Ako se naslovnica još mijenja, snimiti ponovno 8.11.
 - [x] AI tekstovi: ponovno generiranje 5.11. navečer, nakon UI sesije (Gemma 4 31B, `kaggle/results/gemma_batch_2025_31b_q4_0_v2.json`): **561 od 576** prolazi provjeru (550 iz prvog pokušaja), ostalih 15 ide na predložak. 253 teksta imaju rečenicu konteksta (stanovništvo, dohodak).
-- [ ] Sitnica u AI tekstovima: kad je medijan skupine negativan slobodni saldo, model prepiše vrijednost doslovno ("uz medijan skupine od nedostaje 1,7 % tekućih prihoda", npr. Međimurska županija; 14 tekstova). Popravak traži promjenu paketa, a time i novi batch; ne isplati se prije predaje.
+- [x] Tih 15 ponovno generirano 6.11. s konkretnijom porukom nakon odbijanja (`--kaggle-batch --neprovjereni`, `kaggle/results/gemma_batch_2025_31b_q4_0_v3_neprovjereni.json`): **576 od 576** prolazi provjeru (`26796a3`).
+- [ ] Opcionalno, sitnica u AI tekstovima: **44 teksta** prepisuju medijan skupine doslovno, pa ispadne nespretno, npr. "uz medijan skupine od nedostaje 1,7 % tekućih prihoda" (Požeško-slavonska županija) ili "uz medijan skupine od viška 13,3 % tekućih prihoda" (Novi Golubovec). Nije netočno. Popravak traži promjenu paketa ili prompta, a time novi batch za svih 576 (oko 4 h na Kaggleu); ne isplati se prije predaje.
 
 # UI sesija 5.11. popodne (lokalno, necommitano)
 
@@ -32,6 +33,21 @@
 - [x] Jezični pregled (`.gstack/ui-review/jezicni-pregled.md`) primijenjen; "sastavnica" → "pokazatelj", "financijska održivost proračuna", predložak u punim rečenicama.
 - [ ] Jezik, čeka potvrdu tima: `Reforma.tsx` "Zadnji razred s dodatkom u Vladinoj odluci…" i `metodologija.py` "Zakonska osnovica je približna…" (što je točno približno).
 - [ ] Mobitel: dodir na kartu odmah otvara pregled; prijedlog je da prvi dodir pokaže karticu s gumbom "Pregled →".
+
+# Pregled očima žirija 6.11. popodne (lokalno, necommitano)
+
+Pregledana je stranica uživo na 1440×900, 1366×768 i 390 px. Mobitel se po odluci ne dira.
+
+- [x] AI tekst Grada Zagreba bio je najkraći od svih 576 (174 znaka, 3 brojke), a Zagreb je prvi primjer na naslovnici. Dodana provjera: uz najslabiji pokazatelj mora stajati i njegova vrijednost (`verify.states_value`). Nisu je prošla samo dva teksta, Grad Zagreb i Općina Blato; ponovno su generirani (batch v4, 291 s, `kaggle/results/gemma_batch_2025_31b_q4_0_v4_vrijednost.json`). **576 od 576** prolazi i novu provjeru. Predložak sada također navodi vrijednost.
+- [x] Naslovnica na laptopu: prikaz na karti i godine su u traci iznad karte, pa je sve na prvom ekranu (1366×768, 1280×720, 1440×900). Gumb u traci glasi "Pokreni".
+- [x] Karta reforme: nakon odabira skupine (karta ili popis) stranica skoči na karticu skupine, a karta ostaje vidljiva. Odabrana skupina ima crno-bijeli obrub. Pomicanje klizača ne pomiče stranicu.
+- [x] Simulator: legenda na karti bez državnih brojki.
+- [x] Pregled jedinice: "Kopiraj poveznicu" i "Podaci jedinice (JSON)" u gornjem redu.
+- [x] Metodologija: odjeljak "MCP server za AI asistente" s primjerom iz API-ja; poveznica u podnožju.
+- [x] README: maknuta zastarjela rečenica "Za 15 jedinica prikazuje se predložak".
+- [ ] Commit i push na `main`, zeleni CI, provjera stranice uživo (Zagreb, naslovnica, Karta reforme).
+- [ ] Nova snimka naslovnice za README nakon pusha (naslovnica se promijenila).
+- [ ] Mobitel, ako ostane vremena: u simulatoru s odabranim jedinicama karta je na 4.774. pikselu od 6.014, a na Karti reforme ispod svih brojki.
 
 # Čeka odluku
 

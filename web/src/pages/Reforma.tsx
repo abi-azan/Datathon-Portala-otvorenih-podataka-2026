@@ -139,8 +139,14 @@ export function Reforma({ index }: { index: IndexFile }) {
   const openedBy = useRef<'list' | 'map'>('list')
   const groupList = useRef<HTMLSelectElement>(null)
   const mapArea = useRef<HTMLDivElement>(null)
+  // The group card is under the summary, below the first screen. After a pick on the map or in the
+  // list, and when the link names a group, the page scrolls to it (the map is sticky and stays in
+  // view). Not after a threshold change: then the user is at the slider.
+  const card = useRef<HTMLDivElement>(null)
+  const reveal = useRef(selected !== '')
   const select = (s: string, by: 'list' | 'map' = 'list') => {
     openedBy.current = by
+    if (s) reveal.current = true
     setNote('')
     setState((st) => ({ ...st, s }))
   }
@@ -174,6 +180,12 @@ export function Reforma({ index }: { index: IndexFile }) {
   const savingsAbove10k = merged.filter((u) => u.usteda?.iznad_10000).reduce((a, u) => a + (u.usteda?.realno_do ?? 0), 0)
   const unit = file?.jedinice.find((u) => keyOf(u) === selected)
   const i = REFORM_THRESHOLDS.indexOf(prag as (typeof REFORM_THRESHOLDS)[number])
+  useEffect(() => {
+    if (!unit || !reveal.current) return
+    reveal.current = false
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    card.current?.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' })
+  }, [unit])
 
   return (
     <main className="mx-auto grid max-w-[1440px] gap-8 px-6 pt-8 lg:grid-cols-[minmax(0,460px)_1fr] lg:px-10">
@@ -366,7 +378,9 @@ export function Reforma({ index }: { index: IndexFile }) {
         )}
 
         {unit && (
-          <Selected u={unit} bySifra={bySifra} year={year} demoSources={file?.demografija?.izvor_po_godini} onClose={close} />
+          <div ref={card} className="scroll-mt-24">
+            <Selected u={unit} bySifra={bySifra} year={year} demoSources={file?.demografija?.izvor_po_godini} onClose={close} />
+          </div>
         )}
 
         <p className="text-xs leading-relaxed text-muted">

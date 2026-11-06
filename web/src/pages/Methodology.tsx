@@ -2,14 +2,16 @@ import { ChevronDown, ExternalLink } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { IndicatorsExplained } from '../components/IndicatorsExplained'
 import { Eyebrow } from '../components/Layout'
-import { loadDatasets, loadMethodology, type Dataset, type MethodologyDoc } from '../lib/data'
-import { num } from '../lib/format'
+import { loadDatasets, loadMethodology, loadUnit, type Dataset, type MethodologyDoc, type UnitDetail } from '../lib/data'
+import { grade, groupLabel, num } from '../lib/format'
+import { unitHref } from '../lib/router'
 
 const REPO = 'https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026'
 const SECTIONS = [
   ['pokazatelji', 'Pokazatelji'],
   ['pravila', 'Pravila i upozorenja'],
   ['ai', 'AI objašnjenje'],
+  ['mcp', 'MCP za AI asistente'],
   ['simulator', 'Simulator i Karta reforme'],
   ['kontekst', 'Kontekst u pregledu jedinice'],
   ['podaci', 'Podaci'],
@@ -24,7 +26,54 @@ const RULE_NAMES: Record<string, string> = {
 const day = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('hr-HR') : '–')
 const link = 'underline decoration-axis underline-offset-4 hover:decoration-ink'
 
-/** One part of the page, folded except the first, so the page reads as a list of seven headings.
+// The six tools of the MCP server (fiskalna_mcp/tools.py, docs/mcp.md), in the words of the page.
+const MCP_TOOLS: [string, string][] = [
+  ['pronadi_jedinicu', 'pretraga po nazivu, i bez dijakritika'],
+  ['pregled_jedinice', 'ocjena, bodovi, pet pokazatelja, mjesto u skupini, upozorenja i kontekst'],
+  ['usporedi', 'dvije do pet jedinica jedna uz drugu'],
+  ['scenarij_spajanja', 'simulator spajanja za dvije do četiri susjedne jedinice'],
+  ['karta_reforme', 'Karta reforme za odabrani prag stanovnika'],
+  ['izvor_brojke', 'formula pokazatelja i svaki ulaz s kontom, datotekom i retkom'],
+]
+
+/** What one tool call gives the assistant, shown with the numbers of the API file the tool reads
+ *  (jedinice/opcina-povljana.json), never typed in. Nothing is shown if the file does not load. */
+function McpExample() {
+  const [u, setU] = useState<UnitDetail | null>(null)
+  useEffect(() => {
+    loadUnit('opcina-povljana')
+      .then(setU)
+      .catch(() => {})
+  }, [])
+  const year = u && Object.keys(u.godine).filter((y) => u.godine[y].ocjena != null).sort().pop()
+  const r = u && year ? u.godine[year] : null
+  if (!u || !r) return null
+  return (
+    <div className="mt-4 rounded-xl border border-hairline bg-card p-4 text-sm">
+      <Eyebrow>Primjer</Eyebrow>
+      <dl className="mt-3 grid gap-x-5 gap-y-2 sm:grid-cols-[auto_1fr]">
+        <dt className="text-muted">Pitanje asistentu</dt>
+        <dd>„Kako stoji Općina Povljana?”</dd>
+        <dt className="text-muted">Asistent pozove alat</dt>
+        <dd className="font-mono text-[13px]">pregled_jedinice(jedinica="Povljana")</dd>
+        <dt className="text-muted">Alat vrati iz API-ja</dt>
+        <dd className="text-ink-2">
+          <span className="tabular text-ink">
+            ocjena {r.ocjena} ({grade(r.ocjena)?.word}), {num(r.bodovi, 1)} bodova od 100
+            {r.rang != null && r.n_skupine != null && `, ${num(r.rang)}. od ${num(r.n_skupine)} u skupini „${groupLabel(u.skupina)}”`}
+          </span>{' '}
+          za {year}. godinu, uz pet pokazatelja s medijanom skupine, upozorenja i{' '}
+          <a className={link} href={unitHref(u.slug)}>
+            poveznicu na pregled jedinice
+          </a>
+          .
+        </dd>
+      </dl>
+    </div>
+  )
+}
+
+/** One part of the page, folded except the first, so the page reads as a list of eight headings.
  *  The id stays on the element, so the section links and #/metodologija?o=<id> still find it. */
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
@@ -69,8 +118,15 @@ export function Methodology() {
   // #/metodologija?o=podaci opens that section once the page has its content
   useEffect(() => {
     if (!doc) return
-    const o = new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('o')
-    if (o && SECTIONS.some(([id]) => id === o)) requestAnimationFrame(() => openSection(o, false))
+    const open = (smooth: boolean) => {
+      const o = new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('o')
+      if (o && SECTIONS.some(([id]) => id === o)) requestAnimationFrame(() => openSection(o, smooth))
+    }
+    open(false)
+    // a link to a section from this very page (the footer) only changes the hash
+    const on = () => open(true)
+    window.addEventListener('hashchange', on)
+    return () => window.removeEventListener('hashchange', on)
   }, [doc])
 
   const used = (sets ?? []).filter((s) => s.koristi_se)
@@ -167,6 +223,31 @@ export function Methodology() {
               <a className={link} href={doc.ai.kod.provjera}>Provjera (verify.py)</a>
               <a className={link} href={doc.ai.kod.cinjenice}>Činjenice (facts.py)</a>
               <a className={link} href={doc.ai.kod.biljeznica}>Kaggle bilježnica</a>
+            </p>
+          </Section>
+
+          <Section id="mcp" title="MCP server za AI asistente">
+            <p className="mt-3 leading-relaxed text-ink-2">
+              MCP (Model Context Protocol) je otvoreni standard kojim AI asistent poziva vanjske alate. Naš MCP server daje
+              asistentu šest alata nad otvorenim API-jem Fiskalne karte. Asistent tako na pitanja o općinama, gradovima i
+              županijama odgovara ovim brojkama, uz poveznicu na izvor. Server samo čita API i ne računa ništa novo.
+            </p>
+            <McpExample />
+            <ul className="mt-5 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+              {MCP_TOOLS.map(([name, what]) => (
+                <li key={name}>
+                  <code className="font-mono text-[13px] text-ink">{name}</code>
+                  <div className="text-ink-2">{what}</div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-sm text-ink-2">
+              Server je otvorenog koda (službeni MCP Python SDK, licenca MIT). Pokreće se lokalno uz asistenta i čita javni
+              API ove stranice.
+            </p>
+            <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <a className={link} href={`${REPO}/blob/main/docs/mcp.md`}>Upute za spajanje i primjeri</a>
+              <a className={link} href={`${REPO}/tree/main/fiskalna_mcp`}>Kod servera</a>
             </p>
           </Section>
 

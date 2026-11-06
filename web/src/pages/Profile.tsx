@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ExternalLink, Info, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ArrowRight, Braces, Check, CheckCircle2, ChevronDown, ExternalLink, Info, Link2, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { GradeChip } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
@@ -93,9 +93,24 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
 
   return (
     <main className="mx-auto max-w-[1440px] px-6 pt-6 lg:px-10">
-      <a href="#/" className="inline-flex items-center gap-1.5 text-sm text-ink-2 hover:text-ink">
-        <ArrowLeft className="h-4 w-4" /> Karta
-      </a>
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-sm text-ink-2">
+        <a href="#/" className="inline-flex items-center gap-1.5 hover:text-ink">
+          <ArrowLeft className="h-4 w-4" /> Karta
+        </a>
+        {/* the page is one file of the open API: say so where the reader is, not only in the footer */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <CopyLink slug={unit.slug} />
+          <a
+            href={`./api/v1/jedinice/${unit.slug}.json`}
+            target="_blank"
+            rel="noreferrer"
+            title="Sve brojke s ove stranice kao jedna datoteka otvorenog API-ja"
+            className="inline-flex items-center gap-1.5 hover:text-ink"
+          >
+            <Braces className="h-4 w-4" aria-hidden /> Podaci jedinice (JSON)
+          </a>
+        </div>
+      </div>
 
       {/* header */}
       <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_420px] lg:items-start">
@@ -440,6 +455,35 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
         </aside>
       </div>
     </main>
+  )
+}
+
+/** Copies the address of this unit's page (the hash route is a link straight to the unit). */
+function CopyLink({ slug }: { slug: string }) {
+  const [done, setDone] = useState(false)
+  const copy = async () => {
+    const url = `${window.location.origin}${window.location.pathname}${unitHref(slug)}`
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      // no clipboard access (an old browser, or a page not served over https): through a text field
+      const t = document.createElement('textarea')
+      t.value = url
+      t.style.position = 'fixed'
+      t.style.opacity = '0'
+      document.body.appendChild(t)
+      t.select()
+      document.execCommand('copy')
+      t.remove()
+    }
+    setDone(true)
+    setTimeout(() => setDone(false), 2000)
+  }
+  return (
+    <button type="button" onClick={copy} className="inline-flex items-center gap-1.5 hover:text-ink">
+      {done ? <Check className="h-4 w-4" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
+      <span aria-live="polite">{done ? 'Poveznica kopirana' : 'Kopiraj poveznicu'}</span>
+    </button>
   )
 }
 

@@ -18,7 +18,7 @@ Uz smirenu brzinu (oko 130 riječi u minuti) govor traje oko 2:35, pa ostaje oko
 
 ## 0:00-0:20 Problem
 
-**Kadar:** naslovnica, klik na "Pokreni 2019.–2025.". Boje se meko prelijevaju iz godine u godinu (pretapanje), kamera polako ide prema Zadru i Pagu. Zatim kratki kadar Excel tablice Ministarstva financija (PR-RAS, tisuće redaka).
+**Kadar:** naslovnica, klik na "Pokreni" u traci s godinama iznad karte (od 6.11.; na mobitelu gumb i dalje glasi "Pokreni 2019.–2025."). Boje se meko prelijevaju iz godine u godinu (pretapanje), kamera polako ide prema Zadru i Pagu. Zatim kratki kadar Excel tablice Ministarstva financija (PR-RAS, tisuće redaka).
 
 **Naracija:**
 > Hrvatska ima 576 općina, gradova i županija. Više od dvjesto općina ima manje od dvije tisuće stanovnika. Svaka godišnje predaje izvještaje koji završe u tablicama s tisućama redaka. Je li vaša općina financijski stabilna? Odgovor postoji, samo ga nitko nije izračunao za sve.
@@ -91,7 +91,7 @@ Uz smirenu brzinu (oko 130 riječi u minuti) govor traje oko 2:35, pa ostaje oko
 
 Snima se zaslon 1920×1080, preglednik bez traka i kursor uvećan.
 
-1. Naslovnica i animacija godina ("Pokreni 2019.–2025.", s pretapanjem boja).
+1. Naslovnica i animacija godina (gumb "Pokreni" iznad karte, s pretapanjem boja).
 2. Pretraga "povlj" i pregled Povljane (ocjena, pokazatelji, trend).
 3. **[nakon regeneracije]** "Ukratko" s oznakom provjere; klik na "1.045.908 €" i ploča s izračunom za dospjele obveze.
 4. Kartica "Stanovništvo i gospodarstvo" Povljane s oznakom "uživo s API-ja DZS-a" (prije snimanja provjeriti da se oznaka pojavi; DZS nakon desetak brzih upita vraća HTTP 429, a tada se prikazuje spremljena kopija bez oznake).

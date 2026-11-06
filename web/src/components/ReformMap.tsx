@@ -212,7 +212,9 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
         source: 'reform',
         paint: { 'line-color': '#0b0b0b', 'line-width': ['case', ['boolean', ['feature-state', 'hover'], false], 2.2, 0] },
       })
-      m.addLayer({ id: 'reform-selected', type: 'line', source: 'reform', filter: ['==', ['get', 'key'], ''], paint: { 'line-color': '#0b0b0b', 'line-width': 3.5 } })
+      // the open group: a black line on a white one, so it also stands out on the dark green of grade 5
+      m.addLayer({ id: 'reform-selected-halo', type: 'line', source: 'reform', filter: ['==', ['get', 'key'], ''], layout: { 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 7 } })
+      m.addLayer({ id: 'reform-selected', type: 'line', source: 'reform', filter: ['==', ['get', 'key'], ''], layout: { 'line-join': 'round' }, paint: { 'line-color': '#0b0b0b', 'line-width': 3.5 } })
       setReady(true)
     })
 
@@ -363,7 +365,7 @@ export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
   useEffect(() => {
     const m = map.current
     if (!ready || !m) return
-    m.setFilter('reform-selected', ['==', ['get', 'key'], selected ?? ''])
+    for (const layer of ['reform-selected-halo', 'reform-selected']) m.setFilter(layer, ['==', ['get', 'key'], selected ?? ''])
   }, [ready, selected])
 
   // a key from the previous threshold (until the pointer is re-read) shows no tooltip
