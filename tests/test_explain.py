@@ -104,6 +104,40 @@ def test_resumed_batch_reruns_units_whose_pack_changed(tmp_path, monkeypatch):
     assert mod.RUN_META["verify_sha256"] == explain.verify_sha256()
 
 
+def test_rerun_of_only_the_unverified_units(tmp_path, monkeypatch):
+    """--neprovjereni: only units whose stored text is not a shown AI text (rejected, written from an
+    older pack, or missing); --oib adds single units. The manifest still covers every unit."""
+    a, b, c, d = ({**PACK, "oib": o} for o in "1234")
+    monkeypatch.setattr(explain, "AI_DIR", tmp_path)
+    monkeypatch.setattr(explain, "load_packs", lambda year=None: ([a, b, c, d], None))
+    (tmp_path / f"objasnjenja-{config.LAST_YEAR}.json").write_text(json.dumps({"tekstovi": {
+        "1": {"izvor": "ai", "pack_sha256": explain.pack_sha256(a)},
+        "2": {"izvor": "neprovjereno", "pack_sha256": explain.pack_sha256(b)},
+        "3": {"izvor": "ai", "pack_sha256": "0" * 64}}}), encoding="utf-8")      # 3: pack changed; 4: no text
+    mod = load_script(explain.write_kaggle_batch(dest=tmp_path / "s.py", unverified=True))
+    assert [p["oib"] for p in mod.PACKS] == ["2", "3", "4"] and set(mod.RUN_META["paketi"]) == {"2", "3", "4"}
+    assert len(json.loads((tmp_path / f"manifest-{config.LAST_YEAR}.json").read_text(encoding="utf-8"))["paketi"]) == 4
+    mod = load_script(explain.write_kaggle_batch(dest=tmp_path / "s.py", only={"1"}))
+    assert [p["oib"] for p in mod.PACKS] == ["1"]
+    with pytest.raises(SystemExit, match="nepoznati"):
+        explain.write_kaggle_batch(dest=tmp_path / "s.py", only={"9"})
+
+
+def test_feedback_says_to_drop_a_strength_or_context_sentence_the_list_does_not_have():
+    """Batch v2 (5.11.): all 15 rejected units repeated the same text three times after the general
+    feedback. Without the pack the message stays general; with it, it says what to drop or keep."""
+    no_extras = {"facts": [{"label": "Najslabiji pokazatelj", "value": "slobodni saldo"}]}
+    strengths = {"facts": no_extras["facts"] + [{"label": "Jake strane", "value": "servis duga"}]}
+    ctx = {"facts": no_extras["facts"] + [{"label": "Kontekst: broj stanovnika", "value": "x", "kontekst": True}]}
+    ctx_issue, strong_issue = ["kontekst bez stavke u činjenicama"], ["jaka strana „operativni saldo”"]
+    assert "izostavi" not in explain.feedback([], ctx_issue)
+    assert "„Kontekst koji ne ulazi u ocjenu: …” potpuno izostavi" in explain.feedback([], ctx_issue, no_extras)
+    assert "potpuno izostavi" not in explain.feedback([], ctx_issue, ctx)
+    assert "„Jake strane jedinice su: …” potpuno izostavi" in explain.feedback([], strong_issue, no_extras)
+    assert "Jake strane su samo: servis duga." in explain.feedback([], strong_issue, strengths)
+    assert "potpuno izostavi" not in explain.feedback(["97"], [], no_extras)
+
+
 GOOD = {"oib": "1", "year": 2025, "naziv": {"nom": "Općina Primjerovo"}, "ocjene": [4], "ocjena": 4,
         "facts": [{"label": "Ocjena financijske održivosti proračuna", "value": "4 (stabilno) na ljestvici od 1 do 5"},
                   {"label": "Ukupni bodovi", "value": "72,5 boda od 100"}]}

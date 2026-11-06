@@ -33,12 +33,29 @@
     "commit_skripte": null,
     "model_izvor": "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2",
     "biljeznica": "albertmari/fiskalna-karta-jls-gemma-batch"
+   },
+   {
+    "datoteka": "gemma_batch_2025_31b_q4_0_v3_neprovjereni.json",
+    "sha256": "caf3d316c97a8841a0a2aedfdf94a9210d2166703ba04670c198ab1b7d51bfff",
+    "djelomicno": false,
+    "llama_cpp_commit": "2cbca389f515df455412dafa07e2b1359cc72a6d",
+    "gpu": "Tesla T4, Tesla T4",
+    "sekundi": 715,
+    "modeli": [
+     "gemma-4-31B_q4_0-it.gguf"
+    ],
+    "otisci_paketa": "meta.paketi",
+    "prompt_sha256": "0f58640aecb8f70bb34a1f1c594aba0abc70cf98e4ead6c1a00278476edd0433",
+    "verify_sha256_kaggle": "51ed056a51c6bc9dd7bd5fff7a2c5283b7f9a000011a39956205e37023a9b5f4",
+    "commit_skripte": null,
+    "model_izvor": "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2",
+    "biljeznica": "albertmari/fiskalna-karta-jls-gemma-batch"
    }
   ],
-  "uvezeno": "2026-11-05T23:24:42+00:00",
+  "uvezeno": "2026-11-06T00:51:42+00:00",
   "jedinica": 576,
   "tekstova": 576,
-  "ai": 561
+  "ai": 576
  },
  "tekstovi": {
   "00252572114": {
@@ -592,12 +609,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "08666646178": {
-   "tekst": "Općina Severin za 2025. godinu ima ocjenu 4 (stabilno) i 76,9 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 3,5 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: 702 stanovnika (Popis 2021.).",
+   "tekst": "Općina Severin za 2025. godinu ima ocjenu 4 (stabilno) i 76,9 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 3,5 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze.",
    "pack_sha256": "1408b71556967478b110b61ecec3f7a5b92992a70fb820ab966f2b6d9a14fb9d",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -672,12 +689,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "09535394755": {
-   "tekst": "Općina Žumberak za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 87,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 13,8 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga. Kontekst koji ne ulazi u ocjenu: 609 stanovnika (Popis 2021.).",
+   "tekst": "Općina Žumberak za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 87,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 13,8 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga.",
    "pack_sha256": "5410b0d9d42395fad897cf21f97e75a6df065f971a7087c9a27ec950d6c67b3c",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -922,12 +939,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "14292080724": {
-   "tekst": "Općina Lećevica za 2025. godinu ima ocjenu 1 (vrlo nestabilno) i 11,2 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 20,1 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; rashodi poslovanja veći od tekućih prihoda dvije godine zaredom. Kontekst koji ne ulazi u ocjenu: 495 stanovnika (Popis 2021.).",
+   "tekst": "Općina Lećevica za 2025. godinu ima ocjenu 1 (vrlo nestabilno) i 11,2 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 20,1 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; rashodi poslovanja veći od tekućih prihoda dvije godine zaredom.",
    "pack_sha256": "1cc217f26f47b455b70574d1cecf2b9870d801afadff18a57466f50364b0c482",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -942,12 +959,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "14503583078": {
-   "tekst": "Općina Jarmina za 2025. godinu ima ocjenu 4 (stabilno) i 75 bodova od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 6,6 % tekućih prihoda, uz medijan skupine od 16,9 % tekućih prihoda. Kontekst koji ne ulazi u ocjenu: 2.016 stanovnika (Popis 2021.).",
+   "tekst": "Općina Jarmina za 2025. godinu ima ocjenu 4 (stabilno) i 75 bodova od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 6,6 % tekućih prihoda, uz medijan skupine od 16,9 % tekućih prihoda.",
    "pack_sha256": "c6e823d8691fade584f47ed29d1a22935f5b50a90cd663e140a861a4fdf809ab",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -1592,12 +1609,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "25654647153": {
-   "tekst": "Grad Karlovac ima ocjenu 4 (stabilno) i 70,2 boda od 100, dok je medijan skupine 81,9 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 3,2 % tekućih prihoda, uz medijan skupine od 7,7 % tekućih prihoda. Jake strane jedinice su: servis duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+   "tekst": "Grad Karlovac ima ocjenu 4 (stabilno) i 70,2 boda od 100, dok je medijan skupine 81,9 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 3,2 % tekućih prihoda, uz medijan skupine od 7,7 % tekućih prihoda. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
    "pack_sha256": "4de0c3e16f16788bf8ee33647207d5d906ab8b77b58ebc7e4d571d6e71b814ac",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -1762,12 +1779,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "28587364712": {
-   "tekst": "Općina Lokve za 2025. godinu ima ocjenu 2 (nestabilno) i 36,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; novca na računu manje nego za mjesec dana rashoda poslovanja. Kontekst koji ne ulazi u ocjenu: 850 stanovnika (Popis 2021.).",
+   "tekst": "Općina Lokve za 2025. godinu ima ocjenu 2 (nestabilno) i 36,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 6,5 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; novca na računu manje nego za mjesec dana rashoda poslovanja.",
    "pack_sha256": "3bc110eded1bd61ccfeb386a12f393a5eef784d30e3c8bd746f3b0ff8de9df6e",
    "pokusaja": 3,
    "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -2962,12 +2979,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "48744373701": {
-   "tekst": "Požeško-slavonska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 58,8 boda od 100, dok je medijan usporedne skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 6,9 % tekućih prihoda, uz medijan skupine od nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: 64.084 stanovnika (Popis 2021.).",
+   "tekst": "Požeško-slavonska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 58,8 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 6,9 % tekućih prihoda, uz medijan skupine od nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
    "pack_sha256": "01c0661000e10884155b671e48b6fe0c81b7d4be43892ede69a68db4ef9af5e3",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 1,
+   "pokusaj": 1,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -3392,12 +3409,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "57306974930": {
-   "tekst": "Općina Zagvozd za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 51,2 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „godine otplate duga”: neto dug mogao bi se otplatiti iz operativnog viška za 18,6 godine, dok većina jedinica u skupini nema neto duga. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice. Kontekst koji ne ulazi u ocjenu: 957 stanovnika (Popis 2021.).",
+   "tekst": "Općina Zagvozd za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 51,2 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „godine otplate duga”: neto dug mogao bi se otplatiti iz operativnog viška za 18,6 godine, dok većina jedinica u skupini nema neto duga. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice.",
    "pack_sha256": "36df5cb2fd69ead88b4be3b7f99487dc4a5ec8c2c5e628f8baa513d5cc961da2",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -3582,12 +3599,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "61145614093": {
-   "tekst": "Općina Klakar za 2025. godinu ima ocjenu 4 (stabilno) i 70,5 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 5,7 % tekućih prihoda, uz medijan skupine od 16,9 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja. Kontekst koji ne ulazi u ocjenu: 2.020 stanovnika (Popis 2021.).",
+   "tekst": "Općina Klakar za 2025. godinu ima ocjenu 4 (stabilno) i 70,5 boda od 100, dok je medijan usporedne skupine 88,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 5,7 % tekućih prihoda, uz medijan skupine od 16,9 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; novca na računu manje nego za mjesec dana rashoda poslovanja.",
    "pack_sha256": "1cba5d8e8ccecc4bfa1ff478f2c7ae2f8f05fc42a5df3eaa022554c520d3d13a",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 1,
+   "pokusaj": 1,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -3612,12 +3629,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "61688552243": {
-   "tekst": "Općina Novi Golubovec za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni višak iznosi 36,4 % tekućih prihoda, uz medijan skupine: višak 13,3 % tekućih prihoda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: 824 stanovnika (Popis 2021.).",
+   "tekst": "Općina Novi Golubovec za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 100 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni višak iznosi 36,4 % tekućih prihoda, uz medijan skupine od viška 13,3 % tekućih prihoda. Jake strane jedinice su: operativni saldo, slobodni saldo, godine otplate duga, servis duga, dospjele obveze.",
    "pack_sha256": "4fc66939a093a60ee58117cf5585a490099a4c087e1280afd1abf84864887887",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -3992,12 +4009,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "69544772850": {
-   "tekst": "Općina Zagorska Sela za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 81 bod od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 6,7 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: 899 stanovnika (Popis 2021.).",
+   "tekst": "Općina Zagorska Sela za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 81 bod od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 6,7 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
    "pack_sha256": "1508b3f23af99a9a944b41d3946d65dae85316503b0359b5b89ca469d2be60c7",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -4582,12 +4599,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "79734182959": {
-   "tekst": "Općina Promina za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 84,7 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,7 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga. Kontekst koji ne ulazi u ocjenu: 943 stanovnika (Popis 2021.).",
+   "tekst": "Općina Promina za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 84,7 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,7 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga.",
    "pack_sha256": "2fc8384fb20752c0e2b4697e2cad650ecb590a4d58acb456b9ee6ee38ecaef47",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -5262,12 +5279,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "90811277065": {
-   "tekst": "Općina Primorski Dolac za 2025. godinu ima ocjenu 1 (vrlo nestabilno) i 5 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 20,6 % tekućih prihoda; medijan skupine: višak 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Kontekst koji ne ulazi u ocjenu: 686 stanovnika (Popis 2021.).",
+   "tekst": "Općina Primorski Dolac za 2025. godinu ima ocjenu 1 (vrlo nestabilno) i 5 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 20,6 % tekućih prihoda, uz medijan skupine od viška 13,3 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja.",
    "pack_sha256": "7a1f9c8e19ab91f633da37e35cbb15d0ff33285af2133b25a2f45e0b521d6b92",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -5432,12 +5449,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "93666098369": {
-   "tekst": "Općina Končanica za 2025. godinu ima ocjenu 4 (stabilno) i 64,7 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 1,7 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda. U Bilanci je kredit iskazan u cijelosti kao dospio, ali se redovno otplaćuje ili se još povlači, pa se ne broji u dospjele obveze.",
+   "tekst": "Općina Končanica za 2025. godinu ima ocjenu 4 (stabilno) i 64,7 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 1,7 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
    "pack_sha256": "05f5f3e3041e457dfd3c60bdd98e0d42bbb894ce0b7de66088837e650e29e097",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
@@ -5582,12 +5599,12 @@
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },
   "95699596710": {
-   "tekst": "Grad Požega za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 81 bod od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 11,7 % tekućih prihoda, uz medijan skupine od 9,2 % tekućih prihoda. Jake strane jedinice su: nema. Kontekst koji ne ulazi u ocjenu: 22.294 stanovnika (Popis 2021.).",
+   "tekst": "Grad Požega za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 81 bod od 100. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 11,7 % tekućih prihoda, uz medijan skupine od 9,2 % tekućih prihoda.",
    "pack_sha256": "4338af6f82cfaee7a5a08768e93c23d923a0d1da2a1962c15f95b850cf436ebc",
-   "pokusaja": 3,
-   "pokusaj": 3,
-   "izvor": "neprovjereno",
-   "izvor_kaggle": "neprovjereno",
+   "pokusaja": 2,
+   "pokusaj": 2,
+   "izvor": "ai",
+   "izvor_kaggle": "ai",
    "model": "Gemma 4 31B",
    "gguf": "gemma-4-31B_q4_0-it.gguf"
   },

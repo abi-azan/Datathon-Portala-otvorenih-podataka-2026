@@ -43,7 +43,7 @@ Model ne računa i ne bira što je važno. To radi naš kod, a model samo piše 
 5. **Objava.** Tekstovi se commitaju (`data/ai/objasnjenja-2025.json`) zajedno sa sha256 paketa iz kojeg su nastali. CI ne poziva model. Pri objavi ponovno provjeri svaki tekst i prikaže ga samo ako se paket nije promijenio; inače prikazuje predložak.
 6. **U sučelju** tekst nosi oznaku poput „AI tekst · Gemma 4 31B · 15/15 brojki provjereno” (Povljana), a svaka brojka pokazuje činjenicu iz koje dolazi.
 
-Model je izabran nakon testova na jedinicama koje nije vidio (`docs/research/06-gemma-test.md`). Ponovno generiranje: `python -m pipeline.explain --kaggle-batch`, pa `--import-batch <izlaz>`.
+Model je izabran nakon testova na jedinicama koje nije vidio (`docs/research/06-gemma-test.md`). Ponovno generiranje: `python -m pipeline.explain --kaggle-batch`, pa `--import-batch <izlaz>`. Samo tekstovi koji nisu prošli provjeru: `--kaggle-batch --neprovjereni` (ili `--oib <OIB>` za jednu jedinicu), pa `--import-batch <stari izlaz> <novi izlaz>`.
 
 ## Podaci
 

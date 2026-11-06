@@ -181,7 +181,7 @@ def run_job(pack):
         if check["ok"]:
             break
         msgs = msgs + [{"role": "assistant", "content": text},
-                       {"role": "user", "content": feedback(check["nepoznate"], check.get("sadrzaj", []))}]
+                       {"role": "user", "content": feedback(check["nepoznate"], check.get("sadrzaj", []), pack)}]
     return {"oib": pack["oib"], "naziv": pack["naziv"]["nom"], "text": attempts[-1]["text"],
             "source": "ai" if attempts[-1]["check"]["ok"] else "neprovjereno",
             "check": attempts[-1]["check"], "attempts": attempts}

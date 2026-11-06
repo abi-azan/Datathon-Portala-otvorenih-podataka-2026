@@ -6,6 +6,8 @@
     .venv/Scripts/python -m pipeline.explain --check out.json   # re-verifies a downloaded Kaggle output
     .venv/Scripts/python -m pipeline.explain --kaggle-batch     # all 576 units, plus data/ai/manifest-2025.json
     .venv/Scripts/python -m pipeline.explain --kaggle-batch --skip out.json   # resume: leave out units whose text fits their pack
+    .venv/Scripts/python -m pipeline.explain --kaggle-batch --neprovjereni    # only the units whose text failed the check
+    .venv/Scripts/python -m pipeline.explain --kaggle-batch --oib 25654647153 # only this unit (repeatable)
     .venv/Scripts/python -m pipeline.explain --import-batch out.json [out2.json]  # -> data/ai/objasnjenja-2025.json
 
 A batch output is matched to the packs its texts were written from by fingerprint (pack_sha256),
@@ -135,7 +137,10 @@ def messages(pack):
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
 
-def feedback(unknown, issues=()):
+def feedback(unknown, issues=(), pack=None):
+    """The retry message. With the pack it also says exactly what to change for the two misses the
+    general line did not fix (batch v2, 5.11., all 15 rejected units, three identical attempts each):
+    a closing "Kontekst …" sentence or a "Jake strane …" sentence although the list has no such item."""
     parts = []
     if unknown:
         parts.append("Tekst sadrži brojke kojih nema u činjenicama: " + ", ".join(unknown)
@@ -144,6 +149,17 @@ def feedback(unknown, issues=()):
         parts.append("Tekst se ne slaže s činjenicama: " + "; ".join(issues)
                      + ". Najslabiji pokazatelj, jake strane, ograničenje ocjene i kontekst navedi samo kako piše na "
                      "popisu, a kontekst ne povezuj s ocjenom.")
+        labels = {f["label"]: f["value"] for f in pack["facts"]} if pack else None
+        if labels is not None and any(i.startswith("jaka strana") for i in issues):
+            if "Jake strane" in labels:
+                parts.append(f"Jake strane su samo: {labels['Jake strane']}.")
+            else:
+                parts.append("Na popisu nema stavke „Jake strane”, pa rečenicu „Jake strane jedinice su: …” "
+                             "potpuno izostavi.")
+        if labels is not None and any(i.endswith("bez stavke u činjenicama") for i in issues) \
+                and not any(f.get("kontekst") for f in pack["facts"]):
+            parts.append("Na popisu nema stavki „Kontekst”, pa rečenicu „Kontekst koji ne ulazi u ocjenu: …” "
+                         "potpuno izostavi; ne piši ni broj stanovnika.")
     return " ".join(parts) + " Napiši tekst ponovno."
 
 
@@ -186,7 +202,7 @@ def generate(pack, call):
         if check["ok"]:
             return {"text": text, "source": "ai", "check": check, "attempts": attempts}
         msgs = msgs + [{"role": "assistant", "content": text},
-                       {"role": "user", "content": feedback(check["nepoznate"], check.get("sadrzaj", []))}]
+                       {"role": "user", "content": feedback(check["nepoznate"], check.get("sadrzaj", []), pack)}]
     text = template(pack)
     return {"text": text, "source": "predlozak", "check": verify.verify(text, pack), "attempts": attempts}
 
@@ -332,16 +348,38 @@ def write_manifest(packs, year=config.LAST_YEAR):
     return manifest
 
 
-def write_kaggle_batch(skip=(), dest=None):
+def unverified_oibs(current, path=None, year=config.LAST_YEAR):
+    """Units without a shown AI text in data/ai/objasnjenja-<year>.json: no text, a text that did not
+    pass the check ("neprovjereno"), or one written from a pack that has changed since.
+    current: {oib: pack_sha256} of today's packs."""
+    path = Path(path) if path else AI_DIR / f"objasnjenja-{year}.json"
+    texts = json.loads(path.read_text(encoding="utf-8"))["tekstovi"] if path.exists() else {}
+    return {o for o, sha in current.items()
+            if o not in texts or texts[o]["izvor"] != "ai" or texts[o]["pack_sha256"] != sha}
+
+
+def write_kaggle_batch(skip=(), dest=None, only=None, unverified=False):
     """kaggle/gemma_batch.py: every unit's pack for LAST_YEAR, minus the units whose text in one of
-    the outputs listed in skip still fits their pack. The manifest always covers all units."""
+    the outputs listed in skip still fits their pack. only: a set of OIBs to run instead of all units;
+    unverified: add the units without a shown AI text (unverified_oibs), to try the rejected texts
+    again. The manifest always covers all units."""
     packs = load_packs()[0]
     current = {p["oib"]: pack_sha256(p) for p in packs}
     done = done_oibs(skip, current)
+    if unverified:
+        only = set(only or ()) | unverified_oibs(current)
+        if not only:
+            raise SystemExit("nema jedinica za ponovno generiranje: svi tekstovi prolaze provjeru")
+    if only is not None:
+        unknown = set(only) - set(current)
+        if unknown:
+            raise SystemExit(f"nepoznati OIB-ovi: {sorted(unknown)}")
     manifest = write_manifest(packs)
-    todo = [p for p in packs if p["oib"] not in done]
+    todo = [p for p in packs if p["oib"] not in done and (only is None or p["oib"] in only)]
     if skip:
         print(f"preskačem {len(done)} jedinica s tekstom za nepromijenjen paket, ostaje {len(todo)}")
+    if only is not None:
+        print(f"samo odabrane jedinice: {len(todo)} ({', '.join(p['naziv']['nom'] for p in todo[:20])})")
     # the output carries the fingerprint of every pack it was given (and of the check), so an
     # import does not have to trust a manifest that a later run may have rewritten
     meta = {"vrsta": "batch", "godina": config.LAST_YEAR, "prompt_sha256": manifest["prompt_sha256"],
@@ -502,6 +540,10 @@ def main():
     ap.add_argument("--skip", action="append", default=[], metavar="OUTPUT_JSON",
                     help="with --kaggle-batch: leave out units whose text in this output was written from "
                          "their current pack")
+    ap.add_argument("--neprovjereni", action="store_true",
+                    help="with --kaggle-batch: only the units without a shown AI text in data/ai/objasnjenja-<year>.json")
+    ap.add_argument("--oib", action="append", default=[], metavar="OIB",
+                    help="with --kaggle-batch: only this unit (repeatable)")
     ap.add_argument("--import-batch", nargs="+", metavar="OUTPUT_JSON",
                     help="downloaded batch outputs -> data/ai/objasnjenja-<year>.json")
     ap.add_argument("--out", metavar="JSON", help="with --import-batch: write here instead of data/ai/")
@@ -511,7 +553,7 @@ def main():
     if a.kaggle_test:
         write_kaggle_test(a.kaggle_test, fresh=a.fresh, hf=a.hf, min_context=a.kontekst)
     if a.kaggle_batch:
-        write_kaggle_batch(skip=a.skip)
+        write_kaggle_batch(skip=a.skip, only=set(a.oib) if a.oib else None, unverified=a.neprovjereni)
     if a.check:
         check_output(a.check)
 
