@@ -45,9 +45,22 @@ Pregledana je stranica uživo na 1440×900, 1366×768 i 390 px. Mobitel se po od
 - [x] Pregled jedinice: "Kopiraj poveznicu" i "Podaci jedinice (JSON)" u gornjem redu.
 - [x] Metodologija: odjeljak "MCP server za AI asistente" s primjerom iz API-ja; poveznica u podnožju.
 - [x] README: maknuta zastarjela rečenica "Za 15 jedinica prikazuje se predložak".
-- [ ] Commit i push na `main`, zeleni CI, provjera stranice uživo (Zagreb, naslovnica, Karta reforme).
-- [ ] Nova snimka naslovnice za README nakon pusha (naslovnica se promijenila).
+- [x] Commit i push na `main` (`54fa05f`, `8b3fa6d`), zeleni CI.
 - [ ] Mobitel, ako ostane vremena: u simulatoru s odabranim jedinicama karta je na 4.774. pikselu od 6.014, a na Karti reforme ispod svih brojki.
+
+# Bodovi: API i UI/UX, 6.11. navečer
+
+Procjena prije ovoga: oko 45 od 50 mogućih bez videa (API 4 od 5, dojam 8,5 od 10).
+
+- [x] Kartica "Otvoreni podaci jedinice" pita Portal uživo: broj skupova i dan zadnje izmjene (CKAN `package_search`). Portal ne šalje CORS zaglavlje, pa se zove kao JSONP (`web/src/lib/portal.ts`). Ako ne odgovori ili vrati manje od 80 % spremljenog broja, ostaje brojka iz obrade. Na Portalu objavljuje 269 od 576 jedinica.
+- [x] Metodologija → Podaci: ploča "Podaci preko API-ja" (9 od 32 izvora). Preglednik uživo pita Portal (broj skupova u katalogu), DZS PxWeb (zadnja godina procjene) i WFS (broj jedinica u sloju granica); uz svaki je poveznica "otvori poziv".
+- [x] Pregled jedinice: traka "Ocjena po godinama" uz siluetu; ispod "Ukratko" jedna napomena umjesto dvije; izvori kartice "Stanovništvo i gospodarstvo" i izračun izravnanja sklopljeni iza jednog retka.
+- [x] Simulator: poruka o dospjelim obvezama odmah ispod tablice; kriterij od 10 %, promjena stanovništva i izračun uštede sklopljeni.
+- [x] Karta: legenda više ne prekriva otoke kod Zadra i Šibenika na 1280×720 i 1366×768 (`mapStyle.leftClear` računa lijevi odmak pri prvom prikazu).
+- [x] Pristupačnost: axe (WCAG 2 A i AA) ne nalazi prekršaje na naslovnici, pregledu jedinice, simulatoru, Karti reforme i metodologiji.
+- [ ] Nije napravljeno: tablica Porezne uprave preko DataStore API-ja. Jedina tablica koja ga ima (usporedba stopa 2025./2026.) u DataStoreu ima 10.754 retka, od toga 10.198 praznih, pa XLSX ostaje izvor.
+- [ ] Utjecaj (bez koda): poslati poveznicu dvjema ili trima osobama (vijećnik, novinar, udruga) i jednu njihovu rečenicu staviti u dokumentaciju i video.
+- [ ] Video: probna snimka u subotu, da se vidi stane li 11 kadrova u 3 minute.
 
 # Čeka odluku
 

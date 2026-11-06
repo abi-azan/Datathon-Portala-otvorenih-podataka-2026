@@ -55,11 +55,18 @@ Svi korišteni skupovi s izdavateljem, poveznicom, licencom i načinom pristupa 
 |---|---|---|
 | PR-RAS, RAS-funkcijski i Bilanca JLP(R)S 2019.-2025. | Ministarstvo financija | datoteke (uvjetni GET, ETag) |
 | Fiskalno izravnanje: odluke 2021.-2025. i tablica za 2027. | Ministarstvo financija | datoteke (uvjetni GET) |
-| Popis 2021. i granice gradova i općina (INSPIRE) | DZS, servis DGU/NIPP | **API: OGC WFS** |
+| Popis 2021. i granice gradova i općina (INSPIRE) | DZS, servis DGU/NIPP | **API: OGC WFS** (ETL i provjera uživo) |
 | Stanovništvo, migracije, rođeni i umrli, turizam, građevinske dozvole | DZS | **API: PxWeb** (ETL i uživo iz preglednika) |
-| Katalog portala; neto dohodak, porezne stope i porezi Porezne uprave | data.gov.hr, Porezna uprava | **API: CKAN** |
+| Katalog portala; neto dohodak, porezne stope i porezi Porezne uprave | data.gov.hr, Porezna uprava | **API: CKAN** (ETL i uživo iz preglednika) |
 | Izvješća o financijskim revizijama, objavljena 2019.-2026. | Državni ured za reviziju | HTML popis i PDF (`pipeline/dur.py`) |
 | Upravne jedinice INSPIRE, indeks razvijenosti 2024. | DGU, MRRFEU | jednokratno, `data/reference/jls_master.csv` |
+
+Od 32 izvora podataka 9 se čita izravno preko API-ja: katalog Portala (CKAN), šest tablica DZS-a (PxWeb) i dva sloja INSPIRE (WFS). Ta tri servisa stranica pita i uživo iz preglednika:
+
+- **Metodologija i podaci → Podaci** pokazuje što svaki od njih odgovara u tom trenutku: broj skupova u katalogu Portala, zadnju godinu procjene stanovništva i broj jedinica u sloju granica.
+- **Pregled jedinice** uživo pita DZS za broj stanovnika, a Portal za broj skupova koje jedinica objavljuje i dan zadnje izmjene. Portal ne šalje CORS zaglavlje, pa ga preglednik zove kao JSONP (`web/src/lib/portal.ts`).
+
+Ako servis ne odgovori, ostaje brojka iz zadnje obrade. Tablice Porezne uprave su datoteke na Portalu; ETL pri svakoj obradi preko `package_show` nađe najnoviju.
 
 Podaci Ministarstva financija nisu na portalu i nemaju izričitu licencu. Koriste se prema Zakonu o pravu na pristup informacijama i uz uvjete Otvorene dozvole (Pravilnik NN 67/17, čl. 4.). Obrazloženje je u [docs/skupovi-podataka.md](docs/skupovi-podataka.md).
 
@@ -106,6 +113,7 @@ flowchart LR
   API --> WEB
   API --> MCPS
   PX -. "uživo iz preglednika (CORS)" .-> WEB
+  CK -. "uživo iz preglednika (JSONP)" .-> WEB
 ```
 
 - **Bez poslužitelja i baze.** Sve se izračuna u CI-ju i objavi kao statične datoteke.

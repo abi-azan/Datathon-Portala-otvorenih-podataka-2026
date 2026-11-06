@@ -1,7 +1,7 @@
-import { AlertTriangle, ArrowRight, ChevronDown, Info, LoaderCircle, RotateCcw, Scale, X } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Info, LoaderCircle, RotateCcw, Scale, X } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { GradeChip } from '../components/Grade'
-import { Card, Eyebrow } from '../components/Layout'
+import { Card, Eyebrow, Fold } from '../components/Layout'
 import { Search } from '../components/Search'
 import {
   canMerge,
@@ -528,27 +528,7 @@ function Result({
           Dospjele obveze su neplaćene obveze kojima je prošao rok, kao udio u rashodima poslovanja. Opća uprava su rashodi za
           opće javne usluge (funkcija 01), bez transakcija za javni dug (017) i prijenosa između razina vlasti (018).
         </p>
-        {(z5 || rows.some((x) => x.z5)) && (
-          <div className="mt-4 border-t border-hairline pt-4">
-            <div className="text-sm font-medium">Kriterij od 10 % za pomoći iz državnog proračuna</div>
-            <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
-              {rows.map((x) => (
-                <div key={x.u.sifra} className="contents">
-                  <dt className="text-ink-2">{short(x.u.naziv)}</dt>
-                  <dd className="tabular text-right">{x.z5 ? `${x.z5.value} · manjak ${pct(x.d_udio)}` : '–'}</dd>
-                </div>
-              ))}
-              <dt className="font-semibold">Spojena</dt>
-              <dd className="tabular text-right font-semibold">{z5 ? `${z5.value} · manjak ${pct(z.z5_manjak_udio)}` : '–'}</dd>
-            </dl>
-            <p className="mt-2 text-xs text-muted">
-              Zaključak Vlade od 16. travnja 2026.: manjak prihoda nad rashodima bez EU izvora smije biti najviše 10 % prihoda
-              bez EU izvora, inače jedinica ne može dobiti pomoći iz državnog proračuna koje se dodjeljuju na javnim pozivima.
-              Izračun je naš, ne službeni
-              {(z5?.approx || rows.some((x) => x.z5?.approx)) && ', a kod jedinica s velikim EU projektima približan'}.
-            </p>
-          </div>
-        )}
+        {/* the one sentence the table is there for comes first; the two side topics open on a click */}
         {diluted && worst && (
           <div className="mt-4 flex gap-2.5 rounded-xl bg-page p-3 text-sm">
             <Scale className="mt-0.5 h-4 w-4 shrink-0 text-ink-2" aria-hidden />
@@ -558,6 +538,26 @@ function Result({
               {pct(z.I5)}.
             </p>
           </div>
+        )}
+        {(z5 || rows.some((x) => x.z5)) && (
+          <Fold label={`Kriterij od 10 % za pomoći iz državnog proračuna${z5 ? `: spojena jedinica ${z5.value}` : ''}`}>
+            <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
+              {rows.map((x) => (
+                <div key={x.u.sifra} className="contents">
+                  <dt className="text-ink-2">{short(x.u.naziv)}</dt>
+                  <dd className="tabular text-right">{x.z5 ? `${x.z5.value} · manjak ${pct(x.d_udio)}` : '–'}</dd>
+                </div>
+              ))}
+              <dt className="font-semibold">Spojena</dt>
+              <dd className="tabular text-right font-semibold">{z5 ? `${z5.value} · manjak ${pct(z.z5_manjak_udio)}` : '–'}</dd>
+            </dl>
+            <p className="text-xs text-muted">
+              Zaključak Vlade od 16. travnja 2026.: manjak prihoda nad rashodima bez EU izvora smije biti najviše 10 % prihoda
+              bez EU izvora, inače jedinica ne može dobiti pomoći iz državnog proračuna koje se dodjeljuju na javnim pozivima.
+              Izračun je naš, ne službeni
+              {(z5?.approx || rows.some((x) => x.z5?.approx)) && ', a kod jedinica s velikim EU projektima približan'}.
+            </p>
+          </Fold>
         )}
         {r.demografija && <Demography d={r.demografija} r={r} members={members} sources={demoSources} />}
       </Card>
@@ -573,7 +573,32 @@ function Result({
             Ušteda zbog veličine: veće jedinice iste vrste na upravu troše manje po stanovniku. U praksi se ostvari tek dio,
             osobito kod dobrovoljnih spajanja.
           </p>
-          <dl className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 border-t border-hairline pt-4 text-sm">
+          {u.razmjer === 0 && (
+            <p className="mt-3 text-sm text-ink-2">
+              Spojena jedinica ne prelazi u razred veličine s nižim troškom uprave po stanovniku, pa se ušteda zbog veličine
+              ne očekuje.
+            </p>
+          )}
+          {u.jaz_bez_spajanja != null && u.jaz_bez_spajanja > 0 && (
+            <div className="mt-4 flex gap-2.5 rounded-xl bg-page p-3 text-sm">
+              <Scale className="mt-0.5 h-4 w-4 shrink-0 text-ink-2" aria-hidden />
+              <p>
+                <strong className="font-semibold">Jaz koji postoji i bez spajanja: {eur(u.jaz_bez_spajanja)} godišnje.</strong>{' '}
+                Toliko članice na upravu troše više od sličnih jedinica svoje veličine. Taj se trošak može smanjiti i bez
+                spajanja, unutarnjom uštedom ili zajedničkim službama, pa ga ne pripisujemo spajanju.
+              </p>
+            </div>
+          )}
+          {u.iznad_10000 && (
+            <p className="mt-3 flex gap-2 text-sm text-ink-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              Spojena jedinica ima više od 10.000 stanovnika. Iznad te veličine dodatna ušteda se ne očekuje; alternativa je
+              funkcionalno spajanje ili zajedničke službe.
+            </p>
+          )}
+          {/* the working of the range and the caveat from the literature open on a click */}
+          <Fold>
+          <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 text-sm">
             <dt className="text-ink-2">Opća uprava članica zajedno</dt>
             <dd className="tabular text-right">{eur(u.uprava_zbroj)}</dd>
             <dt className="text-ink-2">
@@ -598,34 +623,12 @@ function Result({
             </dt>
             <dd className="tabular text-right font-semibold">0 – {eur(u.realno_do)}</dd>
           </dl>
-          {u.razmjer === 0 && (
-            <p className="mt-3 text-sm text-ink-2">
-              Spojena jedinica ne prelazi u razred veličine s nižim troškom uprave po stanovniku, pa se ušteda zbog veličine
-              ne očekuje.
-            </p>
-          )}
-          {u.jaz_bez_spajanja != null && u.jaz_bez_spajanja > 0 && (
-            <div className="mt-4 flex gap-2.5 rounded-xl bg-page p-3 text-sm">
-              <Scale className="mt-0.5 h-4 w-4 shrink-0 text-ink-2" aria-hidden />
-              <p>
-                <strong className="font-semibold">Jaz koji postoji i bez spajanja: {eur(u.jaz_bez_spajanja)} godišnje.</strong>{' '}
-                Toliko članice na upravu troše više od sličnih jedinica svoje veličine. Taj se trošak može smanjiti i bez
-                spajanja, unutarnjom uštedom ili zajedničkim službama, pa ga ne pripisujemo spajanju.
-              </p>
-            </div>
-          )}
-          {u.iznad_10000 && (
-            <p className="mt-3 flex gap-2 text-sm text-ink-2">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-              Spojena jedinica ima više od 10.000 stanovnika. Iznad te veličine dodatna ušteda se ne očekuje; alternativa je
-              funkcionalno spajanje ili zajedničke službe.
-            </p>
-          )}
-          <p className="mt-3 text-xs text-muted">
+          <p className="text-xs text-muted">
             Troškovi prijelaza (usklađivanje službi, sustava i propisa) nisu uključeni. Studije reformi u Danskoj, Njemačkoj i
             Nizozemskoj pokazuju da se u praksi ostvari tek dio potencijala ili ništa, a Svjetska banka upozorava da spojena
             jedinica troškove često izjednači prema skupljoj članici.
           </p>
+          </Fold>
         </Card>
       )}
 
@@ -720,11 +723,14 @@ function Demography({
   sources?: SimulatorFile['demografija_izvor_po_godini']
 }) {
   return (
-    <div className="mt-4 border-t border-hairline pt-4">
-      <div className="text-sm font-medium">
-        Promjena broja stanovnika od {d.od}. do {d.do}.
-      </div>
-      <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
+    <Fold
+      label={
+        <>
+          Promjena broja stanovnika od {d.od}. do {d.do}.: <span className="tabular">{signedPct(d.promjena)}</span>
+        </>
+      }
+    >
+      <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
         {members.map((m) => (
           <div key={m.sifra} className="contents">
             <dt className="text-ink-2">{short(m.naziv)}</dt>
@@ -734,17 +740,17 @@ function Demography({
         <dt className="font-semibold">Spojena</dt>
         <dd className="tabular text-right font-semibold">{signedPct(d.promjena)}</dd>
       </dl>
-      <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">
+      <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-sm">
         <dt className="text-ink-2">Prirodni prirast, {d.do}.</dt>
         <dd className="tabular text-right">{withRate(d.prirodna, r.stanovnici)}</dd>
         <dt className="text-ink-2">Migracijski saldo, {d.do}.</dt>
         <dd className="tabular text-right">{withRate(d.migracije, r.stanovnici)}</dd>
       </dl>
-      <p className="mt-2 text-xs text-muted">
+      <p className="text-xs text-muted">
         Zbroj za sve članice; na 1.000 stanovnika prema Popisu 2021. Kretanje stanovništva ne ulazi u ocjenu: ocjena i
         iznosi po stanovniku računaju se s Popisom 2021. {demographySource(sources)}
       </p>
-    </div>
+    </Fold>
   )
 }
 
@@ -895,14 +901,4 @@ function IncentiveCard({ r, members }: { r: MergeSummary; members: UnitIndex[] }
 }
 
 /** The working and the legal basis of a simulator block, folded so the amount and one sentence lead. */
-function HowComputed({ children }: { children: ReactNode }) {
-  return (
-    <details className="group mt-3 border-t border-hairline pt-3">
-      <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded text-xs text-muted underline decoration-axis underline-offset-4 hover:text-ink hover:decoration-ink [&::-webkit-details-marker]:hidden">
-        Kako se računa
-        <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" aria-hidden />
-      </summary>
-      <div className="mt-3 space-y-3">{children}</div>
-    </details>
-  )
-}
+const HowComputed = Fold

@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Page } from '../lib/router'
 
@@ -142,4 +143,18 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
 
 export function Eyebrow({ children }: { children: ReactNode }) {
   return <div className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">{children}</div>
+}
+
+/** Small print folded under one underlined line, so the figure and one sentence lead, and the working,
+ *  the legal basis or the dates of the sources open on a click. */
+export function Fold({ label = 'Kako se računa', children }: { label?: ReactNode; children: ReactNode }) {
+  return (
+    <details className="group mt-3 border-t border-hairline pt-3">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded text-xs text-muted underline decoration-axis underline-offset-4 hover:text-ink hover:decoration-ink [&::-webkit-details-marker]:hidden">
+        {label}
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" aria-hidden />
+      </summary>
+      <div className="mt-3 space-y-3">{children}</div>
+    </details>
+  )
 }

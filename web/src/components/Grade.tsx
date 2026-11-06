@@ -20,6 +20,37 @@ export function GradeChip({ g, size = 'sm' }: { g: number | null | undefined; si
   )
 }
 
+/** The unit's grade in every year as a row of squares, the shown year outlined. The number is in the
+ *  square and the word in its title, so colour is never the only carrier; a year without a grade
+ *  shows a dash. */
+export function GradeHistory({ years, current, className = '' }: { years: [string, number | null | undefined][]; current: string; className?: string }) {
+  if (years.length < 2) return null
+  return (
+    <div className={className}>
+      <div className="text-xs text-muted">Ocjena po godinama</div>
+      <ol className="mt-2 flex gap-1.5">
+        {years.map(([y, g]) => {
+          const m = grade(g)
+          return (
+            <li key={y} className="text-center" title={`${y}.: ${m ? `${m.value} (${m.word})` : 'nema ocjene'}`}>
+              <span
+                className={`tabular grid h-10 w-10 place-items-center rounded-lg text-base font-semibold ${
+                  m ? '' : 'border border-hairline text-muted'
+                } ${y === current ? 'ring-2 ring-ink ring-offset-2 ring-offset-page' : ''}`}
+                style={m ? { background: m.color, color: m.ink } : undefined}
+              >
+                {m ? m.value : '–'}
+              </span>
+              <span className="sr-only">{m ? m.word : 'nema ocjene'}, </span>
+              <span className="tabular mt-1.5 block text-[11px] text-muted">{y}.</span>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  )
+}
+
 /** Legend drawn on a map: a list inside the map's caption (from lg), or a wrapped strip under the
  *  map on phones, where a list over the map would cover half of Croatia. */
 export function MapLegend({ rows, layout, label }: { rows: LegendRow[]; layout: 'list' | 'strip'; label: string }) {

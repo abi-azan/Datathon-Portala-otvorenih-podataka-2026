@@ -1,5 +1,6 @@
 import { ChevronDown, ExternalLink } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
+import { ApiPanel } from '../components/ApiPanel'
 import { IndicatorsExplained } from '../components/IndicatorsExplained'
 import { Eyebrow } from '../components/Layout'
 import { loadDatasets, loadMethodology, loadUnit, type Dataset, type MethodologyDoc, type UnitDetail } from '../lib/data'
@@ -130,7 +131,6 @@ export function Methodology() {
   }, [doc])
 
   const used = (sets ?? []).filter((s) => s.koristi_se)
-  const ckan = used.find((s) => s.kljuc === 'ckan_package_search')
   const dzsApi = used.find((s) => s.kljuc === 'dzs_pxweb_sp31_2')
 
   return (
@@ -308,12 +308,8 @@ export function Methodology() {
           )}
 
           <Section id="podaci" title="Podaci">
-            {ckan && (
-              <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-sm shadow-sm ring-1 ring-hairline">
-                Preuzeto s data.gov.hr API-ja (CKAN) {day(ckan.zadnje_preuzimanje)}
-              </p>
-            )}
-            {doc.revizija && <p className="mt-3 text-sm text-ink-2">{doc.revizija}</p>}
+            <ApiPanel sets={used} />
+            {doc.revizija && <p className="mt-4 text-sm text-ink-2">{doc.revizija}</p>}
             <p className="mt-3 text-sm text-ink-2">
               Podaci Ministarstva financija, Porezne uprave, DZS-a i Portala otvorenih podataka preuzimaju se automatski pri
               svakoj obradi podataka;

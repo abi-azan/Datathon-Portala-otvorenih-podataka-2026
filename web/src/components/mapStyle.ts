@@ -12,15 +12,67 @@ export const CROATIA: [number, number, number, number] = [13.45, 42.35, 19.45, 4
  *  phone (about zoom 4.9 with the caption above it); on a desktop the first view is above 5.5 anyway. */
 export const MIN_ZOOM = 4.5
 
+/** Web Mercator y of a latitude, in degrees, so it shares a scale with longitude. */
+const mercY = (lat: number) => (Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180) / Math.PI
+
+// The westmost land of Croatia from Istria south, [lon, lat]: Savudrija, the west coast of Istria,
+// Kamenjak, Unije, Susak, Lošinj, Premuda, Dugi otok, Kornati, Žirje, Biševo and Lastovo. A caption in
+// the bottom left corner has to stay left of these (open-sea islets such as Svetac are left out).
+const WEST_EDGE: [number, number][] = [
+  [13.49, 45.5],
+  [13.6, 45.1],
+  [13.9, 44.77],
+  [14.24, 44.62],
+  [14.29, 44.51],
+  [14.45, 44.47],
+  [14.57, 44.33],
+  [14.82, 44.15],
+  [15.0, 43.95],
+  [15.2, 43.8],
+  [15.63, 43.65],
+  [16.0, 42.97],
+  [16.8, 42.75],
+]
+
+/** The left padding with which fitBounds(CROATIA) puts all land right of a caption that sits in the
+ *  bottom left corner of the map. On a short map (a 1280×720 laptop) the caption with the legend is
+ *  almost half the map's height and would cover the islands off Zadar and Šibenik. The padding grows
+ *  only as far as Croatia stays within 10 % of its size at the smallest padding. */
+function leftClear(caption: HTMLElement, base: number): number {
+  const floor = base + 64
+  const box = caption.offsetParent as HTMLElement | null
+  const W = box?.clientWidth ?? 0
+  const H = box?.clientHeight ?? 0
+  if (!W || !H) return floor
+  const [w, s, e, n] = CROATIA
+  const cw = e - w
+  const top = mercY(n)
+  const ch = top - mercY(s)
+  const scaleAt = (left: number) => Math.min((W - left - base) / cw, (H - 2 * base) / ch)
+  const right = caption.offsetLeft + caption.offsetWidth + 10
+  const above = caption.offsetTop - 10
+  let best = floor
+  for (let left = floor; left <= W - base - 200; left += 8) {
+    const scale = scaleAt(left)
+    if (scale < 0.9 * scaleAt(floor)) break
+    best = left
+    // fitBounds centres the bounds in the padded box
+    const x0 = left + (W - left - base - cw * scale) / 2
+    const y0 = base + (H - 2 * base - ch * scale) / 2
+    if (WEST_EDGE.every(([lon, lat]) => y0 + (top - mercY(lat)) * scale < above || x0 + (lon - w) * scale >= right)) break
+  }
+  return best
+}
+
 /** Fit padding that keeps Croatia clear of the map's caption. Below lg the caption sits in the top
  *  corner and the map is wide rather than tall, so a deeper top padding costs no zoom; from lg it sits
- *  bottom left, over the Italian coast, and a wider left padding moves the southern islands to the
- *  right of it (the map is tall rather than wide there, so this too costs almost no zoom). */
+ *  bottom left, over the Italian coast, and a wider left padding moves the islands to the right of it
+ *  (the map is tall rather than wide there, so this too costs almost no zoom). */
 export function fitPadding(caption: HTMLElement | null, base = 24) {
   const atTop = caption != null && caption.offsetTop < 40
   return atTop
     ? { top: Math.max(base, caption.offsetTop + caption.offsetHeight + 8), bottom: base, left: base, right: base }
-    : { top: base, bottom: base, left: caption ? base + 64 : base, right: base }
+    : { top: base, bottom: base, left: caption ? leftClear(caption, base) : base, right: base }
 }
 
 /** Land colour of the quiet basemap (and of BLANK). */

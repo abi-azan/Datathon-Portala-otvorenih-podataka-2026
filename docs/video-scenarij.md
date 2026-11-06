@@ -32,7 +32,7 @@ Uz smirenu brzinu (oko 130 riječi u minuti) govor traje oko 2:35, pa ostaje oko
 
 ## 0:33-1:15 Ana traži svoju općinu (pregled jedinice)
 
-**Kadar:** pretraga, upisuje se "povlj"; zatim pregled Općine Povljana: ocjena 2, 39,9 boda, "Prošle godine 5 · vrlo stabilno".
+**Kadar:** pretraga, upisuje se "povlj"; zatim pregled Općine Povljana: ocjena 2, 39,9 boda, "Prošle godine 5 · vrlo stabilno". Uz siluetu je od 6.11. traka "Ocjena po godinama" (2, 3, 2, 4, 5, 5, 2), pa se pad s pet na dva vidi bez pomicanja stranice.
 
 **Naracija:**
 > Ana živi u Povljani na Pagu. Otvori pregled svoje općine: ocjena dva, nestabilno. Lani je bila pet. Ocjenu spuštaju dospjele neplaćene obveze: milijun i četrdeset šest tisuća eura, gotovo pola godišnjih rashoda. Kod sličnih općina medijan je dva posto.
@@ -61,7 +61,7 @@ Uz smirenu brzinu (oko 130 riječi u minuti) govor traje oko 2:35, pa ostaje oko
 
 ## 2:05-2:42 Podaci i arhitektura
 
-**Kadar:** shema iz README-a (izvori, ETL u CI-ju, statični API, web, MCP, Kaggle), zatim stranica "Metodologija i podaci" (tablica skupova), `openapi.json` i `dcat.jsonld`. Zatim **8-10 s MCP servera** (`docs/mcp.md`, primjer 2): u MCP klijentu (npr. Claude Desktop ili MCP Inspector) pitanje "Što bi bilo da se Povljana spoji s Pagom?", vidljiv poziv `scenarij_spajanja`, odgovor "ocjena 5 (83,6 boda), ušteda 0 do 18.044,8 € godišnje" s poveznicom na simulator.
+**Kadar:** shema iz README-a (izvori, ETL u CI-ju, statični API, web, MCP, Kaggle), zatim stranica "Metodologija i podaci", odjeljak "Podaci": ploča "Podaci preko API-ja" (od 6.11.), na kojoj preglednik uživo pita Portal, DZS PxWeb i WFS i ispiše odgovore ("3.969 skupova u katalogu", "procjena stanovništva do 2024. godine", "556 općina i gradova u sloju granica"; brojke prije snimanja pročitati sa stranice). Zatim `openapi.json` i `dcat.jsonld`. Zatim **8-10 s MCP servera** (`docs/mcp.md`, primjer 2): u MCP klijentu (npr. Claude Desktop ili MCP Inspector) pitanje "Što bi bilo da se Povljana spoji s Pagom?", vidljiv poziv `scenarij_spajanja`, odgovor "ocjena 5 (83,6 boda), ušteda 0 do 18.044,8 € godišnje" s poveznicom na simulator.
 
 **Naracija:**
 > Podatke uzimamo izravno s izvora: Ministarstvo financija, DZS preko INSPIRE i PxWeb servisa, Porezna uprava i Portal otvorenih podataka preko CKAN API-ja. Svako preuzimanje bilježimo s otiskom datoteke. Sve se izračuna u GitHub Actionsu i objavi kao otvoreni API s OpenAPI opisom i katalogom DCAT-AP. Iste brojke AI asistenti dobivaju preko MCP servera.
@@ -99,7 +99,7 @@ Snima se zaslon 1920×1080, preglednik bez traka i kursor uvećan.
 6. Simulator Povljana + Pag, ulaz preko poveznice s pregleda jedinice.
 7. Karta reforme: klizač 2.500 → 5.000 → 10.000, isticanje spojenih, "Prikaži samo spojene", klik na skupinu Paga.
 8. Shema arhitekture iz README-a (dijagram mermaid; za video prepisati u vektorsku sliku).
-9. Stranica "Metodologija i podaci", `openapi.json` i `dcat.jsonld` u pregledniku.
+9. Stranica "Metodologija i podaci", ploča "Podaci preko API-ja" s tri odgovora uživo (`#/metodologija?o=podaci`), zatim `openapi.json` i `dcat.jsonld` u pregledniku.
 10. MCP klijent s pitanjem o Povljani i Pagu (`docs/mcp.md`, primjer 2).
 11. Repozitorij na GitHubu (README).
 

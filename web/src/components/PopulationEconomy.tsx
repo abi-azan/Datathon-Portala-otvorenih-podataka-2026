@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import type { ContextIndicator, PopulationEconomy } from '../lib/data'
 import { liveSeries, mergeSeries, PUBLICATION, yearSpan, yearsBySource } from '../lib/dzs'
 import { eur, num, pct } from '../lib/format'
-import { Card, Eyebrow } from './Layout'
+import { Card, Eyebrow, Fold } from './Layout'
 import { StatRow } from './StatRow'
 
 const MINUS = '−'
@@ -194,8 +194,10 @@ export function PopulationEconomyCard({ data }: { data: PopulationEconomy }) {
         />
       </dl>
 
-      <p className="mt-4 text-xs leading-relaxed text-muted">
-        Izvor: Državni zavod za statistiku, PxWeb (stanovništvo{updated('SP31_2') && `, ažurirano ${updated('SP31_2')}`}; turizam u
+      {/* the publishers stay on the card; the dates and the notes open on a click */}
+      <Fold label="Izvor: Državni zavod za statistiku i Porezna uprava">
+      <p className="text-xs leading-relaxed text-muted">
+        Državni zavod za statistiku, PxWeb (stanovništvo{updated('SP31_2') && `, ažurirano ${updated('SP31_2')}`}; turizam u
         komercijalnom smještaju{updated('BS_TU19') && `, ${updated('BS_TU19')}`}; građevinske dozvole
         {updated('PX14') && `, ${updated('PX14')}`})
         {pub && pubYears.length > 0 && (
@@ -208,6 +210,7 @@ export function PopulationEconomyCard({ data }: { data: PopulationEconomy }) {
         Iznosi po stanovniku računaju se s Popisom 2021.
         {data.skupina ? ` Medijan je za usporednu skupinu „${data.skupina}”.` : ' Grad Zagreb nema usporedne skupine.'}
       </p>
+      </Fold>
     </Card>
   )
 }

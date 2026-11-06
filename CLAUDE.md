@@ -81,6 +81,9 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
   - Pushing a change under `.github/workflows/` needs a `gh` token with the `workflow` scope (`gh auth refresh -h github.com -s workflow`).
 - `web/` is the frontend: React 19, Vite 8, Tailwind 4, MapLibre GL 6 with OpenFreeMap tiles, hash routes.
   - Run it with `npm run dev`, or with `npm run build` and then `npx vite preview`.
+  - Live calls to public APIs from the browser are in `web/src/lib/dzs.ts` (PxWeb population series on the profile) and `web/src/lib/portal.ts` (since 2026-11-06). The portal's CKAN is called as JSONP (`callback=`), because it sends no CORS header: the unit's dataset count on the profile (`PortalCard`) and the catalogue count in Metodologija → Podaci (`ApiPanel`, which also asks PxWeb table metadata and a WFS `RESULTTYPE=hits` count). Every failure keeps the build's copy; a live count under 80 % of the stored one is not shown.
+  - `mapStyle.leftClear` sets the left fit padding so that the caption with the legend (bottom left from lg) covers no land on short maps (1280×720).
+  - The portal's DataStore copy of the one Porezna table that has it (rate comparison 2025/2026, resource `a33cb1d7…`) holds 10,754 rows, 10,198 of them empty (checked 2026-11-06), so the XLSX stays the source.
   - The MapLibre worker URL is set explicitly with `?url`, because Vite breaks the default path.
 - `pipeline/build.py` orchestrates the steps above and writes `data/build/units.csv`, `results.parquet`, `results.json` and `geo/`.
 

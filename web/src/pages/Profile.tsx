@@ -1,8 +1,9 @@
 import { AlertTriangle, ArrowLeft, ArrowRight, Braces, Check, CheckCircle2, ChevronDown, ExternalLink, Info, Link2, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { GradeChip } from '../components/Grade'
+import { GradeChip, GradeHistory } from '../components/Grade'
 import { Card, Eyebrow } from '../components/Layout'
 import { PopulationEconomyCard } from '../components/PopulationEconomy'
+import { PortalCard } from '../components/PortalCard'
 import { StatRow as Row } from '../components/StatRow'
 import { TrendChart } from '../components/TrendChart'
 import { CheckedText, SourcePanel } from '../components/Sources'
@@ -129,20 +130,30 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             )}
             <span>usporedna skupina: {groupLabel(unit.skupina)}</span>
           </div>
-          {wide() && (
-            <div className="mt-6 hidden lg:block">
-              <Suspense fallback={null}>
-                <UnitOutline
-                  kind={isCounty ? 'zupanija' : 'jedinica'}
-                  slug={unit.slug}
-                  neighbours={unit.susjedi.map((s) => s.slug)}
-                  zupId={unit.zup_id}
-                  ocjena={r.ocjena}
-                  naziv={unit.naziv}
-                />
-              </Suspense>
-            </div>
-          )}
+          {/* where the unit is, and how its grade moved: the first screen answers "since when" too */}
+          <div className="mt-6 flex flex-wrap items-center gap-x-12 gap-y-5">
+            {wide() && (
+              <div className="hidden lg:block">
+                <Suspense fallback={null}>
+                  <UnitOutline
+                    kind={isCounty ? 'zupanija' : 'jedinica'}
+                    slug={unit.slug}
+                    neighbours={unit.susjedi.map((s) => s.slug)}
+                    zupId={unit.zup_id}
+                    ocjena={r.ocjena}
+                    naziv={unit.naziv}
+                  />
+                </Suspense>
+              </div>
+            )}
+            <GradeHistory
+              years={Object.keys(unit.godine)
+                .sort()
+                .map((y) => [y, unit.godine[y].ocjena])}
+              current={year}
+              className="hidden sm:block"
+            />
+          </div>
         </div>
         <div className="rounded-2xl border border-hairline bg-card p-5">
           <div className="flex items-start justify-between gap-4">
@@ -227,14 +238,13 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
                 listOpen={checkOpen}
                 className="mt-3 font-serif text-xl leading-relaxed"
               />
+              {/* one note, not two: what the check is, and that a number can be followed to its source */}
               <p className="mt-3 text-sm text-ink-2">
                 {unit.objasnjenje.izvor === 'ai'
-                  ? 'Svaka brojka u tekstu provjerena je prema činjenicama koje je izračunao naš kod. Tekst s ijednom drugom brojkom odbacuje se, a umjesto njega prikazuje se predložak.'
-                  : 'Tekst je složen iz predloška, bez jezičnog modela. AI tekst prikazuje se samo kad prođe provjeru brojki.'}
-              </p>
-              <p className="mt-1.5 text-xs text-muted">
-                Prijeđi mišem preko brojke ili je dodirni da vidiš odakle je. Brojke pokazatelja vode do konta i redaka u
-                datotekama Ministarstva financija. Popis svih brojki otvara se klikom na oznaku iznad teksta.
+                  ? 'Svaka brojka u tekstu provjerena je prema činjenicama koje je izračunao naš kod; tekst s ijednom drugom brojkom odbacuje se.'
+                  : 'Tekst je složen iz predloška, bez jezičnog modela. AI tekst prikazuje se samo kad prođe provjeru brojki.'}{' '}
+                Prijeđi mišem preko brojke ili je dodirni da vidiš odakle je; brojke pokazatelja vode do retka u datotekama
+                Ministarstva financija.
               </p>
             </Card>
           )}
@@ -397,24 +407,7 @@ export function Profile({ slug, lastYear }: { slug: string; lastYear: number }) 
             </div>
           )}
 
-          <Card className="order-10 lg:order-none">
-            <Eyebrow>Otvoreni podaci jedinice</Eyebrow>
-            {unit.portal_objavljuje ? (
-              <div className="mt-3 space-y-2 text-sm text-ink-2">
-                <p>
-                  <strong className="tabular text-ink">{num(unit.portal_skupova)}</strong> skupova podataka, zadnje ažuriranje{' '}
-                  {unit.portal_zadnje_azuriranje ? new Date(unit.portal_zadnje_azuriranje).toLocaleDateString('hr-HR') : '–'}.
-                </p>
-                {unit.portal_strojno_citljivo != null && <p>Strojno čitljivo: {pct(unit.portal_strojno_citljivo, 0)} resursa.</p>}
-                <div className="flex flex-wrap gap-3 pt-1">
-                  {unit.portal_url_org && <ExtLink href={unit.portal_url_org}>Profil na portalu</ExtLink>}
-                  {unit.portal_url_proracun && <ExtLink href={unit.portal_url_proracun}>Proračun</ExtLink>}
-                </div>
-              </div>
-            ) : (
-              <p className="mt-3 text-sm text-ink-2">Jedinica ne objavljuje skupove podataka na Portalu otvorenih podataka.</p>
-            )}
-          </Card>
+          <PortalCard unit={unit} className="order-10 lg:order-none" />
 
           {unit.susjedi.length > 0 && (
             <Card className="order-9 lg:order-none">
@@ -484,14 +477,6 @@ function CopyLink({ slug }: { slug: string }) {
       {done ? <Check className="h-4 w-4" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
       <span aria-live="polite">{done ? 'Poveznica kopirana' : 'Kopiraj poveznicu'}</span>
     </button>
-  )
-}
-
-function ExtLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-ink underline decoration-axis underline-offset-4 hover:decoration-ink">
-      {children} <ExternalLink className="h-3.5 w-3.5" />
-    </a>
   )
 }
 

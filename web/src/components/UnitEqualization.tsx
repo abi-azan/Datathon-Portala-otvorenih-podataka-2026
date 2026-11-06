@@ -1,6 +1,6 @@
 import type { UnitEqualization } from '../lib/data'
 import { eur, num } from '../lib/format'
-import { Card, Eyebrow } from './Layout'
+import { Card, Eyebrow, Fold } from './Layout'
 
 // Self-contained on purpose: the card can be dropped from the profile without touching anything else.
 
@@ -85,7 +85,8 @@ export function UnitEqualizationCard({ e, zagreb }: { e: UnitEqualization; zagre
           Stope određuje vijeće, a izravnanje razliku ne nadoknađuje.
         </p>
       )}
-      <p className="mt-3 text-xs leading-relaxed text-muted">
+      <Fold>
+      <p className="text-xs leading-relaxed text-muted">
         Zakon o financiranju jedinica lokalne i područne (regionalne) samouprave, čl. 8. i 9. Isplata = iznos u državnom
         proračunu ({eur(e.iznos_proracuna)} za {e.proracun_godina}.; za {e.godina}. još nije utvrđen, pa se uzima isti) × udio
         jedinice u zbroju punih iznosa svih jedinica. Puni iznos je (referentna vrijednost − kapacitet) × broj stanovnika.
@@ -94,6 +95,7 @@ export function UnitEqualizationCard({ e, zagreb }: { e: UnitEqualization; zagre
         {more &&
           ` Procjena iz poreza stanovnika ${more.godina_poreza}. (Porezna uprava), samo dohodak na koji se plaća lokalna stopa.`}
       </p>
+      </Fold>
     </Card>
   )
 }
