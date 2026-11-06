@@ -79,6 +79,8 @@ py -3.12 -m venv .venv && .venv/Scripts/python -m pip install -r requirements.tx
 - `.github/workflows/deploy.yml` runs on push to main or by hand (the weekly cron is off for judging since 2026-11-06): build → publish → pytest → `npm run build` → GitHub Pages.
   - Pages is enabled with Source "GitHub Actions" (2026-11-03). The site is https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/. The first CI run passed end to end, ETL included.
   - Pushing a change under `.github/workflows/` needs a `gh` token with the `workflow` scope (`gh auth refresh -h github.com -s workflow`).
+  - The deploy job normally takes about 10 s. On 2026-11-06 it once hung in `updating_pages` until the action's 10 min timeout and cancelled the deployment. Re-running the job then fails at once with "Deployment cancelled", because the Pages deployment id is the commit sha; a new commit deploys again.
+  - `gh run watch --exit-status | tail` hides the exit code; read the conclusion with `gh run view <id> --json conclusion`.
 - `web/` is the frontend: React 19, Vite 8, Tailwind 4, MapLibre GL 6 with OpenFreeMap tiles, hash routes.
   - Run it with `npm run dev`, or with `npm run build` and then `npx vite preview`.
   - Live calls to public APIs from the browser are in `web/src/lib/dzs.ts` (PxWeb population series on the profile) and `web/src/lib/portal.ts` (since 2026-11-06). The portal's CKAN is called as JSONP (`callback=`), because it sends no CORS header: the unit's dataset count on the profile (`PortalCard`) and the catalogue count in Metodologija → Podaci (`ApiPanel`, which also asks PxWeb table metadata and a WFS `RESULTTYPE=hits` count). Every failure keeps the build's copy; a live count under 80 % of the stored one is not shown.

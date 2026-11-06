@@ -28,13 +28,13 @@ Iz `1792415200857_praviladatathonfinal.pdf`:
 | Tehnička i projektna dokumentacija | `README.md` (što radi, podaci, metodologija, arhitektura, pokretanje, API, MCP, daljnji razvoj, licence, AI alati); `docs/PLAN.md` (projektni plan i odluke); `docs/research/` (istraživanja i provjere); stranica "Metodologija i podaci" (`#/metodologija`) | gotovo, osvježiti brojke na dan predaje |
 | Opis tehničke arhitekture | `README.md`, odjeljak "Arhitektura" (dijagram mermaid i moduli ETL-a), uz preduvjete (pravni, organizacijski, tehnički) | gotovo |
 | Popis svih skupova podataka s izdavateljem i poveznicom | `docs/skupovi-podataka.md` (generira `python -m pipeline.publish` iz `data/reference/skupovi.csv`; 34 korištena skupa, s licencom i načinom pristupa); isto u API-ju kao `api/v1/skupovi.json`, a zapis svakog preuzimanja u `api/v1/izvori.json` | gotovo; generira se pri svakom buildu |
-| Demo: poveznica na radni prototip | https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/ (GitHub Pages) | uživo je verzija od 4.11.; nova verzija nakon pusha u petak i zelenog CI-ja |
-| Demo: snimke zaslona | `docs/snimke/` (naslovnica u README-u: `docs/snimke/naslovnica.png`) | ponovno snimiti 8.11. (`docs/TODO.md`) |
+| Demo: poveznica na radni prototip | https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/ (GitHub Pages) | uživo je verzija od 6.11. navečer (`55f1ed1`, zeleni CI); provjereno 576 od 576 AI tekstova |
+| Demo: snimke zaslona | `docs/snimke/` (naslovnica u README-u: `docs/snimke/naslovnica.png`) | naslovnica snimljena 6.11. navečer sa stranice uživo; ostale snimke ponovno snimiti 8.11. (`docs/TODO.md`) |
 | Video do 3 min sa 7 elemenata | `docs/video-scenarij.md` (v3, s tablicom pokrivenosti 7 elemenata) | scenarij gotov; snimanje nakon regeneracije AI tekstova; poveznica na video još ne postoji |
 | Popis AI alata i knjižnica s licencama | `README.md`, odjeljak "Korišteni AI alati"; `THIRD_PARTY_LICENSES.md` (web, ETL, alati u izgradnji i AI dijelu, video, usluge) | gotovo |
 | Softver otvorenog koda | `THIRD_PARTY_LICENSES.md`: sve knjižnice su otvorenog koda (MIT, BSD, Apache-2.0, ISC, PSF, MPL-2.0; copyleft samo GEOS LGPL-2.1 i text-unidecode); u proizvodu samo otvoreni model (Gemma 4, Apache-2.0) | gotovo |
 | Navođenje izvora (atribucija) | `LICENSE-DATA.md` (izjava o izvoru prema Otvorenoj dozvoli), `docs/skupovi-podataka.md` (dokaz licence i datum zadnje izmjene), podnožje i stranica "Metodologija i podaci", natpis OpenStreetMap/OpenFreeMap na svakoj karti | gotovo; u videu otvoriti natpis karte ("i") ili ga dopisati u montaži |
-| Podaci s Portala, i to preko API-ja | CKAN API (katalog i sloj otvorenosti; datoteke Porezne uprave pronalaze se preko `package_show`), DZS INSPIRE WFS, DZS PxWeb (u ETL-u i uživo iz preglednika); popis u README-u, odjeljak "Podaci" | gotovo |
+| Podaci s Portala, i to preko API-ja | CKAN API (katalog i sloj otvorenosti; datoteke Porezne uprave pronalaze se preko `package_show`), DZS INSPIRE WFS, DZS PxWeb: 9 od 32 izvora. Sva tri servisa zovu se i uživo iz preglednika (ploča "Podaci preko API-ja" na `#/metodologija?o=podaci`; Portal i DZS na pregledu jedinice); popis u README-u, odjeljak "Podaci" | gotovo |
 | Poveznica dostupna do objave rezultata | repozitorij i stranica su javni; video [poveznica, npr. YouTube "unlisted" ili repozitorij] | otvoreno: odabrati gdje je video |
 
 ## 3. Gdje žiri vidi kriterije (za tijelo e-maila)
@@ -43,7 +43,7 @@ Iz `1792415200857_praviladatathonfinal.pdf`:
 |---|---|
 | Izvedivost | radni prototip na GitHub Pagesu, 576 jedinica, testovi u CI-ju |
 | Dojam (UI/UX) | naslovnica s kartom, pregled jedinice, simulator, Karta reforme, mobilni prikaz |
-| Otvoreni podaci preko API-ja | CKAN API, DZS WFS i PxWeb (i uživo iz preglednika), zapis preuzimanja u `izvori.json` |
+| Otvoreni podaci preko API-ja | CKAN API, DZS WFS i PxWeb (9 od 32 izvora; sva tri i uživo iz preglednika, vidi `#/metodologija?o=podaci`), zapis preuzimanja u `izvori.json` |
 | Povezivanje izvora | MF + DZS + Porezna uprava + DUR + katalog portala, spojeni po OIB-u i šifri DGU |
 | Relevantnost za izazov C | fiskalna održivost svih JLP(R)S, simulator spajanja i Karta reforme |
 | Utjecaj | građani, novinari, vijećnici, Ministarstvo financija i MPUDT |

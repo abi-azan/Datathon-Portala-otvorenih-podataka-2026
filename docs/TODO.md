@@ -58,6 +58,8 @@ Procjena prije ovoga: oko 45 od 50 mogućih bez videa (API 4 od 5, dojam 8,5 od 
 - [x] Simulator: poruka o dospjelim obvezama odmah ispod tablice; kriterij od 10 %, promjena stanovništva i izračun uštede sklopljeni.
 - [x] Karta: legenda više ne prekriva otoke kod Zadra i Šibenika na 1280×720 i 1366×768 (`mapStyle.leftClear` računa lijevi odmak pri prvom prikazu).
 - [x] Pristupačnost: axe (WCAG 2 A i AA) ne nalazi prekršaje na naslovnici, pregledu jedinice, simulatoru, Karti reforme i metodologiji.
+- [x] Push na `main` (`55f1ed1`), zeleni CI, provjera uživo: 576 od 576 AI tekstova, Zagreb "4/4 brojki provjereno", tri API-ja odgovaraju iz preglednika, Rijeka "uživo s API-ja Portala". Prvi pokušaj objave (`8b3fa6d`) zapeo je na GitHub Pagesu 10 minuta i bio otkazan; novi commit je prošao.
+- [x] Nova snimka naslovnice za README sa stranice uživo (1440×900).
 - [ ] Nije napravljeno: tablica Porezne uprave preko DataStore API-ja. Jedina tablica koja ga ima (usporedba stopa 2025./2026.) u DataStoreu ima 10.754 retka, od toga 10.198 praznih, pa XLSX ostaje izvor.
 - [ ] Utjecaj (bez koda): poslati poveznicu dvjema ili trima osobama (vijećnik, novinar, udruga) i jednu njihovu rečenicu staviti u dokumentaciju i video.
 - [ ] Video: probna snimka u subotu, da se vidi stane li 11 kadrova u 3 minute.
