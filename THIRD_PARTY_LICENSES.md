@@ -63,6 +63,7 @@ Fiskalna karta JLS gradi se i radi samo uz softver otvorenog koda. Ovdje su izra
 | Gemma 4 31B-it (QAT Q4_0, GGUF) | Kaggle v2 | Apache-2.0 | tekst objašnjenja ocjene |
 | Kaggle CLI (kaggle, kagglesdk) | 2.2.5, 0.1.38 | Apache-2.0 | slanje bilježnice na Kaggle |
 | MCP Inspector (`@modelcontextprotocol/inspector`, `npx`) | 2.13.0 | Apache-2.0 (stariji doprinosi MIT) | provjera MCP servera; nije dio rješenja |
+| markdown-it-py | 4.2.0 | MIT | `docs/DOKUMENTACIJA.md` u HTML za PDF (`pipeline/dokumentacija.py`); nije dio rješenja |
 | GitHub Actions: checkout, setup-python, setup-node, cache, upload-pages-artifact, deploy-pages | v5 do v7 | MIT | CI i objava |
 
 ## Video (planirano, `docs/video-scenarij.md`)

@@ -174,6 +174,9 @@ CONTEXT_INCOME_REL = 0.20         # net income per inhabitant at least 20 % abov
 CONTEXT_LABEL = "Kontekst"
 CONTEXT_NOTE = "ne ulazi u ocjenu i ne objašnjava je"
 
+# Points of an indicator from which it counts as a strength (if it is also not worse than the peer median).
+STRONG_MIN = 90
+
 
 def _relation(value, median, fmt):
     return f"što je {'iznad' if value > median else 'ispod'} medijana skupine ({fmt(median)})"
@@ -249,11 +252,15 @@ def fact_pack(unit, history, med, year, context=None):
     # A strength must score high and, where there is a peer group, not be worse than its median.
     valid = {c: s for c, s in scores.items() if s is not None and not pd.isna(s)}
     weakest = min(valid, key=valid.get)
-    # always named: "it pulls the grade down most" is true even for a high grade, and the model
-    # names one anyway (Istarska županija in Gemma v5), so the check needs the right answer
-    facts.append(("Najslabiji pokazatelj", COMPONENTS[weakest]))
     strong = [COMPONENTS[c] for c, s in valid.items()
-              if s >= 90 and (not peers or not_worse_than_median(c, r[c], m[c]))]
+              if s >= STRONG_MIN and (not peers or not_worse_than_median(c, r[c], m[c]))]
+    # Named unless it is itself a strength. Until 6.11. it was always named, and 68 texts said
+    # "Ocjenu najviše spušta pokazatelj X" and then "Jake strane jedinice su: X, ..."; 15 of those
+    # units have 100 points of 100, where nothing pulls the grade down (Grad Rovinj). The model may
+    # still name one without the item (Istarska županija in Gemma v5): the check then rejects the
+    # sentence (verify.content_issues) and the retry is told to leave it out (explain.feedback).
+    if COMPONENTS[weakest] not in strong:
+        facts.append(("Najslabiji pokazatelj", COMPONENTS[weakest]))
     if strong:                      # no "nijedna ..." line: the model turned it into "Jake strane su: nijedna" (v4)
         facts.append(("Jake strane", ", ".join(strong)))
 

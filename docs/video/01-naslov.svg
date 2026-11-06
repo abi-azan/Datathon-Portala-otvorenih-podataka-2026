@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="t">
+  <title id="t">Fiskalna karta: financijska održivost proračuna svih 576 općina, gradova i županija</title>
+  <defs>
+    <style>
+      .bg { fill: #faf9f6 }
+      .eyebrow { font: 600 26px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #6b6a66; letter-spacing: 3.2px }
+      .h { font: 600 168px 'Source Serif 4', Georgia, 'Times New Roman', serif; fill: #0b0b0b; letter-spacing: -2px }
+      .sub { font: 400 58px 'Source Serif 4', Georgia, 'Times New Roman', serif; fill: #1d1c1a }
+      .note { font: 400 32px 'Public Sans', 'Segoe UI', Arial, sans-serif; fill: #55544f }
+    </style>
+  </defs>
+  <rect class="bg" width="1920" height="1080"/>
+
+  <!-- the site's mark (web/public/favicon.svg), 32 units drawn at 4,25x -->
+  <g transform="translate(150 196) scale(4.25)">
+    <path d="M3 5L12 3L20 5L29 3L29 27L20 29L12 27L3 29Z" fill="#ffffff"/>
+    <path fill="#c8342d" d="M3 5L12 3L12 11L3 13ZM3 21L12 19L12 27L3 29ZM12 11L20 13L20 21L12 19ZM20 5L29 3L29 11L20 13ZM20 21L29 19L29 27L20 29Z"/>
+    <path d="M3 5L12 3L20 5L29 3L29 27L20 29L12 27L3 29Z" fill="none" stroke="#c8342d" stroke-width="1.6" stroke-linejoin="round"/>
+  </g>
+  <text class="eyebrow" x="312" y="280">OTVORENI PODACI · OTVORENI KOD</text>
+
+  <text class="h" x="142" y="560">Fiskalna karta</text>
+  <text class="sub" x="150" y="672">Financijska održivost proračuna svih 576 općina,</text>
+  <text class="sub" x="150" y="748">gradova i županija, 2019.–2025.</text>
+
+  <!-- the five grades, in the colours of the map -->
+  <g transform="translate(150 842)">
+    <rect width="150" height="16" rx="8" fill="#7d1518"/>
+    <rect x="162" width="150" height="16" rx="8" fill="#df7727"/>
+    <rect x="324" width="150" height="16" rx="8" fill="#f2d148"/>
+    <rect x="486" width="150" height="16" rx="8" fill="#68c598"/>
+    <rect x="648" width="150" height="16" rx="8" fill="#087664"/>
+  </g>
+
+  <text class="note" x="150" y="968">Datathon Portala otvorenih podataka 2026 · izazov C: Gospodarstvo i učinkovito upravljanje</text>
+</svg>

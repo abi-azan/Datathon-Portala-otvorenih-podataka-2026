@@ -353,15 +353,15 @@ Korisnik je 2.11. potvrdio plan i nalaze Fable reviewa (neovisni pregled modelom
     - Pravilo 1: kredit iskazan kao cijeli dospio, a redovno otplaćivan, ne ulazi u DO i dobiva oznaku kvalitete.
     - Pravilo 2: DO ≥ 30% rashoda poslovanja daje ocjenu najviše 2.
 15. **Odlučeno 3.11.:** repozitorij postaje javan odmah. Ime ostaje.
-16. **Odlučeno 4.11.** (odgovori na O1-O8, `docs/plan-srijeda-4-11.md`):
+16. **Odlučeno 4.11.** (odgovori na O1-O8, `docs/dnevnik/plan-srijeda-4-11.md`):
     - AI model u proizvodu: **Gemma 4 31B-it QAT Q4_0** (v6 i v7: 40/40 na jedinicama koje model nije vidio). U proizvodu se koristi samo AI otvorenog koda, a Claude Code je razvojni alat.
     - Simulator se **računa unaprijed** u Pythonu, bez TypeScripta: sve povezane skupine od 2-4 jedinice unutar županije.
     - Pravila za `merge()`: samo ista županija; bez županija i Grada Zagreba; vrsta je grad ako je barem jedna članica grad; pravilo 1 primjenjuje se po članici prije zbrajanja.
     - **Statistički blizanci su izbačeni** (§3.5 i §6 MUST 3 vrijede bez blizanaca). MCP ostaje SHOULD, na kraju ako bude vremena.
     - Tablica kao alternativa karti dolazi nakon MUST-a, kao prekidač ispod karte.
     - Rečenica "Ocjena nije službena" maknuta je iz sučelja (§1).
-17. **Odlučeno 4.11. noću** (prije noćne smjene 4.11., program u `docs/noc-4-11-program.md`):
-    - **Pravilo 1 se proširuje na kredit u povlačenju.** Vrijedi i kad je stanje kredita veće nego prethodne godine, uz iste uvjete (kredit veći od 10.000 € i barem 90 % iskazano kao dospjelo). Prijedlog je iz `docs/noc-3-11.md` (10:45). Ocjene za 2025. se ne mijenjaju, a mijenjaju se trendovi (npr. Sveta Marija 2023.).
+17. **Odlučeno 4.11. noću** (prije noćne smjene 4.11., program u `docs/dnevnik/noc-4-11-program.md`):
+    - **Pravilo 1 se proširuje na kredit u povlačenju.** Vrijedi i kad je stanje kredita veće nego prethodne godine, uz iste uvjete (kredit veći od 10.000 € i barem 90 % iskazano kao dospjelo). Prijedlog je iz `docs/dnevnik/noc-3-11.md` (10:45). Ocjene za 2025. se ne mijenjaju, a mijenjaju se trendovi (npr. Sveta Marija 2023.).
     - **Karta reforme:** pohlepno pravilo umjesto spopta. Unutar županije najmanja jedinica ispod praga spaja se s najmanjim susjedom, dok sve ne dosegnu prag. Tri praga (2.500, 5.000 i 10.000 stanovnika) računaju se unaprijed, a klizač prelazi između njih. Koristi se ista funkcija spajanja kao u simulatoru. `spopt` zasad ostaje u `requirements.txt`.
     - **Fiskalno izravnanje u simulatoru računa se po zakonskoj formuli** (§4.4 i `research/01` §5.5), ali se prikazuje samo ako formula na postojećim jedinicama reproducira objavljene iznose MF-a. Inače se prikazuje napomena.
     - **Ušteda na općoj upravi** (§4.3) računa se iz medijana po razredu, ne regresijom. Očekivani trošak uprave po stanovniku je medijan usporedne skupine spojene jedinice. Strukturni jaz (gornja granica) je stvarni zbroj umanjen za očekivani trošak, a realističan raspon je 0 do 10 % zbroja, najviše do jaza.

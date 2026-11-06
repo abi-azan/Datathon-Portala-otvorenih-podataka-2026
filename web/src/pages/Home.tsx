@@ -1,5 +1,7 @@
 import { ArrowRight, Pause, Play } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
+import { ErrorBoundary } from '../components/ErrorBoundary'
+import type { GradeMapProps } from '../components/GradeMap'
 import { Eyebrow } from '../components/Layout'
 import { Search } from '../components/Search'
 import { UnitTable } from '../components/UnitTable'
@@ -7,16 +9,30 @@ import { loadDatasets, loadReform, type IndexFile } from '../lib/data'
 import { num } from '../lib/format'
 import { simulatorHref, unitHref } from '../lib/router'
 import { CONTEXT_VIEWS, contextView, type ViewKey } from '../lib/views'
+import { webgl2Available } from '../lib/webgl'
 
 const YEARS = ['2019', '2020', '2021', '2022', '2023', '2024', '2025']
 
+// The map without WebGL, as SVG: for a browser that gives no WebGL 2 context, and in place of a
+// MapLibre map that threw while drawing.
+const GradeMapSvg = lazy(async (): Promise<{ default: ComponentType<GradeMapProps> }> => {
+  try {
+    return { default: (await import('../components/GradeMapSvg')).GradeMapSvg }
+  } catch {
+    return { default: MapFailed }
+  }
+})
+
 // MapLibre is about 1 MB, so the map is a separate chunk: the profile and methodology pages never load it.
-const GradeMap = lazy(() =>
-  import('../components/GradeMap')
-    .then((m) => ({ default: m.GradeMap }))
+const GradeMap = lazy(async (): Promise<{ default: ComponentType<GradeMapProps> }> => {
+  try {
+    if (!webgl2Available()) return { default: (await import('../components/GradeMapSvg')).GradeMapSvg }
+    return { default: (await import('../components/GradeMap')).GradeMap }
+  } catch {
     // offline or a stale deploy (chunk or its CSS missing): keep the page usable, the search still works
-    .catch(() => ({ default: MapFailed })),
-)
+    return { default: MapFailed }
+  }
+})
 
 function MapFailed() {
   return <MapPlaceholder>Karta se nije učitala. Osvježi stranicu ili koristi pretragu.</MapPlaceholder>
@@ -223,9 +239,17 @@ export function Home({ index }: { index: IndexFile }) {
         <div className="relative h-[60vh] min-h-[420px] lg:h-auto lg:min-h-0 lg:flex-1">
           <div className="absolute inset-0">
             {mode === 'karta' ? (
-              <Suspense fallback={<MapPlaceholder>Učitavam kartu…</MapPlaceholder>}>
-                <GradeMap units={index.jedinice} year={year} colorBy={view} />
-              </Suspense>
+              <ErrorBoundary
+                fallback={
+                  <Suspense fallback={<MapPlaceholder>Učitavam kartu…</MapPlaceholder>}>
+                    <GradeMapSvg units={index.jedinice} year={year} colorBy={view} />
+                  </Suspense>
+                }
+              >
+                <Suspense fallback={<MapPlaceholder>Učitavam kartu…</MapPlaceholder>}>
+                  <GradeMap units={index.jedinice} year={year} colorBy={view} />
+                </Suspense>
+              </ErrorBoundary>
             ) : (
               <UnitTable units={index.jedinice} year={year} ctx={ctx} />
             )}

@@ -9,11 +9,11 @@ import { feature } from 'topojson-client'
 import type { Topology } from 'topojson-specification'
 import type { FeatureCollection } from 'geojson'
 import { topoUrl, type UnitIndex } from '../lib/data'
-import { grade, gradeRows, num, type LegendRow } from '../lib/format'
+import { grade, num } from '../lib/format'
 import { go, unitHref } from '../lib/router'
 import { GradeChip, MapLegend } from './Grade'
 import { BASEMAP, BLANK, CROATIA, LAND, MIN_ZOOM, SEQUENTIAL_CLASS, addOutsideVeil, classFill, fitPadding, quietBasemap, reducedMotion } from './mapStyle'
-import { SEQUENTIAL, classOf, contextView, quintiles, type ViewKey } from '../lib/views'
+import { classOf, contextView, legendRows, quintiles, type ViewKey } from '../lib/views'
 
 maplibregl.setWorkerUrl(workerUrl)
 
@@ -34,7 +34,7 @@ const FILL = 1
 const DIM = 0.22
 const FADE_MS = 650
 
-interface Props {
+export interface GradeMapProps {
   units: UnitIndex[]
   year: string
   colorBy?: MapColorBy
@@ -62,7 +62,7 @@ interface Hover {
 const TOOLTIP_W = 256
 const TOOLTIP_H = 132 // approximate height, to keep the tooltip inside the map
 
-export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, selected, onSelect, dimmed, hint, focus, legendCounts = true }: Props) {
+export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, selected, onSelect, dimmed, hint, focus, legendCounts = true }: GradeMapProps) {
   const box = useRef<HTMLDivElement>(null)
   const caption = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
@@ -306,30 +306,7 @@ export function GradeMap({ units, year, colorBy = 'ocjena', selectable = false, 
     if (w < e) m.fitBounds([w, s, e, n], { padding: 48, maxZoom: 9.5, duration: 600 })
   }, [ready, focusKey])
 
-  // legend rows: the grades, or a context view's five classes with their ranges; both with unit counts
-  const legend = useMemo<LegendRow[]>(() => {
-    const jls = units.filter((u) => u.vrsta !== 'zupanija')
-    const v = contextView(colorBy)
-    if (!v) {
-      const counts: Record<number, number> = {}
-      for (const u of jls) {
-        const g = u.ocjena[year]
-        if (g) counts[g] = (counts[g] ?? 0) + 1
-      }
-      return gradeRows(legendCounts ? counts : undefined)
-    }
-    const cuts = quintiles(jls, v, year)
-    const vals = jls.map((u) => v.value(u, year))
-    const finite = vals.filter((x): x is number => x != null && Number.isFinite(x))
-    if (!finite.length) return []
-    const edges = [Math.min(...finite), ...cuts, Math.max(...finite)]
-    return SEQUENTIAL.map((color, i) => ({
-      key: i,
-      color,
-      label: v.range(edges[i], edges[i + 1]),
-      n: vals.filter((x) => classOf(x, cuts) === i + 1).length,
-    }))
-  }, [units, year, colorBy, legendCounts])
+  const legend = useMemo(() => legendRows(units, year, colorBy, legendCounts), [units, year, colorBy, legendCounts])
 
   const h = hover && grade(hover.unit.ocjena[year])
   const view = contextView(colorBy)

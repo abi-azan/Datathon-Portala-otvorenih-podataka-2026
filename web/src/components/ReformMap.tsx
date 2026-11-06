@@ -20,7 +20,7 @@ const unitCount = (n: number) => {
   return `${n} ${d >= 2 && d <= 4 && (h < 12 || h > 14) ? 'jedinice' : 'jedinica'}`
 }
 
-interface Props {
+export interface ReformMapProps {
   units: ReformUnit[]
   /** The threshold of `units`, which can lag the slider while the next file loads. */
   prag: number
@@ -96,7 +96,7 @@ function flash(m: maplibregl.Map, on: boolean, duration: number) {
 /** Karta reforme: the units after the scenario, members' polygons dissolved into one per group
  *  on the client (topojson-client merge over geo/jls.topo.json), coloured by the grade after.
  *  It stays mounted across threshold changes, so the view (zoom, position) is kept. */
-export function ReformMap({ units, prag, selected, onSelect, notice }: Props) {
+export function ReformMap({ units, prag, selected, onSelect, notice }: ReformMapProps) {
   const box = useRef<HTMLDivElement>(null)
   const caption = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)

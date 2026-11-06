@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { ErrorBoundary, PageFailed } from './components/ErrorBoundary'
 import { Footer, Header } from './components/Layout'
 import { loadIndex, type IndexFile } from './lib/data'
 import { useRoute } from './lib/router'
+import { webgl2Available } from './lib/webgl'
 import { Home } from './pages/Home'
 import { Methodology } from './pages/Methodology'
 import { Profile } from './pages/Profile'
@@ -19,7 +21,10 @@ export default function App() {
 
   // On the home page, fetch the lazy map chunk alongside the index instead of after it.
   useEffect(() => {
-    if (route.page === 'home' || route.page === 'simulator') import('./components/GradeMap').catch(() => {})
+    if (route.page !== 'home' && route.page !== 'simulator') return
+    // without WebGL 2 the pages draw the SVG map, so MapLibre's megabyte is never fetched
+    if (webgl2Available()) import('./components/GradeMap').catch(() => {})
+    else import('./components/GradeMapSvg').catch(() => {})
   }, [route.page])
 
   useEffect(() => {
@@ -50,11 +55,14 @@ export default function App() {
           </p>
         )}
         {!index && !error && <p className="mx-auto max-w-3xl px-6 py-20 text-center text-muted">Učitavam…</p>}
-        {index && route.page === 'home' && <Home index={index} />}
-        {index && route.page === 'unit' && <Profile key={route.slug} slug={route.slug} lastYear={index.zadnja_godina} />}
-        {index && route.page === 'simulator' && <Simulator index={index} />}
-        {index && route.page === 'reform' && <Reforma index={index} />}
-        {route.page === 'methodology' && <Methodology />}
+        {/* a page that throws shows a sentence instead of an empty screen; another page starts afresh */}
+        <ErrorBoundary key={route.page === 'unit' ? route.slug : route.page} fallback={<PageFailed />}>
+          {index && route.page === 'home' && <Home index={index} />}
+          {index && route.page === 'unit' && <Profile key={route.slug} slug={route.slug} lastYear={index.zadnja_godina} />}
+          {index && route.page === 'simulator' && <Simulator index={index} />}
+          {index && route.page === 'reform' && <Reforma index={index} />}
+          {route.page === 'methodology' && <Methodology />}
+        </ErrorBoundary>
       </div>
       <Footer generated={index?.generirano} />
     </div>

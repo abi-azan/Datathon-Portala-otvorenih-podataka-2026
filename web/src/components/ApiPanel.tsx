@@ -103,8 +103,8 @@ export function ApiPanel({ sets }: { sets: Dataset[] }) {
     <div ref={box} className="mt-4 rounded-xl border border-hairline bg-card p-4 sm:p-5">
       <h3 className="font-semibold">Podaci preko API-ja</h3>
       <p className="mt-1 text-sm text-ink-2">
-        Od {num(api.length + files.length)} izvora podataka {num(api.length)} čitamo izravno preko API-ja tijela javnog sektora.
-        To su tri servisa, a tvoj preglednik ih upravo pita odgovaraju li.
+        Svaki izvor koji ima upotrebljiv API čitamo izravno preko njega: {num(api.length)} skupova podataka kroz tri servisa
+        tijela javnog sektora. Tvoj preglednik ih upravo pita odgovaraju li.
       </p>
       <ul className="mt-3 divide-y divide-hairline">
         {rows.map((r) => {
@@ -138,9 +138,10 @@ export function ApiPanel({ sets }: { sets: Dataset[] }) {
         })}
       </ul>
       <p className="border-t border-hairline pt-3 text-sm text-ink-2">
-        Preostali izvori ({num(files.length)}) su datoteke. Financijske izvještaje jedinica Ministarstvo financija objavljuje samo
-        kao Excel tablice na svojim stranicama, bez API-ja, a izvješća Državnog ureda za reviziju su PDF. Tablice Porezne
-        uprave preuzimamo s Portala.
+        Ostalo su datoteke ({num(files.length)}), i to samo tamo gdje API ne postoji. Financijske izvještaje jedinica i tablice
+        fiskalnog izravnanja Ministarstvo financija objavljuje kao Excel i PDF na svojim stranicama, a izvješća Državnog ureda
+        za reviziju su PDF. Tablice Porezne uprave su datoteke na Portalu, a najnoviju pri svakoj obradi nalazimo preko API-ja
+        Portala. Svaku datoteku obrada preuzima sama i bilježi adresu, vrijeme i otisak (sha256).
       </p>
     </div>
   )

@@ -1,0 +1,455 @@
+{
+ "partial": false,
+ "meta": {
+  "llama_cpp_commit": "2cbca389f515df455412dafa07e2b1359cc72a6d",
+  "gpu": "Tesla T4\nTesla T4",
+  "max_retries": 2,
+  "hf_models": [],
+  "vrsta": "batch",
+  "godina": 2025,
+  "prompt_sha256": "0f58640aecb8f70bb34a1f1c594aba0abc70cf98e4ead6c1a00278476edd0433",
+  "verify_sha256": "1938c25751ab1c8122e354cc8f8c7dbb9c0f8f80554561525f21e1416a84a3a6",
+  "model_izvor": "google/gemma-4/gguf/gemma-4-31b-it-qat-q4_0-gguf/2",
+  "biljeznica": "albertmari/fiskalna-karta-jls-gemma-batch",
+  "paketa": 8,
+  "paketi": {
+   "07132269553": "ab8f412e0a29d1c5f2820c1d0d76458467f0084793e07b2bbc17b55aa9a714e7",
+   "20042466298": "5ca17baf86d2f7b47158a87b6ae58037d1f59b6f0297cfaeaca98cba4793adc1",
+   "01129249076": "6d591aef60c4d47a0504919373596c822e9305766313fca08bdd49c8df468fff",
+   "01582703044": "5871728cbfc850481c3af4ee8526703c781b5d78e687410a40bfadea47c86682",
+   "06872053793": "c14f9f6b8082031ac3ade2e882c074351395b953511a8c6c2c4252ea8e637a9a",
+   "28587364712": "3bc110eded1bd61ccfeb386a12f393a5eef784d30e3c8bd746f3b0ff8de9df6e",
+   "00981494061": "8d1f38b1a22a15ad99bf9b95d88d5552dfc2322274cdab3af85d6f7229b00a42",
+   "40781519492": "abaee4129be382f72b07b4c59e1f572c8873a6a1afd62fc84994a2dd7ed6ef4f"
+  },
+  "hf_download_seconds": 0,
+  "seconds_total": 479
+ },
+ "models": {
+  "gemma-4-31B_q4_0-it.gguf": {
+   "load_seconds": 146,
+   "results": [
+    {
+     "oib": "07132269553",
+     "naziv": "Zagrebačka županija",
+     "text": "Zagrebačka županija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 86,2 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,3 % tekućih prihoda, dok kod medijana skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Zagrebačka županija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 86,2 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,3 % tekućih prihoda, uz medijan skupine od nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: 299.985 stanovnika (Popis 2021.).",
+       "check": {
+        "ok": false,
+        "n_brojki": 9,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine uveden riječima „od nedostaje”",
+         "kontekst bez stavke u činjenicama"
+        ]
+       },
+       "seconds": 18.2,
+       "usage": {
+        "completion_tokens": 166,
+        "prompt_tokens": 1292,
+        "total_tokens": 1458,
+        "prompt_tokens_details": {
+         "cached_tokens": 0
+        }
+       }
+      },
+      {
+       "text": "Zagrebačka županija za 2025. godinu ima ocjenu 5 (vrlo stabilno) i 86,2 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 10,3 % tekućih prihoda, dok kod medijana skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 14.1,
+       "usage": {
+        "completion_tokens": 137,
+        "prompt_tokens": 1670,
+        "total_tokens": 1807,
+        "prompt_tokens_details": {
+         "cached_tokens": 1288
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "20042466298",
+     "naziv": "Krapinsko-zagorska županija",
+     "text": "Krapinsko-zagorska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 52 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 14,5 % tekućih prihoda, dok je medijan skupine manjak od 1,0 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Krapinsko-zagorska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 52 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 14,5 % tekućih prihoda, uz medijan skupine od manjka 1,0 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+       "check": {
+        "ok": false,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine uveden riječima „od manjka”"
+        ]
+       },
+       "seconds": 19.4,
+       "usage": {
+        "completion_tokens": 133,
+        "prompt_tokens": 1325,
+        "total_tokens": 1458,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Krapinsko-zagorska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 52 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 14,5 % tekućih prihoda, dok je medijan skupine manjak od 1,0 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: 120.702 stanovnika (Popis 2021.).",
+       "check": {
+        "ok": false,
+        "n_brojki": 9,
+        "nepoznate": [],
+        "sadrzaj": [
+         "kontekst bez stavke u činjenicama"
+        ]
+       },
+       "seconds": 16.5,
+       "usage": {
+        "completion_tokens": 164,
+        "prompt_tokens": 1620,
+        "total_tokens": 1784,
+        "prompt_tokens_details": {
+         "cached_tokens": 1321
+        }
+       }
+      },
+      {
+       "text": "Krapinsko-zagorska županija za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 52 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 14,5 % tekućih prihoda, dok je medijan skupine manjak od 1,0 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 14.0,
+       "usage": {
+        "completion_tokens": 134,
+        "prompt_tokens": 1899,
+        "total_tokens": 2033,
+        "prompt_tokens_details": {
+         "cached_tokens": 1616
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "01129249076",
+     "naziv": "Općina Hrvatska Dubica",
+     "text": "Općina Hrvatska Dubica za 2025. godinu ima ocjenu 4 (stabilno) i 60 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 15,7 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 5.574 €, što je ispod medijana skupine (7.227 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 10,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Hrvatska Dubica za 2025. godinu ima ocjenu 4 (stabilno) i 60 bodova od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „operativni saldo”: operativni manjak iznosi 15,7 % tekućih prihoda, dok je medijan skupine višak 13,3 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga, dospjele obveze. Kontekst koji ne ulazi u ocjenu: neto dohodak po stanovniku u 2025. iznosio je 5.574 €, što je ispod medijana skupine (7.227 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 10,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 27.1,
+       "usage": {
+        "completion_tokens": 189,
+        "prompt_tokens": 1407,
+        "total_tokens": 1596,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "01582703044",
+     "naziv": "Općina Kamanje",
+     "text": "Općina Kamanje za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 45,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 12,9 % tekućih prihoda, dok kod medijana skupine ostaje 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 8,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Kamanje za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 45,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 12,9 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+       "check": {
+        "ok": false,
+        "n_brojki": 8,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine bez riječi „ostaje”"
+        ]
+       },
+       "seconds": 21.8,
+       "usage": {
+        "completion_tokens": 155,
+        "prompt_tokens": 1340,
+        "total_tokens": 1495,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Općina Kamanje za 2025. godinu ima ocjenu 3 (umjereno stabilno) i 45,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 12,9 % tekućih prihoda, dok kod medijana skupine ostaje 10,8 % tekućih prihoda. Jake strane jedinice su: godine otplate duga. Upozorenje: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda.",
+       "check": {
+        "ok": true,
+        "n_brojki": 8,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 16.7,
+       "usage": {
+        "completion_tokens": 158,
+        "prompt_tokens": 1644,
+        "total_tokens": 1802,
+        "prompt_tokens_details": {
+         "cached_tokens": 1336
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "06872053793",
+     "naziv": "Koprivničko-križevačka županija",
+     "text": "Koprivničko-križevačka županija za 2025. godinu ima ocjenu 4 (stabilno) i 68,4 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 1,6 % tekućih prihoda, dok kod medijana skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Koprivničko-križevačka županija za 2025. godinu ima ocjenu 4 (stabilno) i 68,4 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 1,6 % tekućih prihoda, uz medijan skupine od nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+       "check": {
+        "ok": false,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine uveden riječima „od nedostaje”"
+        ]
+       },
+       "seconds": 20.5,
+       "usage": {
+        "completion_tokens": 136,
+        "prompt_tokens": 1307,
+        "total_tokens": 1443,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Koprivničko-križevačka županija za 2025. godinu ima ocjenu 4 (stabilno) i 68,4 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 1,6 % tekućih prihoda, dok kod medijana skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, dospjele obveze.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 14.8,
+       "usage": {
+        "completion_tokens": 137,
+        "prompt_tokens": 1605,
+        "total_tokens": 1742,
+        "prompt_tokens_details": {
+         "cached_tokens": 1303
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "28587364712",
+     "naziv": "Općina Lokve",
+     "text": "Općina Lokve za 2025. godinu ima ocjenu 2 (nestabilno) i 36,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 6,5 % tekućih prihoda, dok kod medijana skupine ostaje 10,8 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 9,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Općina Lokve za 2025. godinu ima ocjenu 2 (nestabilno) i 36,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 6,5 % tekućih prihoda, uz medijan skupine od 10,8 % tekućih prihoda. Jake strane jedinice su: operativni saldo. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": false,
+        "n_brojki": 9,
+        "nepoznate": [],
+        "sadrzaj": [
+         "jaka strana „operativni saldo”",
+         "medijan skupine bez riječi „ostaje”"
+        ]
+       },
+       "seconds": 26.3,
+       "usage": {
+        "completion_tokens": 191,
+        "prompt_tokens": 1372,
+        "total_tokens": 1563,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Općina Lokve za 2025. godinu ima ocjenu 2 (nestabilno) i 36,8 boda od 100, dok je medijan usporedne skupine 80,8 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 6,5 % tekućih prihoda, dok kod medijana skupine ostaje 10,8 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; novca na računu manje nego za mjesec dana rashoda poslovanja.",
+       "check": {
+        "ok": true,
+        "n_brojki": 9,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 18.8,
+       "usage": {
+        "completion_tokens": 183,
+        "prompt_tokens": 1747,
+        "total_tokens": 1930,
+        "prompt_tokens_details": {
+         "cached_tokens": 1368
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "00981494061",
+     "naziv": "Grad Knin",
+     "text": "Grad Knin za 2025. godinu ima ocjenu 2 (nestabilno) i 21,4 boda od 100, dok je medijan usporedne skupine 82,7 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 18,4 % tekućih prihoda, dok kod medijana skupine ostaje 9,2 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Kontekst koji ne ulazi u ocjenu: broj stanovnika: od 2021. do 2025. smanjio se za 8,1 %, što je ispod medijana skupine (+0,8 %); neto dohodak po stanovniku: u 2025. iznosio je 7.003 €, što je ispod medijana skupine (9.035 €).",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 16,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Grad Knin za 2025. godinu ima ocjenu 2 (nestabilno) i 21,4 boda od 100, dok je medijan usporedne skupine 82,7 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 18,4 % tekućih prihoda, uz medijan skupine od 9,2 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Kontekst koji ne ulazi u ocjenu: broj stanovnika od 2021. do 2025. smanjio se za 8,1 %, što je ispod medijana skupine (+0,8 %), te neto dohodak po stanovniku u 2025. iznosio je 7.003 €, što je ispod medijana skupine (9.035 €).",
+       "check": {
+        "ok": false,
+        "n_brojki": 16,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine bez riječi „ostaje”"
+        ]
+       },
+       "seconds": 34.8,
+       "usage": {
+        "completion_tokens": 291,
+        "prompt_tokens": 1512,
+        "total_tokens": 1803,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Grad Knin za 2025. godinu ima ocjenu 2 (nestabilno) i 21,4 boda od 100, dok je medijan usporedne skupine 82,7 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita nedostaje 18,4 % tekućih prihoda, dok kod medijana skupine ostaje 9,2 % tekućih prihoda. Upozorenja: preneseni manjak iz prethodnih godina veći od 5 % tekućih prihoda; otplata duga i dospjele obveze iznad 20 % zakonske osnovice; rashodi poslovanja veći od tekućih prihoda dvije godine zaredom; novca na računu manje nego za mjesec dana rashoda poslovanja. Kontekst koji ne ulazi u ocjenu: broj stanovnika: od 2021. do 2025. smanjio se za 8,1 %, što je ispod medijana skupine (+0,8 %); neto dohodak po stanovniku: u 2025. iznosio je 7.003 €, što je ispod medijana skupine (9.035 €).",
+       "check": {
+        "ok": true,
+        "n_brojki": 16,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 29.6,
+       "usage": {
+        "completion_tokens": 296,
+        "prompt_tokens": 1951,
+        "total_tokens": 2247,
+        "prompt_tokens_details": {
+         "cached_tokens": 1508
+        }
+       }
+      }
+     ]
+    },
+    {
+     "oib": "40781519492",
+     "naziv": "Splitsko-dalmatinska županija",
+     "text": "Splitsko-dalmatinska županija za 2025. godinu ima ocjenu 4 (stabilno) i 74 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 3,8 % tekućih prihoda, dok kod medijana skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga.",
+     "source": "ai",
+     "check": {
+      "ok": true,
+      "n_brojki": 7,
+      "nepoznate": [],
+      "sadrzaj": []
+     },
+     "attempts": [
+      {
+       "text": "Splitsko-dalmatinska županija za 2025. godinu ima ocjenu 4 (stabilno) i 74 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 3,8 % tekućih prihoda, uz medijan skupine od nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga.",
+       "check": {
+        "ok": false,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": [
+         "medijan skupine uveden riječima „od nedostaje”"
+        ]
+       },
+       "seconds": 20.0,
+       "usage": {
+        "completion_tokens": 126,
+        "prompt_tokens": 1311,
+        "total_tokens": 1437,
+        "prompt_tokens_details": {
+         "cached_tokens": 52
+        }
+       }
+      },
+      {
+       "text": "Splitsko-dalmatinska županija za 2025. godinu ima ocjenu 4 (stabilno) i 74 boda od 100, dok je medijan skupine 68,4 boda. Ocjenu najviše spušta pokazatelj „slobodni saldo”: nakon otplate glavnice kredita ostaje 3,8 % tekućih prihoda, dok kod medijana skupine nedostaje 1,7 % tekućih prihoda. Jake strane jedinice su: godine otplate duga, servis duga.",
+       "check": {
+        "ok": true,
+        "n_brojki": 7,
+        "nepoznate": [],
+        "sadrzaj": []
+       },
+       "seconds": 13.9,
+       "usage": {
+        "completion_tokens": 127,
+        "prompt_tokens": 1599,
+        "total_tokens": 1726,
+        "prompt_tokens_details": {
+         "cached_tokens": 1307
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "gpu_memory": "9523 MiB, 15360 MiB\n9969 MiB, 15360 MiB\n",
+   "seconds": 475
+  }
+ }
+}
