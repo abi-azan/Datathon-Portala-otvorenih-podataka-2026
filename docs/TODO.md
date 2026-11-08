@@ -61,7 +61,7 @@ Procjena prije ovoga: oko 45 od 50 mogućih bez videa (API 4 od 5, dojam 8,5 od 
 - [x] Push na `main` (`55f1ed1`), zeleni CI, provjera uživo: 576 od 576 AI tekstova, Zagreb "4/4 brojki provjereno", tri API-ja odgovaraju iz preglednika, Rijeka "uživo s API-ja Portala". Prvi pokušaj objave (`8b3fa6d`) zapeo je na GitHub Pagesu 10 minuta i bio otkazan; novi commit je prošao.
 - [x] Nova snimka naslovnice za README sa stranice uživo (1440×900).
 - [ ] Nije napravljeno: tablica Porezne uprave preko DataStore API-ja. Jedina tablica koja ga ima (usporedba stopa 2025./2026.) u DataStoreu ima 10.754 retka, od toga 10.198 praznih, pa XLSX ostaje izvor.
-- [ ] Utjecaj (bez koda): poslati poveznicu dvjema ili trima osobama (vijećnik, novinar, udruga) i jednu njihovu rečenicu staviti u dokumentaciju i video.
+- [x] ~~Utjecaj (bez koda): poslati poveznicu dvjema ili trima osobama (vijećnik, novinar, udruga) i jednu njihovu rečenicu staviti u dokumentaciju i video.~~ Odluka 8.11.: bez izjave korisnika.
 - [ ] Video: probna snimka u subotu, da se vidi stane li 11 kadrova u 3 minute.
 
 # Čeka odluku
@@ -90,12 +90,12 @@ Procjena prije ovoga: oko 45 od 50 mogućih bez videa (API 4 od 5, dojam 8,5 od 
 - [x] **Video:** scenarij v4 s natpisom za svaki od 7 elemenata iz pravila, 327 riječi, sve brojke ponovno pročitane iz API-ja; slike naslov, izvori i kraj; titlovi (`docs/video/`).
 - [x] Pristupačnost ponovno provjerena (axe, WCAG 2 A i AA): bez prekršaja na pet glavnih stranica i na prikazu bez WebGL-a.
 - [x] `docs/` pospremljen: radni dnevnici u `docs/dnevnik/`.
-- [ ] **Tim, prvo:** pregledati granu `noc-6-11` i spojiti je u `main`. Dok se ne spoji, stranica uživo na pregledniku bez WebGL-a 2 ostaje prazna.
-- [ ] **Tim:** u `docs/DOKUMENTACIJA.md` upisati naziv tima, članove, mentora i poveznicu na video, pa ponovno ispisati PDF (upute u `pipeline/dokumentacija.py` i `CLAUDE.md`).
-- [ ] **Tim:** poslati poruku iz `docs/PREDAJA.md`, odjeljak 6, na 3 do 5 adresa i jednu rečenicu korisnika staviti u dokumentaciju i video.
+- [x] **Tim, prvo:** pregledati granu `noc-6-11` i spojiti je u `main`. (spojeno 6.11. navečer, `6dc14d6`, zeleni CI)
+- [ ] **Tim:** u `docs/DOKUMENTACIJA.md` upisati naziv tima, članove, mentora i poveznicu na video, pa ponovno ispisati PDF (upute u `pipeline/dokumentacija.py` i `CLAUDE.md`). Tim (Begovi mušketiri) i mentor (doc. dr. sc. Stjepan Begušić, FER) upisani 8.11.; ostaju članovi i poveznica na video.
+- [x] ~~**Tim:** poslati poruku iz `docs/PREDAJA.md`, odjeljak 6, na 3 do 5 adresa i jednu rečenicu korisnika staviti u dokumentaciju i video.~~ Odluka 8.11.: izjave nema (još nema korisnika), mjesto u dokumentaciji je obrisano.
 - [ ] **Tim:** snimiti glas i video po scenariju v4.
 - [x] Preglednici: Firefox 157 i WebKit 27 (Playwrightove verzije, jezgra Safarija) otvaraju naslovnicu, prikaz bez WebGL-a, pregled Povljane, simulator, Kartu reforme i metodologiju bez greške u konzoli i bez vodoravnog pomicanja. Pravi Safari na Macu vrijedi još jednom pogledati.
-- [ ] **Tim:** opis repozitorija na GitHubu (About: adresa stranice, kratki opis, teme `open-data`, `croatia`, `public-finance`).
+- [x] **Tim:** opis repozitorija na GitHubu (About: adresa stranice, kratki opis, teme `open-data`, `croatia`, `public-finance`). (provjereno 8.11.: opis, adresa i pet tema su postavljeni)
 - [ ] Pročitati i potvrditi dvije rečenice koje govore u ime tima: redak "Claude Code" u README-u (Korišteni AI alati) i `docs/dnevnik/README.md`.
 - Nije napravljeno, namjerno: četvrti prikaz karte "Otvoreni podaci" (tko objavljuje na Portalu). Tražio bi novo polje u API-ju i izmjene na naslovnici, dvjema kartama i tablici dan prije zamrzavanja; podatak je već na pregledu jedinice i na stranici "Metodologija i podaci".
 

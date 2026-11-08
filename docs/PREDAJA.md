@@ -25,11 +25,11 @@ Iz `docs/pravila-datathona.pdf`:
 |---|---|---|
 | Izvorni kod, javni repozitorij | https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026 (javan od 3.11., odluka 15) | djelomično: `origin/main` je `25c589c` (4.11.); rad od 4.11. poslijepodne čeka push u petak, nakon regeneracije AI tekstova |
 | Licenca otvorenog koda | `LICENSE` (EUPL-1.2, kod), `LICENSE-DATA.md` (CC BY 4.0, podaci koje projekt proizvodi) | gotovo |
-| Tehnička i projektna dokumentacija | **`docs/DOKUMENTACIJA.pdf`** (10 stranica, poredano po kriterijima žirija, s prilogom svih skupova podataka; izvor je `docs/DOKUMENTACIJA.md`, PDF radi `python -m pipeline.dokumentacija` i ispis iz preglednika); `README.md` (što radi, podaci, metodologija, arhitektura, pokretanje, API, MCP, daljnji razvoj, licence, AI alati); `docs/PLAN.md` (projektni plan i odluke); `docs/research/` (istraživanja i provjere); stranica "Metodologija i podaci" (`#/metodologija`) | gotovo; prije slanja upisati tim, članove, mentora i poveznicu na video, pa ponovno ispisati PDF |
+| Tehnička i projektna dokumentacija | **`docs/DOKUMENTACIJA.pdf`** (10 stranica, poredano po kriterijima žirija, s prilogom svih skupova podataka; izvor je `docs/DOKUMENTACIJA.md`, PDF radi `python -m pipeline.dokumentacija` i ispis iz preglednika); `README.md` (što radi, podaci, metodologija, arhitektura, pokretanje, API, MCP, daljnji razvoj, licence, AI alati); `docs/PLAN.md` (projektni plan i odluke); `docs/research/` (istraživanja i provjere); stranica "Metodologija i podaci" (`#/metodologija`) | gotovo; tim i mentor upisani 8.11.; prije slanja upisati članove i poveznicu na video, pa ponovno ispisati PDF |
 | Opis tehničke arhitekture | `docs/DOKUMENTACIJA.pdf`, odjeljak 7 (shema `docs/arhitektura.svg`, standardi, tablica "Povezivanje s postojećim javnim sustavima", preduvjeti: tehnički, organizacijski, pravni); `README.md`, odjeljak "Arhitektura" (ista shema i moduli ETL-a) | gotovo |
 | Popis svih skupova podataka s izdavateljem i poveznicom | `docs/skupovi-podataka.md` (generira `python -m pipeline.publish` iz `data/reference/skupovi.csv`; 34 korištena skupa, s licencom i načinom pristupa); isto u API-ju kao `api/v1/skupovi.json`, a zapis svakog preuzimanja u `api/v1/izvori.json` | gotovo; generira se pri svakom buildu |
 | Demo: poveznica na radni prototip | https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/ (GitHub Pages) | uživo je verzija od 6.11. navečer (`55f1ed1`, zeleni CI); provjereno 576 od 576 AI tekstova |
-| Demo: snimke zaslona | `docs/snimke/`: `naslovnica.png`, `pregled-jedinice.png`, `simulator.png`, `karta-reforme.png` (1440×900; iste su u PDF-u) | naslovnica je sa stranice uživo (6.11.); ostale tri su s lokalne kopije iste verzije, ponovno ih snimiti sa stranice uživo nakon zadnjeg pusha |
+| Demo: snimke zaslona | `docs/snimke/`: `naslovnica.png`, `pregled-jedinice.png`, `simulator.png`, `karta-reforme.png` (1440×900; iste su u PDF-u) | sve četiri su sa stranice uživo (naslovnica 6.11., ostale tri 8.11., ista objavljena verzija `6dc14d6`) |
 | Video do 3 min sa 7 elemenata | `docs/video-scenarij.md` (v4: natpis na ekranu za svaki od 7 elemenata, 327 riječi, tablica provjerenih brojki); slike `docs/video/01-naslov.png`, `02-izvori.png`, `04-kraj.png` i shema `docs/arhitektura.svg`; titlovi `docs/video/titlovi.srt` | scenarij, slike i titlovi gotovi; snima i govori tim; poveznica na video još ne postoji |
 | Popis AI alata i knjižnica s licencama | `README.md`, odjeljak "Korišteni AI alati"; `THIRD_PARTY_LICENSES.md` (web, ETL, alati u izgradnji i AI dijelu, video, usluge) | gotovo |
 | Softver otvorenog koda | `THIRD_PARTY_LICENSES.md`: sve knjižnice su otvorenog koda (MIT, BSD, Apache-2.0, ISC, PSF, MPL-2.0; copyleft samo GEOS LGPL-2.1 i text-unidecode); u proizvodu samo otvoreni model (Gemma 4, Apache-2.0) | gotovo |
@@ -53,13 +53,13 @@ Iz `docs/pravila-datathona.pdf`:
 ## 4. Nacrt e-maila (ne šalje se)
 
 **Prima:** open.data@mpudt.hr
-**Predmet:** Datathon Portala otvorenih podataka 2026 – rješenje za izazov C – Fiskalna karta JLS – tim [naziv tima]
+**Predmet:** Datathon Portala otvorenih podataka 2026 – rješenje za izazov C – Fiskalna karta JLS – tim Begovi mušketiri
 
 **Tijelo:**
 
 > Poštovani,
 >
-> u ime tima [naziv tima] dostavljamo rješenje za izazov C (Gospodarstvo i učinkovito upravljanje): **Fiskalna karta JLS**.
+> u ime tima Begovi mušketiri dostavljamo rješenje za izazov C (Gospodarstvo i učinkovito upravljanje): **Fiskalna karta JLS**.
 >
 > Fiskalna karta daje ocjenu financijske stabilnosti od 1 do 5 za svih 576 općina, gradova i županija, iz izvještaja Ministarstva financija i otvorenih podataka DZS-a, Porezne uprave, Državnog ureda za reviziju i Portala otvorenih podataka. Uz ocjenu su usporedba sa sličnim jedinicama, simulator spajanja susjednih jedinica i Karta reforme. Kratko objašnjenje piše otvoreni jezični model (Gemma 4), a program provjerava svaku brojku u tekstu i pokazuje odakle dolazi.
 >
@@ -73,7 +73,7 @@ Iz `docs/pravila-datathona.pdf`:
 >
 > U privitku su tehnička i projektna dokumentacija (PDF) i snimke zaslona. Sve poveznice bit će dostupne najmanje do objave rezultata.
 >
-> Članovi tima: [ime i prezime, visoko učilište], … Mentor: [ime i prezime].
+> Članovi tima: [ime i prezime, visoko učilište], … Mentor: doc. dr. sc. Stjepan Begušić, Fakultet elektrotehnike i računarstva Sveučilišta u Zagrebu.
 >
 > Srdačan pozdrav,
 > [ime i prezime voditelja tima]
@@ -97,6 +97,8 @@ Iz `docs/pravila-datathona.pdf`:
 | nakon slanja | ne mijenjati `main` do objave rezultata (17.11.), da stranica odgovara videu |
 
 ## 6. Izjava korisnika (do nedjelje 8.11.)
+
+**Odluka 8.11.:** izjave nema, jer rješenje još nema stvarnih korisnika. Mjesto u uglatim zagradama u `docs/DOKUMENTACIJA.md` je obrisano; tekst ispod ostaje kao nacrt za vrijeme nakon natjecanja.
 
 Kriterij "Utjecaj i korist za zajednicu" nosi 5 bodova. Jedna rečenica stvarnog korisnika u dokumentaciji i videu vrijedi više od našeg opisa koristi. Poruku treba poslati na 3 do 5 adresa: vijećnik ili pročelnik za financije u općini koju netko iz tima poznaje, lokalni novinar, netko iz udruge koja prati proračune. Dovoljan je jedan odgovor.
 

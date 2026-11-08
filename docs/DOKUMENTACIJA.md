@@ -2,7 +2,7 @@
 
 **Datathon Portala otvorenih podataka 2026 · izazov C: Gospodarstvo i učinkovito upravljanje**
 
-Tim: [naziv tima] · članovi: [ime i prezime, …] · mentor: [ime i prezime]
+Tim: Begovi mušketiri · članovi: [ime i prezime, …] · mentor: doc. dr. sc. Stjepan Begušić (FER)
 
 | | |
 |---|---|
@@ -144,8 +144,6 @@ Najviše bi pomoglo da Ministarstvo financija ove izvještaje objavljuje na Port
 | MPUDT i Portal otvorenih podataka | Pregled koje jedinice objavljuju podatke na Portalu (269 od 576) i primjer ponovne uporabe s navođenjem izvora do razine retka. |
 
 U jedinicama s ocjenom 1 ili 2 živi 145.953 stanovnika (2025.).
-
-[Mjesto za izjavu korisnika, uz njegovo dopuštenje.]
 
 ## 10. Daljnji razvoj
 
