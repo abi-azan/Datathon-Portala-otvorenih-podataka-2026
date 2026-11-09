@@ -8,7 +8,7 @@ Tim: Begovi mušketiri · članovi: Albert Maršić, Damjan Crnković, Mihael Vr
 |---|---|
 | Radni prototip | <https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/> |
 | Izvorni kod (EUPL-1.2) | <https://github.com/abi-azan/Datathon-Portala-otvorenih-podataka-2026> |
-| Video prezentacija | [poveznica] |
+| Video prezentacija | <https://youtu.be/OEg3KVmDMAc> (2:55) |
 | Otvoreni API | `…/api/v1/openapi.json` (OpenAPI 3.1), katalog `…/api/v1/dcat.jsonld` (DCAT-AP) |
 
 ## 1. Sažetak

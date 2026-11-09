@@ -10,6 +10,8 @@ Projekt za [Datathon Portala otvorenih podataka 2026](https://data.gov.hr/-datat
 
 **Stranica:** https://abi-azan.github.io/Datathon-Portala-otvorenih-podataka-2026/
 
+**Video (2:55):** https://youtu.be/OEg3KVmDMAc
+
 **Tehnička i projektna dokumentacija:** [docs/DOKUMENTACIJA.pdf](docs/DOKUMENTACIJA.pdf) (10 stranica, poredano po kriterijima ocjenjivanja; isti tekst je u [docs/DOKUMENTACIJA.md](docs/DOKUMENTACIJA.md)). Popis svih skupova podataka: [docs/skupovi-podataka.md](docs/skupovi-podataka.md).
 
 ![Naslovnica Fiskalne karte: karta Hrvatske s 556 općina i gradova obojenih od zelene (vrlo stabilno) preko žute do crvene (vrlo nestabilno) za 2025., s legendom, pretragom i izborom godine](docs/snimke/naslovnica.png)
