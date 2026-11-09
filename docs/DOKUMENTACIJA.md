@@ -2,7 +2,7 @@
 
 **Datathon Portala otvorenih podataka 2026 · izazov C: Gospodarstvo i učinkovito upravljanje**
 
-Tim: Begovi mušketiri · članovi: [ime i prezime, …] · mentor: doc. dr. sc. Stjepan Begušić (FER)
+Tim: Begovi mušketiri · članovi: Albert Maršić, Damjan Crnković, Mihael Vranić, Matej Samaržija · mentor: doc. dr. sc. Stjepan Begušić (FER)
 
 | | |
 |---|---|
@@ -158,4 +158,5 @@ U jedinicama s ocjenom 1 ili 2 živi 145.953 stanovnika (2025.).
 - **Kod:** EUPL-1.2. **Podaci koje rješenje proizvodi:** CC BY 4.0, uz navođenje izvornih skupova.
 - **Softver:** sve knjižnice su otvorenog koda; popis s licencama je u `THIRD_PARTY_LICENSES.md`.
 - **AI u proizvodu:** Gemma 4 31B (Apache-2.0), pokrenuta programom llama.cpp (MIT) na Kaggle GPU-u. U aplikaciji se prikazuju samo tekstovi tog otvorenog modela.
-- **AI u razvoju:** Claude Code (vlasnički alat) za pisanje i pregled koda, testove, provjeru brojki i nacrte dokumentacije, prema planu i odlukama tima (`docs/PLAN.md` §11). Radni dnevnici su u `docs/dnevnik/`.
+- **AI u razvoju:** Claude Code (vlasnički alat) za pisanje i pregled koda, testove, provjeru brojki i nacrte dokumentacije, prema planu i odlukama tima (`docs/PLAN.md` §11).
+- **Video:** glas je ljudski. Kadrove sa stranice uživo snima Playwright (Apache-2.0), a montažu radi ffmpeg (GPL). Whisper large-v3-turbo (MIT, pokrenut lokalno) daje samo vremena izgovorenih riječi za rezove i titlove.

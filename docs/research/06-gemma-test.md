@@ -127,7 +127,7 @@ Sirovi izlazi: `kaggle/results/gemma_test_v4_e4b_12b.json` i `gemma_test_v5_e4b_
 
 ## v6 (3.11. 22:59-23:24): 20 novih jedinica, 12B, 26B-A4B i 31B
 
-Ovo je potvrdni test W5 iz `docs/dnevnik/plan-srijeda-4-11.md`, proširen na veće modele. Pitanje je bilo isplati li se za batch od 576 jedinica uzeti veći model, kad je ostalo 28 h GPU kvote.
+Ovo je potvrdni test W5 iz dnevnog plana za 4.11., proširen na veće modele. Pitanje je bilo isplati li se za batch od 576 jedinica uzeti veći model, kad je ostalo 28 h GPU kvote.
 
 **Postav:**
 - Bilježnica je `albertmari/fiskalna-karta-jls-gemma-v6` (privatna).
@@ -217,7 +217,7 @@ Sirovi izlaz: `kaggle/results/gemma_test_v7_31b_q4_0_ud.json`.
 - Tekstovi su ispravni, npr. Gradec: "Ocjenu najviše spušta sastavnica „servis duga”: otplata kredita i kamata iznosi 2,2 % zakonske osnovice, uz medijan skupine 3,8 % …".
 - `verify.claimed_grades` iza riječi "ocjen…" gleda samo 120 znakova. Kad prozor presiječe "3,8" iza trojke, ostaje samostalno "3" i čita se kao navedena ocjena ("ocjena 3"), a ta nije stvarna.
 - Pogođene su Gradec, Breznica, Kostrena, Lovran, Galovac, Bilje, Petrijevci, Pirovac, Fažana, Raša i Orehovica: sve imaju ocjenu 5 i medijan servisa duga od 3,8 %.
-- `verify.py` je zamrznut do kraja smjene, pa ispravak (prozor do kraja rečenice, ne 120 znakova) ide kao odluka za korisnika (`docs/dnevnik/noc-4-11.md`).
+- `verify.py` je zamrznut do kraja smjene, pa ispravak (prozor do kraja rečenice, ne 120 znakova) ide kao odluka za korisnika.
 
 **Ručni pregled 20 nasumičnih AI tekstova** (seed 2026):
 - **Jezik:** svih 20 je gramatički ispravno; nazivi su u nominativu, a slaganje je točno. Stil je šablonski, kako prompt traži, s 48-95 riječi.

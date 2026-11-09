@@ -321,7 +321,7 @@ Za svaku jedinicu prikazati raspon ranga ili razreda kroz scenarije, kao oznaku 
 1. **Mapiranje konta** (KP, 341, 25, 24 D, 663, 6353, udio poreza za decentralizirane funkcije) treba provjeriti u Računskom planu i u stvarnom izvatku [N].
 2. **Razina izvještaja** (samo proračun ili konsolidirano s korisnicima) utječe na 31 i Z006 [N].
 3. **Kvaliteta "dospjelih obveza":** jedinice same izvještavaju; I5 nosi najveću težinu. Provjeriti outliere ručno [P].
-4. **Skriveni dug** u komunalnim društvima i ustanovama nije u bilanci JLS [V-2][S-35]. Moguće proširenje: povezati vlasništvo preko Sudskog registra (API naveden u CLAUDE.md).
+4. **Skriveni dug** u komunalnim društvima i ustanovama nije u bilanci JLS [V-2][S-35]. Moguće proširenje: povezati vlasništvo preko Sudskog registra (REST API na `sudreg-data.gov.hr`).
 5. **Sidrišta su strana** (AT/SK). Kalibraciju na hrvatskoj distribuciji dokumentirati [P].
 6. **Zakonska osnovica (ZO) je približna**: zakon koristi prosječni anuitet i jamstva, a mi stvarne isplate [V-26].
 7. **Broj funkcionalno spojenih jedinica** (~24 %) nije potvrđen; izvori se razlikuju [V-32][S].

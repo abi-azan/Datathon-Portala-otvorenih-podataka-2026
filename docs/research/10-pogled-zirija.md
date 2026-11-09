@@ -23,7 +23,7 @@ Kratki zaključak: proizvod je gotov, brz i bez grešaka u konzoli. Dizajn je ur
 - **Animacija godina mijenja boje bez prijelaza.** Svakih 1,1 s karta "preskoči" u novu godinu (`web/src/pages/Home.tsx:44`, `web/src/components/GradeMap.tsx:206-216` boji preko `setFeatureState`, što MapLibre ne animira). Na videu to izgleda kao treperenje, ne kao priča.
 - **Karta ne daje "aha" bez klika.** Hrvatska je većinom tamnoplava (302 jedinice s ocjenom 5). Pogled na kartu kaže "sve je dobro", a priča projekta je u crvenim točkama. Nema ništa što oko odmah povuče prema Povljani ili Vrhovinama.
 - **Naslovnica nema nijednu brojku koja bi iznenadila.** Rečenica "U jedinicama s ocjenom 1 ili 2 živi 168.899 stanovnika" je dobra, ali skrivena na dnu legende. Isto vrijedi za "13.353 unaprijed izračunate kombinacije spajanja" i "svaka brojka vodi do retka u Excelu Ministarstva", koje se nigdje na naslovnici ne spominju.
-- **Na mobitelu (375 px) karta dolazi tek nakon naslova, pretrage, prikaza, legende i godina**, otprilike na trećem ekranu (`jury/20-m-home-full.png`). Nema horizontalnog prelijevanja, ništa se ne raspada, ali prvi dojam na telefonu je tekst, ne karta. To je već zapisano kao otvoreni zadatak u `docs/TODO.md` (redak 5).
+- **Na mobitelu (375 px) karta dolazi tek nakon naslova, pretrage, prikaza, legende i godina**, otprilike na trećem ekranu (`jury/20-m-home-full.png`). Nema horizontalnog prelijevanja, ništa se ne raspada, ali prvi dojam na telefonu je tekst, ne karta. To je već zapisano kao otvoreni zadatak.
 
 ---
 
@@ -33,7 +33,7 @@ Kratki zaključak: proizvod je gotov, brz i bez grešaka u konzoli. Dizajn je ur
 |---|---|---|---|
 | Izvedivost: radi, spremno za uporabu | 10 | **9** | Sve stranice rade, nema grešaka u konzoli ni na jednoj od pet ruta, učitavanje je brzo, dubinske poveznice (`#/simulator?j=…`, `#/reforma?prag=…&s=…`) rade. Jedan bod manje jer objavljena stranica trenutno nije ova verzija i jer žiri na mobitelu dobiva slabiji doživljaj. |
 | Dojam: UI/UX | 10 | **8** | Dosljedan, miran dizajn, dobra tipografija, ocjene uvijek s riječju, dobra kartica na prijelaz mišem. Odbijam dva boda: prijelazi na karti ne postoje, Karta reforme na razini države izgleda isto prije i poslije pomicanja klizača (`jury/14-reforma-10000-during.png` i `jury/14-reforma-10000.png` su identični), stranica "Metodologija" je zid teksta od 2.300 riječi (`jury/16-metodologija-full.png`), a gornji lijevi dio svjedodžbe ima velik prazan prostor (`jury/08-profile-povljana-top.png`). |
-| Video | 10 | **7** (projekcija) | Scenarij u `docs/video-scenarij.md` pokriva svih sedam obaveznih elemenata i ima dobru priču (Ana u Povljani, "Spoji pa vidi"). Rizik je gustoća: 400 riječi u 2:50 je brzo za hrvatski. Bez prijelaza na karti i bez vidljive promjene na Karti reforme dva ključna kadra neće biti dojmljiva. Ocjenu dižu samo stvarni kadrovi, vidi odjeljak 5. |
+| Video | 10 | **7** (projekcija) | Scenarij videa pokriva svih sedam obaveznih elemenata i ima dobru priču (Ana u Povljani, "Spoji pa vidi"). Rizik je gustoća: 400 riječi u 2:50 je brzo za hrvatski. Bez prijelaza na karti i bez vidljive promjene na Karti reforme dva ključna kadra neće biti dojmljiva. Ocjenu dižu samo stvarni kadrovi, vidi odjeljak 5. |
 | Otvoreni podaci izravno preko API-ja | 5 | **3** | Žiri vidi CKAN API i DZS WFS u tablici skupova i u `izvori.json`. Ali jezgra (MF) su XLSX datoteke, a u pregledniku se uživo ne zove nijedan javni API. Natjecanje izričito boduje API više od datoteka, i to je drugi kriterij za izjednačenje. Jedan poziv uživo iz preglednika (DZS PxWeb, CORS radi, `docs/research/09` §2.2) dignuo bi ovo na 4. |
 | Smisleno povezivanje više izvora | 5 | **5** | MF (tri skupa) + DZS Popis + DZS granice + DGU šifrarnik + indeks razvijenosti + CKAN katalog + DUR revizije + tablica izravnanja, sve spojeno po OIB-u, RKP-u i šifri. Nova vrijednost je očita: ocjena, simulator, Karta reforme. |
 | Relevantnost za izazov C | 5 | **5** | Učinkovito upravljanje i javne financije doslovno. Simulator spajanja je tema koja je trenutno u javnoj raspravi. |
@@ -92,7 +92,7 @@ Procjene sati su za jednog razvojnog programera s AI asistentom. Prvi zadatak ni
 
 ### 7. Mobitel i naslovnica: karta odmah, legenda i godine sklopive (1 h)
 
-- **Što:** na širini ispod 1024 px kartu staviti odmah ispod pretrage, a legendu i godine iza "Legenda i godine" (details/summary). Na desktopu legendu sažeti tako da gumb "Pokreni 2019.–2025." uđe u prvi ekran na 1280×800 (danas je 170 px prenisko). To je zadatak 5 iz `docs/TODO.md`.
+- **Što:** na širini ispod 1024 px kartu staviti odmah ispod pretrage, a legendu i godine iza "Legenda i godine" (details/summary). Na desktopu legendu sažeti tako da gumb "Pokreni 2019.–2025." uđe u prvi ekran na 1280×800 (danas je 170 px prenisko). To je već zapisano kao otvoreni zadatak.
 - **Kriterij:** Dojam +0,5, Izvedivost +0,5 (žiri koji otvori poveznicu na telefonu).
 - **Datoteke:** `web/src/pages/Home.tsx` (redoslijed blokova u gridu, `order-*` klase).
 - **Rizik:** mali.
@@ -151,7 +151,7 @@ Scenarij v2 je dobar; ovo su kadrovi koji ga nose, s onim što treba biti na ekr
 5. **1:55, Karta reforme.** Klizač 2.500 → 5.000 → 10.000, brojač "555 → 370 → 239 → 147", karta zumirana na Zadarsku županiju tako da se spajanja vide (`jury/18-reforma-zoom-zadar.png`, nakon zadatka 2 i iz cijele države). Klik na skupinu Paga: sedam članica, 93,7 bodova (`jury/15-reforma-pag-group-full.png`). *"Scenarij, ne prijedlog granica. Ušteda na upravi do 36 milijuna, poticaj države 168 milijuna godišnje."*
 6. **2:25, stroj iza.** Tri brza reza po 4 s: `izvori.json` s ETag-om i sha256, `openapi.json` u pregledniku, `dcat.jsonld`, zeleni GitHub Actions. Ako postoji zadatak 4: značka "dohvaćeno uživo s DZS-a". Ako postoji zadatak 10: MCP klijent s pitanjem o Povljani. *"CKAN API, DZS WFS, Ministarstvo financija. Sve se izračuna u CI-ju i objavi kao otvoreni API i DCAT katalog. Nema poslužitelja."*
 
-U svakom kadru s kartom mora se vidjeti natpis OpenFreeMap / OpenStreetMap (već zapisano u `docs/video-scenarij.md`).
+U svakom kadru s kartom mora se vidjeti natpis OpenFreeMap / OpenStreetMap (već zapisano u scenariju videa).
 
 ---
 

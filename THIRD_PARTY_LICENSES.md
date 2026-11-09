@@ -66,7 +66,7 @@ Fiskalna karta JLS gradi se i radi samo uz softver otvorenog koda. Ovdje su izra
 | markdown-it-py | 4.2.0 | MIT | `docs/DOKUMENTACIJA.md` u HTML za PDF (`pipeline/dokumentacija.py`); nije dio rješenja |
 | GitHub Actions: checkout, setup-python, setup-node, cache, upload-pages-artifact, deploy-pages | v5 do v7 | MIT | CI i objava |
 
-## Video (`docs/video-scenarij.md`, skripte u `docs/video/snimanje/`)
+## Video
 
 | Alat | Verzija | Licenca | Za što |
 |---|---|---|---|
@@ -74,6 +74,8 @@ Fiskalna karta JLS gradi se i radi samo uz softver otvorenog koda. Ovdje su izra
 | Chromium (Playwright build 1254) | 158 | BSD-3-Clause | preglednik u kojem se kadrovi snimaju |
 | ffmpeg (paket `ffmpeg-static`, build gyan.dev "essentials") | 6.1.1 | GPL-3.0-or-later (paket), GPL (build) | rezanje kadrova, natpisi, zvuk, izvoz MP4 |
 | MCP Inspector | 2.13.0 | Apache-2.0 | kadar MCP servera (vidi i tablicu iznad) |
+| faster-whisper (s CTranslate2) | 1.x | MIT | prepoznavanje govora lokalno: vremena riječi za rezove i titlove, provjera izgovorenih brojki |
+| Whisper large-v3-turbo (model, OpenAI; pretvorba mobiuslabsgmbh) | – | MIT | model za gornje prepoznavanje; tekst titlova je ručno ispravljen |
 | Snimač zvuka (Windows) | – | vlasnički, dio Windowsa | snimanje glasa |
 
 Programi za snimanje i montažu ne ulaze u rješenje, pa njihove licence ne utječu na naše. Glazbe nema, ili je pod CC0.

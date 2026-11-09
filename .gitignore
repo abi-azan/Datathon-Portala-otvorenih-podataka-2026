@@ -25,3 +25,14 @@ kaggle/gemma_batch.py
 
 # HTML za ispis dokumentacije u PDF (python -m pipeline.dokumentacija); u repozitoriju je PDF
 docs/DOKUMENTACIJA.html
+
+# Radni materijali koji nisu dio rješenja: upute za AI asistenta, radni dnevnici,
+# popis zadataka i nacrt predaje
+CLAUDE.md
+docs/dnevnik/
+docs/TODO.md
+docs/PREDAJA.md
+
+# Video: scenarij, slike, titlovi i skripte za snimanje i montažu (video je objavljen zasebno)
+docs/video/
+docs/video-scenarij.md

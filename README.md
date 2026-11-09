@@ -182,7 +182,8 @@ Osnovna adresa je `<stranica>/api/v1/`, bez ključa. Opis je u `openapi.json`.
 | Gemma 4 E4B, 12B i 26B-A4B | Apache-2.0 | samo testovi pri izboru modela |
 | llama.cpp | MIT | izvođenje modela na Kaggle GPU-u |
 | Kaggle (bilježnice, Kaggle Models, Kaggle MCP server) | Kaggle Terms of Use | GPU i upravljanje bilježnicama |
-| Claude Code | vlasnički alat; prava na izlaze ima korisnik | razvojni alat: pisanje i pregled koda, testovi, provjera brojki i nacrti dokumentacije, prema planu i odlukama tima (`docs/PLAN.md` §11); radni dnevnici su u [`docs/dnevnik/`](docs/dnevnik/) |
+| Claude Code | vlasnički alat; prava na izlaze ima korisnik | razvojni alat: pisanje i pregled koda, testovi, provjera brojki i nacrti dokumentacije, prema planu i odlukama tima (`docs/PLAN.md` §11) |
 | gstack | MIT | razvojni alat: pregled sučelja u pregledniku |
+| Whisper large-v3-turbo (preko faster-whisper, lokalno) | MIT | samo video: vremena izgovorenih riječi za rezove i titlove te provjera izgovorenih brojki; glas u videu je ljudski, a tekst titlova ručno ispravljen |
 
 U aplikaciji se prikazuju samo tekstovi otvorenog modela.
