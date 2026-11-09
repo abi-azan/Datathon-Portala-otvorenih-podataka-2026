@@ -1,0 +1,12 @@
+node_modules/
+package-lock.json
+kadrovi/
+slike/
+montaza/
+glas-test/
+*.webm
+*.mp4
+*.m4a
+*.png
+timeline-glas.json
+titlovi-glas.srt

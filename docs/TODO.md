@@ -62,7 +62,7 @@ Procjena prije ovoga: oko 45 od 50 mogućih bez videa (API 4 od 5, dojam 8,5 od 
 - [x] Nova snimka naslovnice za README sa stranice uživo (1440×900).
 - [ ] Nije napravljeno: tablica Porezne uprave preko DataStore API-ja. Jedina tablica koja ga ima (usporedba stopa 2025./2026.) u DataStoreu ima 10.754 retka, od toga 10.198 praznih, pa XLSX ostaje izvor.
 - [x] ~~Utjecaj (bez koda): poslati poveznicu dvjema ili trima osobama (vijećnik, novinar, udruga) i jednu njihovu rečenicu staviti u dokumentaciju i video.~~ Odluka 8.11.: bez izjave korisnika.
-- [ ] Video: probna snimka u subotu, da se vidi stane li 11 kadrova u 3 minute.
+- [x] Video: probna snimka u subotu, da se vidi stane li 11 kadrova u 3 minute. Napravljeno 9.11. u 2 h: kadrovi snimljeni Playwrightom sa stranice uživo (`docs/video/snimanje/`), probna montaža bez glasa traje 2:57 sa 16 segmenata.
 
 # Čeka odluku
 
@@ -93,7 +93,7 @@ Procjena prije ovoga: oko 45 od 50 mogućih bez videa (API 4 od 5, dojam 8,5 od 
 - [x] **Tim, prvo:** pregledati granu `noc-6-11` i spojiti je u `main`. (spojeno 6.11. navečer, `6dc14d6`, zeleni CI)
 - [ ] **Tim:** u `docs/DOKUMENTACIJA.md` upisati naziv tima, članove, mentora i poveznicu na video, pa ponovno ispisati PDF (upute u `pipeline/dokumentacija.py` i `CLAUDE.md`). Tim (Begovi mušketiri) i mentor (doc. dr. sc. Stjepan Begušić, FER) upisani 8.11.; ostaju članovi i poveznica na video.
 - [x] ~~**Tim:** poslati poruku iz `docs/PREDAJA.md`, odjeljak 6, na 3 do 5 adresa i jednu rečenicu korisnika staviti u dokumentaciju i video.~~ Odluka 8.11.: izjave nema (još nema korisnika), mjesto u dokumentaciji je obrisano.
-- [ ] **Tim:** snimiti glas i video po scenariju v4.
+- [ ] **Tim:** snimiti glas po scenariju v4, sedam snimki (po jedna za svaki odjeljak scenarija, nazvane 1 do 7). Kadrovi su snimljeni automatski 9.11. i probna montaža bez glasa je gotova; nakon glasa slijede `glas.js` i `montaza.js` iz `docs/video/snimanje/`, objava na YouTube (nejavno, s titlovima) i poveznica u dokumentaciju.
 - [x] Preglednici: Firefox 157 i WebKit 27 (Playwrightove verzije, jezgra Safarija) otvaraju naslovnicu, prikaz bez WebGL-a, pregled Povljane, simulator, Kartu reforme i metodologiju bez greške u konzoli i bez vodoravnog pomicanja. Pravi Safari na Macu vrijedi još jednom pogledati.
 - [x] **Tim:** opis repozitorija na GitHubu (About: adresa stranice, kratki opis, teme `open-data`, `croatia`, `public-finance`). (provjereno 8.11.: opis, adresa i pet tema su postavljeni)
 - [ ] Pročitati i potvrditi dvije rečenice koje govore u ime tima: redak "Claude Code" u README-u (Korišteni AI alati) i `docs/dnevnik/README.md`.

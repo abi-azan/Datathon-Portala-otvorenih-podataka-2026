@@ -1,0 +1,23 @@
+[
+  { "img": "docs/video/01-naslov.png", "dur": 2.5, "natpis": 1 },
+  { "src": "kadrovi/kadar-1.webm", "in": 4.5, "dur": 14.0, "natpis": 1 },
+  { "src": "kadrovi/kadar-9.mp4", "in": 0, "dur": 3.0, "natpis": 1 },
+
+  { "src": "kadrovi/kadar-10.webm", "in": 4.0, "dur": 16.0, "natpis": 2 },
+
+  { "src": "kadrovi/kadar-2.webm", "in": 3.5, "dur": 19.0, "natpis": 3 },
+  { "src": "kadrovi/kadar-3.webm", "in": 5.0, "dur": 14.0, "natpis": 3 },
+  { "src": "kadrovi/kadar-4.webm", "in": 5.0, "dur": 7.0, "natpis": 3 },
+  { "src": "kadrovi/kadar-5.webm", "in": 2.0, "dur": 26.0, "natpis": 3 },
+  { "src": "kadrovi/kadar-6.webm", "in": 5.0, "dur": 22.0, "natpis": 3 },
+
+  { "img": "docs/video/02-izvori.png", "dur": 5.0, "natpis": 4 },
+  { "src": "kadrovi/kadar-7.webm", "in": 3.0, "dur": 10.0, "natpis": 4 },
+
+  { "img": "slike/arhitektura.png", "dur": 6.0, "natpis": 5 },
+  { "src": "kadrovi/kadar-7.webm", "in": 15.5, "dur": 6.0, "natpis": 5 },
+  { "src": "kadrovi/kadar-8.webm", "in": 22.0, "dur": 10.0, "natpis": 5, "slika": "slike/natpis-pitanje.png" },
+
+  { "src": "kadrovi/kadar-11.webm", "in": 4.0, "dur": 12.0, "natpis": 6 },
+  { "img": "docs/video/04-kraj.png", "dur": 5.0, "natpis": 7 }
+]

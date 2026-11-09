@@ -137,7 +137,7 @@ Naracija ima 327 riječi. Uz oko 130 riječi u minuti govor traje 2:31, pa ostaj
 
 ## Popis kadrova za snimanje
 
-Snima se zaslon 1920×1080, preglednik bez traka i kursor uvećan.
+Kadrovi se snimaju automatski sa stranice uživo, Playwrightom u okviru 1920×1080 s nacrtanim kursorom (skripte i upute u `docs/video/snimanje/`). Zato se svaki kadar može ponoviti kad se stranica promijeni; ručno snimanje zaslona nije potrebno.
 
 1. Naslovnica i animacija godina (gumb "Pokreni" iznad karte, s pretapanjem boja).
 2. Pretraga "povlj" i pregled Povljane (ocjena, pokazatelji, traka ocjena po godinama).
@@ -153,16 +153,16 @@ Slike za montažu (1920×1080) su u `docs/video/`: `01-naslov.png`, `02-izvori.p
 
 ## Titlovi
 
-`docs/video/titlovi.srt` sadrži cijelu naraciju, podijeljenu na retke do 42 znaka, s vremenima iz ovog scenarija. Nakon snimanja glasa vremena treba pomaknuti prema stvarnom govoru (Kdenlive: Titlovi → Uvezi titlove, pa povući rubove). Titlovi pomažu žiriju koji gleda bez zvuka.
+`docs/video/titlovi.srt` sadrži cijelu naraciju, podijeljenu na retke do 42 znaka, s vremenima iz ovog scenarija. Nakon snimanja glasa vremena se pomiču prema stvarnom govoru (`docs/video/snimanje/glas.js` to radi po odjeljcima i zapisuje `titlovi-glas.srt`). Titlovi se uz video šalju na YouTube kao zasebna datoteka i pomažu žiriju koji gleda bez zvuka.
 
 ## Alati (otvoreni)
 
-- OBS Studio za snimanje.
-- Kdenlive za montažu.
-- Audacity za glas.
+- Playwright (Apache-2.0) s Chromiumom (BSD) za snimanje kadrova sa stranice uživo.
+- ffmpeg (GPL, build gyan.dev iz paketa `ffmpeg-static`) za rezanje, natpise, titlove i zvuk.
+- MCP Inspector (Apache-2.0) za kadar MCP servera.
+- Snimač zvuka (Windows) za glas; mikrofon računala ili mobitel.
 - Bez glazbe, ili glazba pod licencom CC0.
-- MCP Inspector (Apache-2.0) za kadar MCP servera, ako se ne koristi Claude Desktop.
 
-Sve treba navesti u dokumentaciji (navedeno je u `THIRD_PARTY_LICENSES.md`). Ako se za kadar MCP-a koristi Claude Desktop, on je vlasnički alat i treba ga dodati u README, odjeljak "Korišteni AI alati".
+Sve je navedeno u `THIRD_PARTY_LICENSES.md`. Claude Desktop se za kadar MCP-a ne koristi; da se koristi, kao vlasnički alat morao bi u README, odjeljak "Korišteni AI alati".
 
 U svakom kadru s kartom mora se vidjeti natpis "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" u kutu karte. MapLibre ga sažme u gumb "i" čim se karta pomakne, pa ga prije snimanja treba otvoriti klikom na "i" ili ga dopisati u montaži. To traže OpenFreeMap i ODbL za video i snimke zaslona.
